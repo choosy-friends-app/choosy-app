@@ -1,0 +1,55 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="stack">
+  <header>
+    <h1>Discover</h1>
+    <p class="subtle">Activities near you</p>
+  </header>
+
+  <div class="search-mock">📍 Search activities, places...</div>
+
+  <section>
+    <h2>Featured</h2>
+    <div class="horizontal-list">
+      {% for item in featured %}
+      <article class="featured-card">
+        <div class="featured-image-wrap">
+          <img src="{{ item.image }}" alt="{{ item.title }}" class="plan-image" />
+          <div class="featured-overlay">
+            <h3>{{ item.title }}</h3>
+            <p class="tiny">📍 {{ item.location }} · ⭐ {{ item.rating }}</p>
+          </div>
+        </div>
+        <div class="featured-footer">
+          <p><strong>${{ item.price }}</strong><span class="subtle tiny"> /person</span></p>
+          <p class="subtle tiny">⏱ {{ item.duration }}</p>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section>
+    <h2>Popular Near You</h2>
+    <div class="grid-two">
+      {% for activity in activities %}
+      <article class="card compact-card">
+        <div class="plan-image-wrap small">
+          <img src="{{ activity.image }}" alt="{{ activity.title }}" class="plan-image" />
+          <span class="tag {{ activity.tag_class }}">{{ activity.tag }}</span>
+        </div>
+        <div class="plan-content">
+          <h3>{{ activity.title }}</h3>
+          <p class="subtle tiny">📍 {{ activity.location }}</p>
+          <div class="row-between">
+            <p class="tiny"><strong>{% if activity.price == 0 %}Free{% else %}${{ activity.price }}{% endif %}</strong></p>
+            <p class="subtle tiny">⭐ {{ activity.rating }}</p>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

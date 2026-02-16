@@ -1,0 +1,88 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="stack">
+  <header class="header-row">
+    <div>
+      <p class="subtle">Good evening</p>
+      <h1>Hey, Alex</h1>
+    </div>
+    <img class="avatar-lg" src="https://i.pravatar.cc/80?img=1" alt="Alex profile" />
+  </header>
+
+  <section class="cta-card">
+    <p class="cta-overline">Ready to go?</p>
+    <p class="cta-title">Create a New Plan</p>
+    <span class="cta-chip">Get Started</span>
+    <span class="shape shape-one"></span>
+    <span class="shape shape-two"></span>
+  </section>
+
+  <section>
+    <h2>Active Group</h2>
+    <div class="card">
+      <div class="row-between">
+        <div>
+          <h3>Weekend Crew</h3>
+          <p class="subtle">4 members · 3 plans proposed</p>
+        </div>
+        <span class="badge badge-voting">Voting</span>
+      </div>
+      <div class="avatar-stack">
+        {% for member in group_members %}
+        <img src="{{ member.avatar }}" alt="{{ member.name }}" class="avatar-sm" />
+        {% endfor %}
+        <span class="subtle tiny">+2 more</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="row-between">
+      <h2>Proposed Plans</h2>
+      <button class="link-btn" type="button">See all</button>
+    </div>
+    <div class="horizontal-list">
+      {% for plan in plans %}
+      <article class="plan-card">
+        <div class="plan-image-wrap">
+          <img src="{{ plan.image }}" alt="{{ plan.title }}" class="plan-image" />
+          <span class="tag {{ plan.tag_class }}">{{ plan.tag }}</span>
+        </div>
+        <div class="plan-content">
+          <h3>{{ plan.title }}</h3>
+          <p class="subtle tiny">{{ plan.description }}</p>
+          <p class="subtle tiny">💵 {{ plan.price }} · ⏱ {{ plan.duration }}</p>
+          <button
+            type="button"
+            class="vote-btn"
+            data-vote-button
+            data-plan-id="{{ plan.id }}"
+            data-base-votes="{{ plan.votes }}"
+            aria-pressed="false"
+          >
+            <span>👍</span> Vote ({{ plan.votes }})
+          </button>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section>
+    <h2>This Week</h2>
+    <div class="stats-grid-two">
+      <div class="card stat-card">
+        <p class="stat-icon">💜</p>
+        <p class="stat-value">12</p>
+        <p class="subtle tiny">Plans voted</p>
+      </div>
+      <div class="card stat-card">
+        <p class="stat-icon">⏰</p>
+        <p class="stat-value">3</p>
+        <p class="subtle tiny">Upcoming plans</p>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Choosy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <main class="screen-content">{% block content %}{% endblock %}</main>
+      <nav class="bottom-nav" aria-label="Navegacion principal">
+        {% for item in nav_items %}
+        <a
+          class="nav-item {% if active_tab == item.id %}active{% endif %}"
+          href="{% url item.url_name %}"
+        >
+          <span class="nav-icon">{{ item.icon }}</span>
+          <span class="nav-label">{{ item.label }}</span>
+        </a>
+        {% endfor %}
+      </nav>
+    </div>
+    <script src="{% static 'js/main.js' %}"></script>
+  </body>
+</html>

@@ -1,0 +1,35 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="stack groups-screen">
+  <header>
+    <h1>Your Groups</h1>
+    <p class="subtle">{{ groups|length }} groups · {{ total_active_plans }} active plans</p>
+  </header>
+
+  <section class="stack-sm">
+    {% for group in groups %}
+    <article class="card row group-row">
+      <div class="avatar-stack avatars-inline">
+        {% for member in group.members|slice:':3' %}
+        <img src="{{ member.avatar }}" alt="{{ member.name }}" class="avatar-sm" />
+        {% endfor %}
+        {% if group.members|length > 3 %}
+        <span class="avatar-more">+{{ group.members|length|add:'-3' }}</span>
+        {% endif %}
+      </div>
+      <div class="grow">
+        <div class="row-start">
+          <h3>{{ group.name }}</h3>
+          <span class="badge {{ group.status_class }}">{{ group.status }}</span>
+        </div>
+        <p class="subtle tiny">{{ group.members|length }} members · {{ group.active_plans }} plans</p>
+      </div>
+      <span class="subtle">›</span>
+    </article>
+    {% endfor %}
+  </section>
+
+  <button class="fab" type="button" aria-label="Create new group">＋</button>
+</div>
+{% endblock %}
