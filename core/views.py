@@ -256,3 +256,17 @@ def profile(request):
         }
     )
     return render(request, "core/profile.html", context)
+
+
+def vote_plan(request):
+    context = base_context("")
+    plan_mock = {
+        "title": "Movie Marathon",
+        "description": "Cozy night in with snacks",
+        "price": 15,
+        "image": "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&h=300&fit=crop",
+        "place_name": "JCA Cinemes Alpicat",
+        "address": "Lleida, Spain",
+    }
+    context.update({"plan": plan_mock})
+    return render(request, "core/vote.html", context)

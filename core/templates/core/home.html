@@ -45,25 +45,21 @@
     <div class="horizontal-list">
       {% for plan in plans %}
       <article class="plan-card">
-        <div class="plan-image-wrap">
-          <img src="{{ plan.image }}" alt="{{ plan.title }}" class="plan-image" />
-          <span class="tag {{ plan.tag_class }}">{{ plan.tag }}</span>
-        </div>
-        <div class="plan-content">
-          <h3>{{ plan.title }}</h3>
-          <p class="subtle tiny">{{ plan.description }}</p>
-          <p class="subtle tiny">💵 {{ plan.price }} · ⏱ {{ plan.duration }}</p>
-          <button
-            type="button"
-            class="vote-btn"
-            data-vote-button
-            data-plan-id="{{ plan.id }}"
-            data-base-votes="{{ plan.votes }}"
-            aria-pressed="false"
-          >
-            <span>👍</span> Vote ({{ plan.votes }})
-          </button>
-        </div>
+        <a href="{% url 'vote' %}" style="text-decoration: none; color: inherit; display: block;">
+          <div class="plan-image-wrap">
+            <img src="{{ plan.image }}" alt="{{ plan.title }}" class="plan-image" />
+            <span class="tag {{ plan.tag_class }}">{{ plan.tag }}</span>
+          </div>
+          <div class="plan-content">
+            <h3>{{ plan.title }}</h3>
+            <p class="subtle tiny">{{ plan.description }}</p>
+            <p class="subtle tiny">💵 {{ plan.price }} · ⏱ {{ plan.duration }}</p>
+            <button type="button" class="vote-btn" data-vote-button data-plan-id="{{ plan.id }}"
+              data-base-votes="{{ plan.votes }}" aria-pressed="false">
+              <span>👍</span> Vote ({{ plan.votes }})
+            </button>
+          </div>
+        </a>
       </article>
       {% endfor %}
     </div>
