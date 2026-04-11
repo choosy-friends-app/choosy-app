@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="groups-page">
+    <header class="groups-hero">
+      <div class="groups-hero__copy">
+        <p class="page-kicker">Ecosystem Overview</p>
+        <h1>Your Squads</h1>
+      </div>
+
+      <button class="groups-hero__action" type="button">
+        <span class="material-symbols-outlined">add</span>
+        <span>Create New Squad</span>
+      </button>
+    </header>
+
+    <section class="squad-grid">
+      <article class="squad-card">
+        <div class="squad-card__ghost">
+          <span class="material-symbols-outlined">restaurant</span>
+        </div>
+        <div class="squad-card__body">
+          <div class="squad-card__head">
+            <span class="squad-card__icon squad-card__icon--secondary">
+              <span class="material-symbols-outlined">restaurant</span>
+            </span>
+            <div>
+              <h3>The Foodies</h3>
+              <p class="squad-card__sub">12 Members</p>
+            </div>
+          </div>
+
+          <div class="squad-card__meta">
+            <span class="squad-card__line">
+              <span class="material-symbols-outlined">poll</span>
+              <span>3 active polls</span>
+            </span>
+            <p>Last active 5m ago</p>
+          </div>
+
+          <div class="squad-card__foot">
+            <div class="avatar-cluster" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <span class="squad-card__link">View Hub</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="squad-card">
+        <div class="squad-card__ghost">
+          <span class="material-symbols-outlined">hiking</span>
+        </div>
+        <div class="squad-card__body">
+          <div class="squad-card__head">
+            <span class="squad-card__icon squad-card__icon--tertiary">
+              <span class="material-symbols-outlined">hiking</span>
+            </span>
+            <div>
+              <h3>Weekend Warriors</h3>
+              <p class="squad-card__sub">8 Members</p>
+            </div>
+          </div>
+
+          <div class="squad-card__meta">
+            <span class="squad-card__line">
+              <span class="material-symbols-outlined">event</span>
+              <span>Next trip placeholder</span>
+            </span>
+            <p>Last active 1h ago</p>
+          </div>
+
+          <div class="squad-card__foot">
+            <div class="avatar-cluster" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <span class="squad-card__link">View Hub</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="squad-card">
+        <div class="squad-card__ghost">
+          <span class="material-symbols-outlined">bolt</span>
+        </div>
+        <div class="squad-card__body">
+          <div class="squad-card__head">
+            <span class="squad-card__icon squad-card__icon--primary">
+              <span class="material-symbols-outlined">bolt</span>
+            </span>
+            <div>
+              <h3>Startup Sync</h3>
+              <p class="squad-card__sub">24 Members</p>
+            </div>
+          </div>
+
+          <div class="squad-card__meta">
+            <span class="squad-card__line">
+              <span class="material-symbols-outlined">record_voice_over</span>
+              <span>Presence placeholder</span>
+            </span>
+            <p>Last active 12m ago</p>
+          </div>
+
+          <div class="squad-card__foot">
+            <div class="avatar-cluster" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <span class="squad-card__link">View Hub</span>
+          </div>
+        </div>
+      </article>
+    </section>
+  </section>
+{% endblock %}

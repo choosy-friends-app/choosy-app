@@ -97,7 +97,9 @@ button {
 .pulse-card strong,
 .group-card h3,
 .promo-copy h3,
-.side-panel h2 {
+.side-panel h2,
+.groups-hero h1,
+.squad-card h3 {
   font-family: "Manrope", sans-serif;
   letter-spacing: -0.03em;
 }
@@ -141,6 +143,10 @@ button {
 .rail-link.is-active {
   color: var(--primary);
   border-right-color: var(--primary);
+}
+
+.rail-link:hover {
+  color: var(--text);
 }
 
 .rail-link .material-symbols-outlined,
@@ -541,6 +547,171 @@ button {
   left: 10.4rem;
 }
 
+.groups-page {
+  display: grid;
+  gap: 2.5rem;
+}
+
+.groups-hero {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.groups-hero__copy {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.groups-hero h1 {
+  font-size: clamp(3.3rem, 6vw, 5.6rem);
+  line-height: 0.95;
+}
+
+.groups-hero__action {
+  min-height: 3.75rem;
+  padding: 0 1.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #160d45;
+  font-weight: 800;
+  box-shadow: 0 18px 30px rgba(165, 165, 255, 0.18);
+}
+
+.squad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.6rem;
+}
+
+.squad-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 20rem;
+  padding: 1.9rem;
+  border-radius: 2rem;
+  border: 1px solid var(--line-soft);
+  background: var(--surface-glass);
+  backdrop-filter: blur(20px);
+}
+
+.squad-card__ghost {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.35rem;
+  opacity: 0.1;
+}
+
+.squad-card__ghost .material-symbols-outlined {
+  font-size: 5rem;
+}
+
+.squad-card__body {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.squad-card__head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.squad-card__icon {
+  width: 3rem;
+  height: 3rem;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 1.1rem;
+}
+
+.squad-card__icon--secondary {
+  background: rgba(210, 119, 255, 0.14);
+  color: var(--secondary);
+}
+
+.squad-card__icon--tertiary {
+  background: rgba(105, 218, 255, 0.14);
+  color: var(--tertiary);
+}
+
+.squad-card__icon--primary {
+  background: rgba(165, 165, 255, 0.14);
+  color: var(--primary);
+}
+
+.squad-card__body p,
+.groups-hero__copy p,
+.squad-card__meta,
+.squad-card__sub {
+  color: var(--muted);
+}
+
+.squad-card__sub {
+  font-size: 0.92rem;
+}
+
+.squad-card__meta {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.squad-card__line {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.92rem;
+}
+
+.squad-card__line .material-symbols-outlined {
+  font-size: 1rem;
+}
+
+.squad-card__foot {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.avatar-cluster {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-cluster span {
+  width: 2.15rem;
+  height: 2.15rem;
+  margin-right: -0.45rem;
+  border-radius: 50%;
+  border: 2px solid var(--surface-low);
+  background: linear-gradient(135deg, rgba(255, 173, 96, 0.85), rgba(105, 218, 255, 0.55));
+}
+
+.avatar-cluster span:nth-child(2) {
+  background: linear-gradient(135deg, rgba(210, 119, 255, 0.8), rgba(165, 165, 255, 0.5));
+}
+
+.avatar-cluster span:nth-child(3) {
+  background: rgba(38, 38, 38, 1);
+}
+
+.squad-card__link {
+  color: var(--primary);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
 @media (max-width: 1100px) {
   .app-shell {
     grid-template-columns: 1fr;
@@ -569,7 +740,8 @@ button {
   }
 
   .hero-grid,
-  .dashboard-grid {
+  .dashboard-grid,
+  .squad-grid {
     grid-template-columns: 1fr;
   }
 
@@ -599,7 +771,8 @@ button {
   }
 
   .section-header,
-  .group-card__top {
+  .group-card__top,
+  .groups-hero {
     flex-direction: column;
     align-items: stretch;
   }

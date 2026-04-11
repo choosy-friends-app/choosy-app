@@ -6,18 +6,18 @@
     </div>
 
     <nav class="rail-nav" aria-label="Estructura principal">
-      <span class="rail-link is-active">
+      <a class="rail-link {% if active_page == 'dashboard' %}is-active{% endif %}" href="{% url 'dashboard' %}">
         <span class="material-symbols-outlined">dashboard</span>
         <span>Dashboard</span>
-      </span>
+      </a>
       <span class="rail-link">
         <span class="material-symbols-outlined">event_repeat</span>
         <span>Active Plans</span>
       </span>
-      <span class="rail-link">
+      <a class="rail-link {% if active_page == 'groups' %}is-active{% endif %}" href="{% url 'groups' %}">
         <span class="material-symbols-outlined">groups</span>
         <span>Groups</span>
-      </span>
+      </a>
       <span class="rail-link">
         <span class="material-symbols-outlined">inventory_2</span>
         <span>Archive</span>
