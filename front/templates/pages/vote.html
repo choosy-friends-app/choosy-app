@@ -1,0 +1,519 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="vote-view-wrapper-adv">
+    <div class="vote-app-adv" id="vote-app">
+
+        <!-- Branding Header -->
+        <div class="vote-brand-header">
+            <span class="brand-logo">CHOOSY.<span class="brand-accent">LY</span></span>
+            <div class="brand-actions">
+                <span class="material-symbols-outlined">group</span>
+                <span class="material-symbols-outlined">history</span>
+            </div>
+        </div>
+
+        <!-- Top Progress -->
+        <div class="vote-timeline">
+            <div class="tl-progress-bar">
+                <div class="tl-fill" id="master-progress"></div>
+            </div>
+            <div class="tl-label">
+                <span id="plan-counter">1</span> / {{ plans.count }}
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="vote-empty-state" id="empty-state" style="display: none;">
+            <div class="empty-icon">✨</div>
+            <h2>All set!</h2>
+            <p>Your choices are locked in. Let's see what the group picks!</p>
+            <a href="{% url 'dashboard' %}" class="btn-primary-adv" style="text-decoration:none;">Back to Home</a>
+        </div>
+
+        <!-- Cards Carrousel Container -->
+        <div class="vote-viewport" id="viewport">
+            <div class="vote-deck-adv" id="deck">
+                <!-- Cards rendered via JS -->
+            </div>
+        </div>
+
+        <!-- Floating Actions -->
+        <div class="vote-float-actions" id="controls">
+            <button class="fa-btn fa-btn-skip" id="btn-skip">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            <button class="fa-btn fa-btn-star" id="btn-star">
+                <span class="material-symbols-outlined">star</span>
+            </button>
+            <button class="fa-btn fa-btn-vote" id="btn-love">
+                <span class="material-symbols-outlined">move_to_inbox</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script id="plans-data" type="application/json">
+[
+  {% for plan in plans %}
+  {
+    "id": {{ plan.id }},
+    "title": "{{ plan.title|escapejs }}",
+    "description": "{{ plan.description|escapejs }}",
+    "price": "{{ plan.price|escapejs }}",
+    "tag": "{{ plan.tag|escapejs }}",
+    "place": "{{ plan.place_name|escapejs }}",
+    "image": "{% if plan.image_url %}{{ plan.image_url }}{% else %}https://images.unsplash.com/photo-1517457373958-b7bdd4587205?q=80&w=800&auto=format&fit=crop{% endif %}"
+  }{% if not forloop.last %},{% endif %}
+  {% endfor %}
+]
+</script>
+
+<style>
+    .vote-view-wrapper-adv {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 5rem);
+        background: radial-gradient(circle at 50% 50%, #1e1b2e 0%, #0a0a0c 100%);
+        overflow: hidden;
+        position: relative;
+    }
+
+    /* Ambient light glow */
+    .vote-view-wrapper-adv::before {
+        content: "";
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(165, 165, 255, 0.08) 0%, transparent 70%);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+    }
+
+    .vote-app-adv {
+        width: 100%;
+        max-width: 460px;
+        height: 88vh;
+        min-height: 750px;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        padding: 2rem;
+        z-index: 1;
+    }
+
+    .vote-brand-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .brand-logo {
+        font-weight: 900;
+        font-size: 1.5rem;
+        letter-spacing: 0.15em;
+        color: white;
+        filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+    }
+
+    .brand-accent {
+        color: var(--secondary);
+        text-shadow: 0 0 15px var(--secondary);
+    }
+
+    .brand-actions {
+        display: flex;
+        gap: 1.8rem;
+        color: #888;
+    }
+
+    .brand-actions .material-symbols-outlined {
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .brand-actions .material-symbols-outlined:hover {
+        color: white;
+        transform: scale(1.1);
+    }
+
+    .vote-timeline {
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+        margin-bottom: 3rem;
+    }
+
+    .tl-progress-bar {
+        flex: 1;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 99px;
+        overflow: hidden;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    .tl-fill {
+        width: 0%;
+        height: 100%;
+        background: linear-gradient(90deg, #a5a5ff, #d277ff, #a5a5ff);
+        background-size: 200% 100%;
+        animation: shimmer 2s linear infinite;
+        border-radius: 99px;
+        transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes shimmer {
+        0% {
+            background-position: 200% 0;
+        }
+
+        100% {
+            background-position: -200% 0;
+        }
+    }
+
+    .tl-label {
+        font-size: 0.85rem;
+        font-weight: 800;
+        color: #666;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .vote-viewport {
+        flex: 1;
+        position: relative;
+        margin-bottom: 3rem;
+        perspective: 1000px;
+    }
+
+    .vote-deck-adv {
+        height: 100%;
+        display: flex;
+        transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .card-container {
+        flex: 0 0 100%;
+        height: 100%;
+        padding: 0 10px;
+        transition: transform 0.6s ease, opacity 0.6s ease;
+    }
+
+    .adv-vote-card {
+        height: 100%;
+        background: #141416;
+        border-radius: 3rem;
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transition: transform 0.3s;
+    }
+
+    .card-bg {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+    }
+
+    .card-bg img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: brightness(0.65) saturate(1.1);
+        transform: scale(1.05);
+        transition: transform 6s linear;
+    }
+
+    .adv-vote-card:hover .card-bg img {
+        transform: scale(1);
+    }
+
+    .card-bg::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top,
+                rgba(10, 10, 12, 1) 0%,
+                rgba(10, 10, 12, 0.8) 25%,
+                rgba(10, 10, 12, 0.2) 60%,
+                transparent 100%);
+    }
+
+    .card-content-adv {
+        position: relative;
+        padding: 3.5rem 2.5rem;
+        z-index: 2;
+    }
+
+    .card-tags {
+        display: flex;
+        gap: 0.6rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .tag-pill {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 0.5rem 1rem;
+        border-radius: 99px;
+        font-size: 0.7rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    .tag-pill--price {
+        color: #4ade80;
+        border-color: rgba(74, 222, 128, 0.2);
+    }
+
+    .tag-pill--cat {
+        color: #a78bfa;
+        border-color: rgba(167, 139, 250, 0.2);
+    }
+
+    .card-content-adv h2 {
+        font-size: 2.8rem;
+        font-weight: 900;
+        margin-bottom: 1rem;
+        line-height: 1;
+        letter-spacing: -0.05em;
+        color: white;
+    }
+
+    .card-content-adv p {
+        color: #999;
+        font-size: 1.05rem;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+        font-weight: 500;
+    }
+
+    .card-loc {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .loc-icon {
+        width: 2.8rem;
+        height: 2.8rem;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent);
+    }
+
+    .card-loc span:last-child {
+        font-size: 1rem;
+        font-weight: 700;
+        color: white;
+    }
+
+    .card-loc small {
+        display: block;
+        color: #555;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        margin-top: 0.1rem;
+    }
+
+    .vote-float-actions {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1.8rem;
+        position: relative;
+        z-index: 10;
+    }
+
+    .fa-btn {
+        width: 4.5rem;
+        height: 4.5rem;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.05);
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        backdrop-filter: blur(20px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .fa-btn .material-symbols-outlined {
+        font-size: 2rem;
+    }
+
+    .fa-btn-skip:hover {
+        background: #ef4444;
+        border-color: #ef4444;
+        transform: scale(1.1);
+        box-shadow: 0 15px 40px rgba(239, 68, 68, 0.4);
+    }
+
+    .fa-btn-star:hover {
+        background: #fbbf24;
+        border-color: #fbbf24;
+        color: #000;
+        transform: scale(1.1);
+        box-shadow: 0 15px 40px rgba(251, 191, 36, 0.4);
+    }
+
+    .fa-btn-love {
+        width: 5.5rem;
+        height: 5.5rem;
+        background: linear-gradient(135deg, #a5a5ff, #d277ff);
+        color: #000;
+        border: none;
+        box-shadow: 0 20px 50px rgba(165, 165, 255, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+    }
+
+    .fa-btn-love:hover {
+        transform: scale(1.15) rotate(8deg);
+        box-shadow: 0 25px 60px rgba(210, 119, 255, 0.6);
+    }
+
+    .vote-empty-state {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 1.5rem;
+    }
+
+    .empty-icon {
+        font-size: 5rem;
+        filter: drop-shadow(0 0 20px var(--accent));
+    }
+
+    .vote-empty-state h2 {
+        font-size: 2.5rem;
+        font-weight: 900;
+    }
+
+    .vote-empty-state p {
+        color: var(--muted);
+        font-size: 1.1rem;
+        max-width: 300px;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const plansData = document.getElementById("plans-data");
+        let plans = [];
+        try { plans = JSON.parse(plansData.textContent); } catch (e) { console.error(e); }
+
+        const deck = document.getElementById("deck");
+        const counter = document.getElementById("plan-counter");
+        const masterProgress = document.getElementById("master-progress");
+        const emptyState = document.getElementById("empty-state");
+        const controls = document.getElementById("controls");
+        const viewport = document.getElementById("viewport");
+
+        let currentIndex = 0;
+
+        if (!plans.length) {
+            emptyState.style.display = "flex";
+            controls.style.display = "none";
+            viewport.style.display = "none";
+            return;
+        }
+
+        plans.forEach((plan, idx) => {
+            const container = document.createElement("div");
+            container.className = "card-container";
+            container.innerHTML = `
+      <article class="adv-vote-card">
+        <div class="card-bg">
+          <img src="${plan.image}" alt="">
+        </div>
+        <div class="card-content-adv">
+          <div class="card-tags">
+            <span class="tag-pill tag-pill--price">$ $ $</span>
+            <span class="tag-pill tag-pill--cat">${plan.tag || 'Activity'}</span>
+            <span class="tag-pill">Top Rated</span>
+          </div>
+          <h2>${plan.title}</h2>
+          <p>${plan.description || 'Una experiència inoblidable per compartir amb el grup.'}</p>
+          <div class="card-loc">
+            <div class="loc-icon"><span class="material-symbols-outlined">location_on</span></div>
+            <div>
+              <span>${plan.place || 'Localització per confirmar'}</span>
+              <small>0.8 MILES AWAY</small>
+            </div>
+          </div>
+        </div>
+      </article>
+    `;
+            deck.appendChild(container);
+        });
+
+        const updateUI = () => {
+            deck.style.transform = `translateX(-${currentIndex * 100}%)`;
+            counter.textContent = currentIndex + 1;
+            masterProgress.style.width = `${((currentIndex + 1) / plans.length) * 100}%`;
+        };
+
+        const vote = (value) => {
+            const planId = plans[currentIndex].id;
+            fetch(`/api/vote/${planId}/`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken") },
+                body: JSON.stringify({ value })
+            });
+
+            if (currentIndex < plans.length - 1) {
+                currentIndex++;
+                updateUI();
+            } else {
+                viewport.style.display = "none";
+                controls.style.display = "none";
+                emptyState.style.display = "flex";
+                document.querySelector('.vote-timeline').style.opacity = "0";
+            }
+        };
+
+        document.getElementById("btn-skip").onclick = () => vote(-1);
+        document.getElementById("btn-love").onclick = () => vote(1);
+        document.getElementById("btn-star").onclick = () => vote(2); // Star as super-vote
+
+        function getCookie(name) {
+            let cv = null;
+            if (document.cookie && document.cookie !== '') {
+                const coo = document.cookie.split(';');
+                for (let i = 0; i < coo.length; i++) {
+                    const c = coo[i].trim();
+                    if (c.substring(0, name.length + 1) === (name + '=')) {
+                        cv = decodeURIComponent(c.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cv;
+        }
+
+        updateUI();
+    });
+</script>
+{% endblock %}

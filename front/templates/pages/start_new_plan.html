@@ -1,140 +1,1049 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <section class="plan-page">
-    <header class="plan-hero">
-      <div class="plan-hero__copy">
-        <p class="page-kicker">Plan Setup</p>
-        <h1>Start New Plan</h1>
-      </div>
+<section class="plan-page">
+  <header class="plan-hero">
+    <div class="plan-hero__content">
+      <p class="kicker">DASHBOARD > NEW PLAN</p>
+      <h1>Create your next <span>adventure.</span></h1>
+      <p class="hero-desc">Set the foundation for your group decision. From dinner spots to weekend getaways, Choosy
+        helps everyone weigh in.</p>
+    </div>
+  </header>
 
-      <div class="plan-hero__badge">
-        <span class="material-symbols-outlined">tune</span>
-      </div>
-    </header>
+  <form method="POST" action="{% url 'start_new_plan' %}" id="plan-form" class="plan-grid">
+    {% csrf_token %}
+    <input type="hidden" name="options_json" id="options-json-input" value="[]">
 
-    <section class="plan-layout">
-      <div class="plan-main">
-        <article class="plan-card plan-card--large">
-          <div class="plan-card__head">
-            <span class="plan-card__icon plan-card__icon--secondary">
-              <span class="material-symbols-outlined">groups</span>
-            </span>
-            <div>
-              <h2>Choose Group</h2>
-              <p>Selecciona amb quin grup d amics vols crear aquest plan.</p>
-            </div>
+    <!-- Main Content Area -->
+    <div class="plan-main-area">
+      <article class="glass-card">
+        <div class="form-row">
+          <div class="field-item">
+            <label class="s-label">PLAN NAME</label>
+            <input type="text" name="title" class="s-input" placeholder="e.g. Summer Cabin Trip 2024" required>
           </div>
-
-          <div class="plan-choice-grid">
-            <article class="plan-choice">
-              <span class="plan-choice__tag">Exemple</span>
-              <h3>Friend Group 01</h3>
-            </article>
-            <article class="plan-choice plan-choice--active">
-              <span class="plan-choice__tag">Seleccionat</span>
-              <h3>Friend Group 02</h3>
-            </article>
-            <article class="plan-choice">
-              <span class="plan-choice__tag">Exemple</span>
-              <h3>Friend Group 03</h3>
-            </article>
-          </div>
-        </article>
-
-        <div class="plan-row">
-          <article class="plan-card">
-            <div class="plan-card__head">
-              <span class="plan-card__icon">
-                <span class="material-symbols-outlined">lightbulb</span>
-              </span>
-              <div>
-                <h2>Plan Idea</h2>
-                <p>Idea principal.</p>
-              </div>
-            </div>
-
-            <div class="plan-card__body-copy">
-              <p>Proposta de prova.</p>
-            </div>
-          </article>
-
-          <article class="plan-card">
-            <div class="plan-card__head">
-              <span class="plan-card__icon plan-card__icon--tertiary">
-                <span class="material-symbols-outlined">calendar_month</span>
-              </span>
-              <div>
-                <h2>Date & Time</h2>
-                <p>Dia i hora.</p>
-              </div>
-            </div>
-
-            <div class="plan-slot-list">
-              <div class="plan-slot">
-                <strong>Friday</strong>
-                <span>Aixo es un exemple</span>
-              </div>
-              <div class="plan-slot">
-                <strong>Saturday</strong>
-                <span>Text provisional</span>
-              </div>
-            </div>
-          </article>
         </div>
-
-        <article class="plan-card">
-          <div class="plan-card__head">
-            <span class="plan-card__icon plan-card__icon--secondary">
-              <span class="material-symbols-outlined">tune</span>
-            </span>
-              <div>
-                <h2>Preferences</h2>
-                <p>Filters basics.</p>
-              </div>
-            </div>
-
-          <div class="plan-pill-row">
-            <span class="plan-pill">Outdoor exemple</span>
-            <span class="plan-pill">Budget exemple</span>
-            <span class="plan-pill">Night plan</span>
-            <span class="plan-pill">Text provisional</span>
+        <div class="form-row">
+          <div class="field-item">
+            <label class="s-label">DESCRIPTION</label>
+            <textarea name="description" class="s-input s-textarea" rows="4"
+              placeholder="What are we deciding on? Give your group some context..."></textarea>
           </div>
-        </article>
+        </div>
+      </article>
+
+      <div class="section-divider">
+        <h2>Dates & Locations</h2>
+        <p>Propose multiple options for the group to vote on.</p>
+        <button type="button" class="btn-ghost" id="add-option-trigger">
+          <span class="material-symbols-outlined">add_circle</span>
+          Add Option
+        </button>
       </div>
 
-      <aside class="plan-side">
-        <article class="plan-card plan-card--side">
-          <div class="plan-card__head">
-            <span class="plan-card__icon">
-              <span class="material-symbols-outlined">visibility</span>
-            </span>
-              <div>
-                <h2>Preview</h2>
-                <p>Resum visual.</p>
-              </div>
-            </div>
+      <div id="options-stack" class="options-stack">
+        <!-- Dynamic Option Cards -->
+      </div>
+    </div>
 
-          <div class="plan-preview">
-            <div class="plan-preview__block">
-              <span>Group</span>
-              <strong>Friend Group 02</strong>
+    <!-- Sidebar Area -->
+    <div class="plan-sidebar">
+      <article class="glass-card">
+        <label class="s-label">SELECT GROUP</label>
+        <div class="group-select-list">
+          {% for g in groups %}
+          <label class="group-radio-item {% if forloop.first %}is-active{% endif %}">
+            <input type="radio" name="group_id" value="{{ g.id }}" {% if forloop.first %}checked{% endif %}
+              style="display:none;">
+            <div class="group-radio-info">
+              <strong>{{ g.name }}</strong>
+              <small>{{ g.members.count }} members</small>
             </div>
-            <div class="plan-preview__block">
-              <span>Idea</span>
-              <strong>Aixo es un exemple de plan</strong>
-            </div>
-            <div class="plan-preview__block">
-              <span>Date</span>
-              <strong>Saturday evening</strong>
-            </div>
-            <div class="plan-preview__block">
-              <span>Status</span>
-              <strong>Draft visual</strong>
-            </div>
+          </label>
+          {% endfor %}
+        </div>
+      </article>
+
+      <article class="glass-card">
+        <label class="s-label">INVITE MEMBERS</label>
+        <div class="invite-container">
+          <div class="invite-tags" id="chips-container">
+            <span class="i-tag">Felix <span class="tag-x">×</span></span>
+            <span class="i-tag">Amara <span class="tag-x">×</span></span>
           </div>
-        </article>
-      </aside>
-    </section>
-  </section>
+          <input type="text" class="i-input" placeholder="Search friends...">
+        </div>
+        <div class="invite-footer">
+          <div class="avatars-group">
+            <span class="avat-tiny"></span><span class="avat-tiny"></span>
+          </div>
+          <button type="button" class="link-btn">+ Invite Group</button>
+        </div>
+      </article>
+
+      <div class="submission-box">
+        <button type="button" class="btn-outline-full">Save as Draft</button>
+        <button type="submit" class="btn-primary-full submit-plan-btn">
+          <span>Create Plan</span>
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <footer class="plan-highlights">
+    <div class="h-item">
+      <span class="material-symbols-outlined">schedule</span>
+      <div>
+        <h4>Decision Deadlines</h4>
+        <p>Ensure the group makes a final choice before the clock runs out.</p>
+      </div>
+    </div>
+    <div class="h-item">
+      <span class="material-symbols-outlined">analytics</span>
+      <div>
+        <h4>Smart Voting</h4>
+        <p>Choosy uses ranked-choice logic to find the outcome everyone likes best.</p>
+      </div>
+    </div>
+  </footer>
+</section>
+
+<style>
+  :root {
+    --glass: rgba(20, 20, 22, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --accent: #a5a5ff;
+    --accent-glow: rgba(165, 165, 255, 0.3);
+    --muted: #888;
+  }
+
+  .plan-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .plan-hero {
+    margin-bottom: 3.5rem;
+  }
+
+  .kicker {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    margin-bottom: 0.75rem;
+  }
+
+  .plan-hero h1 {
+    font-size: 3.8rem;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    margin-bottom: 1rem;
+    line-height: 1;
+  }
+
+  .plan-hero h1 span {
+    color: var(--accent);
+  }
+
+  .hero-desc {
+    color: var(--muted);
+    font-size: 1.15rem;
+    max-width: 650px;
+    line-height: 1.6;
+  }
+
+  .plan-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 2.5rem;
+    align-items: start;
+  }
+
+  .glass-card {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 2rem;
+    backdrop-filter: blur(16px);
+    margin-bottom: 1.5rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  }
+
+  .s-label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    margin-bottom: 1rem;
+    display: block;
+  }
+
+  .s-input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    color: white;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .s-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-glow);
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  .s-textarea {
+    resize: vertical;
+    min-height: 120px;
+  }
+
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin: 3rem 0 2rem;
+  }
+
+  .section-divider h2 {
+    font-size: 1.8rem;
+    font-weight: 800;
+  }
+
+  .section-divider p {
+    color: var(--muted);
+    font-size: 0.95rem;
+    flex: 1;
+  }
+
+  .btn-ghost {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    color: white;
+    padding: 0.75rem 1.25rem;
+    border-radius: 99px;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .options-stack {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .opt-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    position: relative;
+    animation: fadeInUp 0.5s cubic-bezier(0.23, 1, 0.32, 1) both;
+  }
+
+  .opt-idx {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #333;
+  }
+
+  .opt-fields {
+    flex: 1;
+  }
+
+  .opt-grid-inner {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 1.5rem;
+  }
+
+  .mini-box {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    padding: 1rem;
+  }
+
+  .mini-box strong {
+    display: block;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .opt-x {
+    color: var(--muted);
+    cursor: pointer;
+    padding: 0.5rem;
+  }
+
+  .opt-x:hover {
+    color: #ff5e5e;
+  }
+
+  .group-select-list {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .group-radio-item {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .group-radio-item.is-active {
+    border-color: var(--accent);
+    background: rgba(165, 165, 255, 0.08);
+    box-shadow: 0 5px 15px rgba(165, 165, 255, 0.1);
+  }
+
+  .group-radio-info strong {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 0.1rem;
+  }
+
+  .group-radio-info small {
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  .invite-container {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 1rem;
+    min-height: 100px;
+  }
+
+  .invite-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .i-tag {
+    background: #222;
+    border: 1px solid var(--glass-border);
+    border-radius: 99px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .tag-x {
+    font-size: 1.1rem;
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  .i-input {
+    background: transparent;
+    border: none;
+    color: white;
+    width: 100%;
+    outline: none;
+  }
+
+  .invite-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+  }
+
+  .avatars-group {
+    display: flex;
+  }
+
+  .avat-tiny {
+    width: 1.5rem;
+    height: 1.5rem;
+    background: #333;
+    border: 2px solid #151515;
+    border-radius: 50%;
+    margin-right: -0.5rem;
+  }
+
+  .link-btn {
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .submission-box {
+    margin-top: 2rem;
+    display: grid;
+    gap: 1rem;
+  }
+
+  .btn-outline-full {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: white;
+    border-radius: 99px;
+    padding: 1.2rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .btn-primary-full {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 99px;
+    padding: 1.2rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    box-shadow: 0 10px 30px var(--accent-glow);
+    transition: 0.3s;
+  }
+
+  .btn-primary-full:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 40px var(--accent-glow);
+  }
+
+  /* Gamer Map Styling */
+  .opt-map-container {
+    width: 250px;
+    height: 180px;
+    margin-left: auto;
+  }
+
+  .map-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid var(--accent);
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+
+  .map-frame {
+    width: 100%;
+    height: 100%;
+    filter: invert(100%) hue-rotate(180deg) brightness(0.8) contrast(1.2) saturate(1.5);
+  }
+
+  .map-overlay-glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: inset 0 0 40px rgba(165, 165, 255, 0.2);
+    border: 2px solid var(--accent);
+    border-radius: 18px;
+  }
+
+  .schedule-inputs-custom {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-top: 1rem;
+  }
+
+  .custom-picker-box {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    cursor: pointer;
+    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+  }
+
+  .custom-picker-box.is-open {
+    z-index: 100 !important;
+  }
+
+  .custom-picker-box:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--accent);
+    transform: translateX(4px);
+  }
+
+  .custom-picker-box .material-symbols-outlined {
+    color: var(--accent);
+    font-size: 1.3rem;
+  }
+
+  .custom-picker-box input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .picker-val {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: white;
+    letter-spacing: 0.02em;
+  }
+
+  /* Time Picker Overlay */
+  .time-picker-overlay {
+    position: absolute;
+    top: 110%;
+    left: 0;
+    width: 200px;
+    background: #141416;
+    border: 1px solid var(--accent);
+    border-radius: 16px;
+    z-index: 2000;
+    padding: 1rem;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.8);
+    display: none;
+    backdrop-filter: blur(25px);
+    animation: slideDown 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+
+  .time-picker-overlay.is-active {
+    display: block;
+  }
+
+  .tp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+  }
+
+  .tp-col {
+    height: 160px;
+    overflow-y: auto;
+    scrollbar-width: none;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 10px;
+    padding: 0.4rem;
+  }
+
+  .tp-col::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tp-item {
+    padding: 0.6rem;
+    text-align: center;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-weight: 800;
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+  }
+
+  .tp-item:hover {
+    background: rgba(165, 165, 255, 0.15);
+    color: var(--accent);
+  }
+
+  .tp-item.is-selected {
+    background: var(--accent);
+    color: #000;
+    box-shadow: 0 0 15px var(--accent-glow);
+  }
+
+  /* Calendar Picker Overlay */
+  .calendar-overlay {
+    position: absolute;
+    top: 110%;
+    left: 0;
+    width: 280px;
+    background: #141416;
+    /* Near solid to hide content below */
+    border: 1px solid var(--accent);
+    border-radius: 20px;
+    z-index: 2000;
+    padding: 1.2rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 0 1000vw rgba(0, 0, 0, 0.1);
+    /* Subtle dimming */
+    display: none;
+    backdrop-filter: blur(30px);
+    animation: slideDown 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+
+  .calendar-overlay.is-active {
+    display: block;
+  }
+
+  .cal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .cal-header h4 {
+    font-size: 0.9rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .cal-nav {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .cal-nav-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    padding: 0.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+  }
+
+  .cal-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--accent);
+  }
+
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+  }
+
+  .cal-weekday {
+    font-size: 0.65rem;
+    font-weight: 900;
+    color: #555;
+    text-align: center;
+    padding-bottom: 0.5rem;
+    text-transform: uppercase;
+  }
+
+  .cal-day {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #999;
+    text-align: center;
+    padding: 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .cal-day:not(.is-empty):hover {
+    background: rgba(165, 165, 255, 0.1);
+    color: var(--accent);
+  }
+
+  .cal-day.is-today {
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent);
+    border-radius: 0;
+  }
+
+  .cal-day.is-selected {
+    background: var(--accent);
+    color: #000;
+    box-shadow: 0 0 15px var(--accent-glow);
+  }
+
+  .cal-day.is-empty {
+    cursor: default;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .loc-input-group {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-top: 0.8rem;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.8rem 1rem;
+    border-radius: 14px;
+    border: 1px solid var(--glass-border);
+  }
+
+  .s-addr-input {
+    background: transparent;
+    border: none;
+    color: white;
+    outline: none;
+    flex: 1;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+
+  .plan-highlights {
+    margin-top: 5rem;
+    border-top: 1px solid var(--glass-border);
+    padding-top: 3rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+  }
+
+  .h-item {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .h-item .material-symbols-outlined {
+    background: #1a1a1c;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+  }
+
+  .h-item h4 {
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+    font-weight: 800;
+  }
+
+  .h-item p {
+    color: var(--muted);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 900px) {
+    .plan-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .plan-sidebar {
+      order: -1;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const stack = document.getElementById("options-stack");
+    const addBtn = document.getElementById("add-option-trigger");
+    const jsonInp = document.getElementById("options-json-input");
+    const form = document.getElementById("plan-form");
+
+    const addOption = (defaultTitle = "", defaultAddr = "") => {
+      const card = document.createElement("div");
+      card.className = "opt-card";
+      card.innerHTML = `
+            <div class="opt-idx">01</div>
+            <div class="opt-fields">
+                <input type="text" class="s-input opt-t" placeholder="Option Name (e.g. Sunset Beach Dinner)" 
+                    value="${defaultTitle}" 
+                    style="margin-bottom:1.2rem; padding: 1.1rem; font-weight: 800; font-size: 1.1rem; letter-spacing: -0.02em;">
+                <div class="opt-grid-inner">
+                    <div class="mini-box">
+                        <strong>SCHEDULE (24H)</strong>
+                        <div class="schedule-inputs-custom">
+                           <div class="custom-picker-box date-box-trigger">
+                               <span class="material-symbols-outlined">calendar_today</span>
+                               <span class="picker-val date-display">21/07/2024</span>
+                               <input type="date" class="opt-date" value="2024-07-21" style="position:absolute; inset:0; opacity:0; pointer-events:none;">
+                               <div class="calendar-overlay">
+                                   <div class="cal-header">
+                                       <button type="button" class="cal-nav-btn prev-mon"><span class="material-symbols-outlined">chevron_left</span></button>
+                                       <h4 class="cal-month-year">July 2024</h4>
+                                       <button type="button" class="cal-nav-btn next-mon"><span class="material-symbols-outlined">chevron_right</span></button>
+                                   </div>
+                                   <div class="cal-grid">
+                                       <div class="cal-weekday">S</div><div class="cal-weekday">M</div><div class="cal-weekday">T</div><div class="cal-weekday">W</div><div class="cal-weekday">T</div><div class="cal-weekday">F</div><div class="cal-weekday">S</div>
+                                       <!-- days will be injected here -->
+                                   </div>
+                               </div>
+                           </div>
+                           <div class="custom-picker-box time-box-trigger">
+                               <span class="material-symbols-outlined">schedule</span>
+                               <span class="picker-val time-display">20:00</span>
+                               <input type="time" class="opt-time" value="20:00" style="position:absolute; inset:0; opacity:0; pointer-events:none;">
+                               <div class="time-picker-overlay">
+                                   <div class="tp-grid">
+                                       <div class="tp-col h-col"></div>
+                                       <div class="tp-col m-col"></div>
+                                   </div>
+                               </div>
+                           </div>
+                        </div>
+                    </div>
+                    <div class="mini-box">
+                        <strong>LOCATION</strong>
+                        <div class="loc-input-group">
+                            <span class="material-symbols-outlined" style="color:var(--accent);">location_on</span>
+                            <input type="text" class="opt-addr s-addr-input" placeholder="Search address..." value="${defaultAddr}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="opt-map-container">
+                <div class="map-wrapper gamer-map">
+                    <iframe 
+                        class="map-frame"
+                        width="100%" 
+                        height="100%" 
+                        frameborder="0" 
+                        style="border:0"
+                        src="https://maps.google.com/maps?q=${encodeURIComponent(defaultAddr || 'Lleida')}&t=&z=13&ie=UTF8&iwloc=&output=embed" 
+                        allowfullscreen>
+                    </iframe>
+                    <div class="map-overlay-glow"></div>
+                </div>
+            </div>
+            <div class="opt-x"><span class="material-symbols-outlined">delete</span></div>
+        `;
+      stack.appendChild(card);
+      updateIndices();
+
+      const addrInput = card.querySelector(".opt-addr");
+      const mapFrame = card.querySelector(".map-frame");
+      const dateInput = card.querySelector(".opt-date");
+      const timeInput = card.querySelector(".opt-time");
+      const dateDisplay = card.querySelector(".date-display");
+      const timeDisplay = card.querySelector(".time-display");
+      const dateBox = card.querySelector(".date-box-trigger");
+      const timeBox = card.querySelector(".time-box-trigger");
+
+      // Custom Time Picker Logic
+      const tpOverlay = timeBox.querySelector(".time-picker-overlay");
+      const hCol = tpOverlay.querySelector(".h-col");
+      const mCol = tpOverlay.querySelector(".m-col");
+
+      for (let i = 0; i < 24; i++) {
+        const item = document.createElement("div");
+        item.className = "tp-item";
+        item.textContent = i.toString().padStart(2, '0');
+        item.onclick = (e) => {
+          e.stopPropagation();
+          hCol.querySelectorAll(".tp-item").forEach(x => x.classList.remove("is-selected"));
+          item.classList.add("is-selected");
+          updateTimeVal();
+        };
+        hCol.appendChild(item);
+      }
+      [0, 15, 30, 45].forEach(i => {
+        const item = document.createElement("div");
+        item.className = "tp-item";
+        item.textContent = i.toString().padStart(2, '0');
+        item.onclick = (e) => {
+          e.stopPropagation();
+          mCol.querySelectorAll(".tp-item").forEach(x => x.classList.remove("is-selected"));
+          item.classList.add("is-selected");
+          updateTimeVal();
+        };
+        mCol.appendChild(item);
+      });
+
+      const updateTimeVal = () => {
+        const h = hCol.querySelector(".is-selected")?.textContent || "20";
+        const m = mCol.querySelector(".is-selected")?.textContent || "00";
+        timeInput.value = `${h}:${m}`;
+        timeDisplay.textContent = `${h}:${m}`;
+      };
+
+      // Custom Calendar Logic
+      const calOverlay = dateBox.querySelector(".calendar-overlay");
+      const calGrid = calOverlay.querySelector(".cal-grid");
+      const calMonthLabel = calOverlay.querySelector(".cal-month-year");
+      const prevMonBtn = calOverlay.querySelector(".prev-mon");
+      const nextMonBtn = calOverlay.querySelector(".next-mon");
+
+      let currentViewDate = new Date(2024, 6, 1); // July 2024
+
+      const renderCal = () => {
+        // Clear previous days (keep weekdays)
+        const dayElements = calGrid.querySelectorAll(".cal-day, .cal-weekday-spacer");
+        dayElements.forEach(el => el.remove());
+
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        calMonthLabel.textContent = `${months[currentViewDate.getMonth()]} ${currentViewDate.getFullYear()}`;
+
+        const firstDay = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth(), 1).getDay();
+        const daysInMonth = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth() + 1, 0).getDate();
+
+        // Spacers for first week
+        for (let i = 0; i < firstDay; i++) {
+          const spacer = document.createElement("div");
+          spacer.className = "cal-day is-empty";
+          calGrid.appendChild(spacer);
+        }
+
+        // Days
+        const today = new Date();
+        const todayStr = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
+
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dayEl = document.createElement("div");
+          dayEl.className = "cal-day";
+          dayEl.textContent = d;
+
+          const dateStr = `${currentViewDate.getFullYear()}-${(currentViewDate.getMonth() + 1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+          if (dateInput.value === dateStr) dayEl.classList.add("is-selected");
+          if (todayStr === dateStr) dayEl.classList.add("is-today");
+
+          dayEl.onclick = (e) => {
+            e.stopPropagation();
+            dateInput.value = dateStr;
+            const [y, m, day] = dateStr.split("-");
+            dateDisplay.textContent = `${day}/${m}/${y}`;
+            calOverlay.classList.remove("is-active");
+          };
+          calGrid.appendChild(dayEl);
+        }
+      };
+
+      prevMonBtn.onclick = (e) => { e.stopPropagation(); currentViewDate.setMonth(currentViewDate.getMonth() - 1); renderCal(); };
+      nextMonBtn.onclick = (e) => { e.stopPropagation(); currentViewDate.setMonth(currentViewDate.getMonth() + 1); renderCal(); };
+
+      // Trigger pickers on box click
+      dateBox.onclick = (e) => {
+        e.stopPropagation();
+        document.querySelectorAll(".calendar-overlay, .time-picker-overlay").forEach(o => {
+          if (o !== calOverlay) {
+            o.classList.remove("is-active");
+            o.closest(".custom-picker-box").classList.remove("is-open");
+          }
+        });
+        calOverlay.classList.toggle("is-active");
+        dateBox.classList.toggle("is-open");
+        renderCal();
+      };
+
+      timeBox.onclick = (e) => {
+        e.stopPropagation();
+        document.querySelectorAll(".calendar-overlay, .time-picker-overlay").forEach(o => {
+          if (o !== tpOverlay) {
+            o.classList.remove("is-active");
+            o.closest(".custom-picker-box").classList.remove("is-open");
+          }
+        });
+        tpOverlay.classList.toggle("is-active");
+        timeBox.classList.toggle("is-open");
+      };
+
+      document.addEventListener("click", () => {
+        calOverlay.classList.remove("is-active");
+        tpOverlay.classList.remove("is-active");
+        dateBox.classList.remove("is-open");
+        timeBox.classList.remove("is-open");
+      });
+      timeInput.addEventListener("change", () => {
+        timeDisplay.textContent = timeInput.value;
+      });
+
+      let timeout = null;
+      addrInput.addEventListener("input", () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+          const q = encodeURIComponent(addrInput.value || "Lleida");
+          mapFrame.src = `https://maps.google.com/maps?q=${q}&t=&z=13&ie=UTF8&iwloc=&output=embed`;
+        }, 600);
+      });
+
+      card.querySelector(".opt-x").onclick = () => {
+        card.remove();
+        updateIndices();
+      };
+    };
+
+    const updateIndices = () => {
+      document.querySelectorAll(".opt-idx").forEach((el, idx) => {
+        el.textContent = (idx + 1).toString().padStart(2, '0');
+      });
+    };
+
+    const sync = () => {
+      const cards = document.querySelectorAll(".opt-card");
+      const data = Array.from(cards).map((c, i) => {
+        const date = c.querySelector(".opt-date").value;
+        const time = c.querySelector(".opt-time").value;
+        return {
+          title: c.querySelector(".opt-t").value,
+          scheduled_for: `${date}T${time}:00Z`,
+          place_name: c.querySelector(".opt-addr").value,
+          address: c.querySelector(".opt-addr").value,
+          tag: i % 2 === 0 ? "OUTDOOR" : "TOP RATED"
+        };
+      });
+      jsonInp.value = JSON.stringify(data);
+    };
+
+    addBtn.onclick = () => addOption();
+
+    // Default first option with Lleida context
+    addOption("Sopar de benvinguda @ UdL", "Universitat de Lleida, Campus Cappont");
+
+    document.querySelectorAll(".group-radio-item").forEach(item => {
+      item.onclick = () => {
+        document.querySelectorAll(".group-radio-item").forEach(i => i.classList.remove("is-active"));
+        item.classList.add("is-active");
+        item.querySelector("input").checked = true;
+      };
+    });
+
+    form.onsubmit = sync;
+  });
+</script>
 {% endblock %}
