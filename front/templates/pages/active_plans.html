@@ -6,47 +6,179 @@
       <div class="plans-hero__copy">
         <p class="page-kicker">Plans Overview</p>
         <h1>Active Plans</h1>
-        <p>Primera versio simple de la pantalla de plans actius.</p>
+        <p>Vista general dels plans que encara estan actius, amb les votacions obertes, les propostes principals i l estat actual de cada grup.</p>
       </div>
     </header>
 
     <section class="plans-layout">
-      <article class="plans-card plans-card--wide">
-        <div class="plans-card__head">
-          <span class="plans-card__icon">
-            <span class="material-symbols-outlined">event_available</span>
-          </span>
-          <div>
-            <h2>Plan principal</h2>
+      <div class="plans-main">
+        <article class="plans-card plans-card--hero">
+          <div class="plans-card__head plans-card__head--spread">
+            <div class="plans-card__title">
+              <span class="plans-card__icon">
+                <span class="material-symbols-outlined">how_to_vote</span>
+              </span>
+              <div>
+                <h2>Voting in progress</h2>
+                <p>Plan actiu del grup En panas</p>
+              </div>
+            </div>
+
+            <span class="plans-status">Open voting</span>
           </div>
+
+          <div class="plans-hero-grid">
+            <div class="plans-hero-copy">
+              <strong>Sopar de dissabte</strong>
+              <p>Aquest bloc mostra el plan principal que ara mateix s esta votant i serveix per veure rapidament quina decisio va per davant.</p>
+            </div>
+
+            <div class="plans-score-card">
+              <span>Current leader</span>
+              <strong>Anar a fer tapes</strong>
+              <p>Opcio amb mes suport fins ara</p>
+            </div>
+          </div>
+        </article>
+
+        <div class="plans-grid">
+          <article class="plans-card">
+            <div class="plans-card__head">
+              <span class="plans-card__icon plans-card__icon--secondary">
+                <span class="material-symbols-outlined">groups</span>
+              </span>
+              <div>
+                <h2>Groups voting</h2>
+                <p>Resum dels grups que tenen alguna votacio oberta</p>
+              </div>
+            </div>
+
+            <div class="plans-mini-list">
+              <div class="plans-mini-item">
+                <strong>En panas</strong>
+                <span>2 plans oberts</span>
+              </div>
+              <div class="plans-mini-item">
+                <strong>Equipo LEC</strong>
+                <span>1 votacio activa</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="plans-card">
+            <div class="plans-card__head">
+              <span class="plans-card__icon plans-card__icon--tertiary">
+                <span class="material-symbols-outlined">local_activity</span>
+              </span>
+              <div>
+                <h2>Top proposals</h2>
+                <p>Opcions que estan rebent mes vots ara mateix</p>
+              </div>
+            </div>
+
+            <div class="plans-mini-list">
+              <div class="plans-mini-item">
+                <strong>Anar a fer tapes</strong>
+                <span>8 votes</span>
+              </div>
+              <div class="plans-mini-item">
+                <strong>Cinema a la tarda</strong>
+                <span>6 votes</span>
+              </div>
+              <div class="plans-mini-item">
+                <strong>Sortida a la platja</strong>
+                <span>5 votes</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="plans-card">
+            <div class="plans-card__head">
+              <span class="plans-card__icon">
+                <span class="material-symbols-outlined">hourglass_top</span>
+              </span>
+              <div>
+                <h2>Closing soon</h2>
+                <p>Plans que estan a punt de finalitzar la votacio</p>
+              </div>
+            </div>
+
+            <div class="plans-mini-list">
+              <div class="plans-mini-item">
+                <strong>Brunch de diumenge</strong>
+                <span>Ends in 2h</span>
+              </div>
+              <div class="plans-mini-item">
+                <strong>Nit de peli</strong>
+                <span>Ends tonight</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="plans-card">
+            <div class="plans-card__head">
+              <span class="plans-card__icon plans-card__icon--secondary">
+                <span class="material-symbols-outlined">checklist</span>
+              </span>
+              <div>
+                <h2>Plan status</h2>
+                <p>Estats generals per entendre en quin punt esta cada plan</p>
+              </div>
+            </div>
+
+            <div class="plans-pill-row">
+              <span class="plans-pill">Voting</span>
+              <span class="plans-pill">Pending</span>
+              <span class="plans-pill">Confirmed</span>
+            </div>
+          </article>
         </div>
-      </article>
-
-      <div class="plans-grid">
-        <article class="plans-card">
-          <div class="plans-card__head">
-            <span class="plans-card__icon plans-card__icon--secondary">
-              <span class="material-symbols-outlined">schedule</span>
-            </span>
-            <div>
-              <h2>Next Plan</h2>
-              <p>Bloc provisional.</p>
-            </div>
-          </div>
-        </article>
-
-        <article class="plans-card">
-          <div class="plans-card__head">
-            <span class="plans-card__icon plans-card__icon--tertiary">
-              <span class="material-symbols-outlined">groups</span>
-            </span>
-            <div>
-              <h2>Group Plan</h2>
-              <p>Estructura base.</p>
-            </div>
-          </div>
-        </article>
       </div>
+
+      <aside class="plans-side">
+        <article class="plans-card plans-card--side">
+          <div class="plans-card__head">
+              <span class="plans-card__icon plans-card__icon--tertiary">
+                <span class="material-symbols-outlined">emoji_events</span>
+              </span>
+              <div>
+                <h2>Winning now</h2>
+                <p>Proposta que lidera la votacio en aquest moment</p>
+              </div>
+            </div>
+
+          <div class="plans-winning">
+            <strong>Anar a fer tapes</strong>
+            <span>En panas</span>
+            <div class="plans-winning__meter">
+              <div class="plans-winning__fill"></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="plans-card plans-card--side">
+          <div class="plans-card__head">
+              <span class="plans-card__icon">
+                <span class="material-symbols-outlined">notifications_active</span>
+              </span>
+              <div>
+                <h2>Recent activity</h2>
+                <p>Ultims canvis o accions relacionades amb les votacions</p>
+              </div>
+            </div>
+
+          <div class="plans-mini-list">
+            <div class="plans-mini-item">
+              <strong>2 vots nous</strong>
+              <span>Anar a fer tapes</span>
+            </div>
+            <div class="plans-mini-item">
+              <strong>1 proposta nova</strong>
+              <span>Cinema a la tarda</span>
+            </div>
+          </div>
+        </article>
+      </aside>
     </section>
   </section>
 {% endblock %}
