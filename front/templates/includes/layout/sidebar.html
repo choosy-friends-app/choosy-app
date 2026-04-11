@@ -29,7 +29,7 @@
     </nav>
 
     <div class="rail-foot">
-      <button class="rail-cta" type="button">Start New Plan</button>
+      <a class="rail-cta {% if active_page == 'start_new_plan' %}is-active{% endif %}" href="{% url 'start_new_plan' %}">Start New Plan</a>
       <span class="rail-profile">
         <span class="material-symbols-outlined">account_circle</span>
         <span>Profile</span>

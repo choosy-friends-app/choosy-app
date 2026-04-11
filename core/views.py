@@ -23,3 +23,15 @@ def groups(request):
             "topbar_context": "Groups",
         },
     )
+
+
+def start_new_plan(request):
+    return render(
+        request,
+        "pages/start_new_plan.html",
+        {
+            "meta_title": "Start New Plan",
+            "active_page": "start_new_plan",
+            "topbar_context": "Start New Plan",
+        },
+    )
