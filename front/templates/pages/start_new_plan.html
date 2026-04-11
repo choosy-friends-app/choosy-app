@@ -574,6 +574,111 @@
     box-shadow: 0 0 15px var(--accent-glow);
   }
 
+  /* Calendar Picker Overlay */
+  .calendar-overlay {
+    position: absolute;
+    top: 110%;
+    left: 0;
+    width: 280px;
+    background: rgba(20, 20, 22, 0.98);
+    border: 1px solid var(--accent);
+    border-radius: 20px;
+    z-index: 1001;
+    padding: 1.2rem;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.8);
+    display: none;
+    backdrop-filter: blur(25px);
+    animation: slideDown 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+
+  .calendar-overlay.is-active {
+    display: block;
+  }
+
+  .cal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .cal-header h4 {
+    font-size: 0.9rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .cal-nav {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .cal-nav-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    padding: 0.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+  }
+
+  .cal-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--accent);
+  }
+
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+  }
+
+  .cal-weekday {
+    font-size: 0.65rem;
+    font-weight: 900;
+    color: #555;
+    text-align: center;
+    padding-bottom: 0.5rem;
+    text-transform: uppercase;
+  }
+
+  .cal-day {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #999;
+    text-align: center;
+    padding: 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .cal-day:not(.is-empty):hover {
+    background: rgba(165, 165, 255, 0.1);
+    color: var(--accent);
+  }
+
+  .cal-day.is-today {
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent);
+    border-radius: 0;
+  }
+
+  .cal-day.is-selected {
+    background: var(--accent);
+    color: #000;
+    box-shadow: 0 0 15px var(--accent-glow);
+  }
+
+  .cal-day.is-empty {
+    cursor: default;
+  }
+
   @keyframes slideDown {
     from {
       opacity: 0;
@@ -692,6 +797,17 @@
                                <span class="material-symbols-outlined">calendar_today</span>
                                <span class="picker-val date-display">21/07/2024</span>
                                <input type="date" class="opt-date" value="2024-07-21" style="position:absolute; inset:0; opacity:0; pointer-events:none;">
+                               <div class="calendar-overlay">
+                                   <div class="cal-header">
+                                       <button type="button" class="cal-nav-btn prev-mon"><span class="material-symbols-outlined">chevron_left</span></button>
+                                       <h4 class="cal-month-year">July 2024</h4>
+                                       <button type="button" class="cal-nav-btn next-mon"><span class="material-symbols-outlined">chevron_right</span></button>
+                                   </div>
+                                   <div class="cal-grid">
+                                       <div class="cal-weekday">S</div><div class="cal-weekday">M</div><div class="cal-weekday">T</div><div class="cal-weekday">W</div><div class="cal-weekday">T</div><div class="cal-weekday">F</div><div class="cal-weekday">S</div>
+                                       <!-- days will be injected here -->
+                                   </div>
+                               </div>
                            </div>
                            <div class="custom-picker-box time-box-trigger">
                                <span class="material-symbols-outlined">schedule</span>
@@ -780,19 +896,81 @@
         timeDisplay.textContent = `${h}:${m}`;
       };
 
+      // Custom Calendar Logic
+      const calOverlay = dateBox.querySelector(".calendar-overlay");
+      const calGrid = calOverlay.querySelector(".cal-grid");
+      const calMonthLabel = calOverlay.querySelector(".cal-month-year");
+      const prevMonBtn = calOverlay.querySelector(".prev-mon");
+      const nextMonBtn = calOverlay.querySelector(".next-mon");
+
+      let currentViewDate = new Date(2024, 6, 1); // July 2024
+
+      const renderCal = () => {
+        // Clear previous days (keep weekdays)
+        const dayElements = calGrid.querySelectorAll(".cal-day, .cal-weekday-spacer");
+        dayElements.forEach(el => el.remove());
+
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        calMonthLabel.textContent = `${months[currentViewDate.getMonth()]} ${currentViewDate.getFullYear()}`;
+
+        const firstDay = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth(), 1).getDay();
+        const daysInMonth = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth() + 1, 0).getDate();
+
+        // Spacers for first week
+        for (let i = 0; i < firstDay; i++) {
+          const spacer = document.createElement("div");
+          spacer.className = "cal-day is-empty";
+          calGrid.appendChild(spacer);
+        }
+
+        // Days
+        const today = new Date();
+        const todayStr = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
+
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dayEl = document.createElement("div");
+          dayEl.className = "cal-day";
+          dayEl.textContent = d;
+
+          const dateStr = `${currentViewDate.getFullYear()}-${(currentViewDate.getMonth() + 1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+          if (dateInput.value === dateStr) dayEl.classList.add("is-selected");
+          if (todayStr === dateStr) dayEl.classList.add("is-today");
+
+          dayEl.onclick = (e) => {
+            e.stopPropagation();
+            dateInput.value = dateStr;
+            const [y, m, day] = dateStr.split("-");
+            dateDisplay.textContent = `${day}/${m}/${y}`;
+            calOverlay.classList.remove("is-active");
+          };
+          calGrid.appendChild(dayEl);
+        }
+      };
+
+      prevMonBtn.onclick = (e) => { e.stopPropagation(); currentViewDate.setMonth(currentViewDate.getMonth() - 1); renderCal(); };
+      nextMonBtn.onclick = (e) => { e.stopPropagation(); currentViewDate.setMonth(currentViewDate.getMonth() + 1); renderCal(); };
+
       // Trigger pickers on box click
-      dateBox.onclick = () => { if (dateInput.showPicker) dateInput.showPicker(); else dateInput.focus(); };
+      dateBox.onclick = (e) => {
+        e.stopPropagation();
+        document.querySelectorAll(".calendar-overlay, .time-picker-overlay").forEach(o => {
+          if (o !== calOverlay) o.classList.remove("is-active");
+        });
+        calOverlay.classList.toggle("is-active");
+        renderCal();
+      };
+
       timeBox.onclick = (e) => {
         e.stopPropagation();
-        document.querySelectorAll(".time-picker-overlay").forEach(o => o.classList.remove("is-active"));
+        document.querySelectorAll(".calendar-overlay, .time-picker-overlay").forEach(o => {
+          if (o !== tpOverlay) o.classList.remove("is-active");
+        });
         tpOverlay.classList.toggle("is-active");
       };
 
-      document.addEventListener("click", () => tpOverlay.classList.remove("is-active"));
-
-      dateInput.addEventListener("change", () => {
-        const [y, m, d] = dateInput.value.split("-");
-        dateDisplay.textContent = `${d}/${m}/${y}`;
+      document.addEventListener("click", () => {
+        calOverlay.classList.remove("is-active");
+        tpOverlay.classList.remove("is-active");
       });
       timeInput.addEventListener("change", () => {
         timeDisplay.textContent = timeInput.value;
