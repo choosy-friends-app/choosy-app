@@ -1,0 +1,484 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="vote-view-wrapper">
+    <div class="vote-app" id="vote-app">
+
+        <!-- Header & Progress -->
+        <div class="vote-header">
+            <div class="vote-group-info">
+                <span class="material-symbols-outlined gradient-icon">local_fire_department</span>
+                <div>
+                    <h3>{{ group.name }}</h3>
+                    <p class="vote-subtitle"><span id="plan-counter">1</span> of {{ plans.count }} Remaining</p>
+                </div>
+            </div>
+
+            <div class="vote-progress-container">
+                {% for plan in plans %}
+                <div class="vote-progress-segment">
+                    <div class="vote-progress-fill" id="progress-{{ forloop.counter0 }}"></div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="vote-empty-state" id="empty-state" style="display: none;">
+            <div class="empty-icon">🎉</div>
+            <h2>You're all caught up!</h2>
+            <p>Answers saved. Waiting for the rest of the group.</p>
+            <a href="{% url 'dashboard' %}" class="card-cta back-home-btn">Back to Dashboard</a>
+        </div>
+
+        <!-- Cards Deck -->
+        <div class="vote-deck" id="deck" style="display: none;">
+            <!-- Cards rendered via JS -->
+        </div>
+
+        <!-- Controls -->
+        <div class="vote-controls" id="controls" style="display: none;">
+            <button class="vote-btn vote-btn-skip" id="btn-skip">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            <button class="vote-btn vote-btn-love" id="btn-love">
+                <span class="material-symbols-outlined">favorite</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script id="plans-data" type="application/json">
+[
+  {% for plan in plans %}
+  {
+    "id": {{ plan.id }},
+    "title": "{{ plan.title|escapejs }}",
+    "description": "{{ plan.description|escapejs }}",
+    "price": "{{ plan.price|escapejs }}"
+  }{% if not forloop.last %},{% endif %}
+  {% endfor %}
+]
+</script>
+
+<style>
+    .vote-view-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 8rem);
+        /* Accounting for topbar padding */
+        padding: 1rem;
+        overflow: hidden;
+    }
+
+    .vote-app {
+        width: 100%;
+        max-width: 480px;
+        height: 75vh;
+        min-height: 600px;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        background: rgba(18, 18, 18, 0.4);
+        border: 1px solid var(--line-soft);
+        border-radius: 2rem;
+        box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(40px);
+        padding: 1.5rem;
+        overflow: hidden;
+    }
+
+    .vote-header {
+        z-index: 10;
+        margin-bottom: 2rem;
+    }
+
+    .vote-group-info {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        margin-bottom: 1rem;
+    }
+
+    .gradient-icon {
+        font-size: 2rem;
+        background: linear-gradient(135deg, #ff7171, var(--secondary));
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .vote-group-info h3 {
+        font-size: 1.2rem;
+        font-weight: 800;
+    }
+
+    .vote-subtitle {
+        font-size: 0.8rem;
+        color: var(--muted);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+
+    /* Instagram style progress bars */
+    .vote-progress-container {
+        display: flex;
+        gap: 4px;
+        width: 100%;
+    }
+
+    .vote-progress-segment {
+        flex: 1;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .vote-progress-fill {
+        width: 0%;
+        height: 100%;
+        background: var(--text);
+        border-radius: 4px;
+        transition: width linear;
+    }
+
+    .vote-progress-fill.done {
+        width: 100%;
+    }
+
+    .vote-deck {
+        position: relative;
+        flex: 1;
+        perspective: 1000px;
+        transform-style: preserve-3d;
+    }
+
+    .vote-card {
+        position: absolute;
+        inset: 0;
+        border-radius: 1.5rem;
+        background: radial-gradient(circle at top left, var(--surface-high), var(--surface));
+        border: 1px solid var(--line-soft);
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease, filter 0.4s ease;
+        opacity: 0;
+        transform: scale(0.95) translateY(20px);
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .vote-card.active {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        pointer-events: auto;
+        z-index: 5;
+        filter: brightness(1.1);
+    }
+
+    .vote-card.swiped-left {
+        transform: translateX(-120%) rotate(-15deg);
+        opacity: 0;
+    }
+
+    .vote-card.swiped-right {
+        transform: translateX(120%) rotate(15deg);
+        opacity: 0;
+    }
+
+    .card-price-tag {
+        position: absolute;
+        top: 1.5rem;
+        right: 1.5rem;
+        background: rgba(0, 0, 0, 0.5);
+        padding: 0.4rem 0.8rem;
+        border-radius: 999px;
+        font-weight: 800;
+        color: var(--tertiary);
+        border: 1px solid var(--line-soft);
+    }
+
+    .vote-card h2 {
+        font-size: 2.2rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #ffffff, #a5a5ff);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .vote-card p {
+        font-size: 1.1rem;
+        color: var(--muted);
+        line-height: 1.5;
+    }
+
+    .vote-controls {
+        display: flex;
+        justify-content: space-evenly;
+        align-items: center;
+        padding: 1rem 0;
+        z-index: 10;
+    }
+
+    .vote-btn {
+        width: 4.5rem;
+        height: 4.5rem;
+        border-radius: 50%;
+        border: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 2rem;
+        transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s;
+        background: var(--surface-high);
+        border: 1px solid var(--line-soft);
+    }
+
+    .vote-btn .material-symbols-outlined {
+        font-size: 2.2rem;
+    }
+
+    .vote-btn-skip {
+        color: #ff5e5e;
+    }
+
+    .vote-btn-skip:hover {
+        transform: scale(1.15);
+        background: rgba(255, 94, 94, 0.1);
+        box-shadow: 0 0 30px rgba(255, 94, 94, 0.2);
+        border-color: rgba(255, 94, 94, 0.3);
+    }
+
+    .vote-btn-love {
+        color: #5effa8;
+    }
+
+    .vote-btn-love:hover {
+        transform: scale(1.15);
+        background: rgba(94, 255, 168, 0.1);
+        box-shadow: 0 0 30px rgba(94, 255, 168, 0.2);
+        border-color: rgba(94, 255, 168, 0.3);
+    }
+
+    .vote-empty-state {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        animation: fadeIn 0.8s ease;
+    }
+
+    .empty-icon {
+        font-size: 5rem;
+        margin-bottom: 1rem;
+    }
+
+    .vote-empty-state h2 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .vote-empty-state p {
+        color: var(--muted);
+        margin-bottom: 2rem;
+    }
+
+    .back-home-btn {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0 2rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: #000;
+        text-decoration: none;
+        border: none;
+    }
+
+    .back-home-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(210, 119, 255, 0.3);
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const plansData = document.getElementById("plans-data");
+        let plans = [];
+        try {
+            plans = JSON.parse(plansData.textContent);
+        } catch (e) {
+            console.error("Could not parse plans.", e);
+        }
+
+        const deckEl = document.getElementById("deck");
+        const controlsEl = document.getElementById("controls");
+        const emptyStateEl = document.getElementById("empty-state");
+        const counterEl = document.getElementById("plan-counter");
+
+        const TIME_PER_CARD_MS = 8000; // 8 seconds per card like Instagram
+        let currentIndex = 0;
+        let timerInterval = null;
+        let startTime = 0;
+
+        if (plans.length === 0) {
+            emptyStateEl.style.display = "flex";
+            return;
+        }
+
+        deckEl.style.display = "block";
+        controlsEl.style.display = "flex";
+
+        // Build cards
+        plans.forEach((plan, idx) => {
+            const card = document.createElement("div");
+            card.className = "vote-card";
+            card.id = `card-${idx}`;
+            card.innerHTML = `
+      <div class="card-price-tag">€${parseFloat(plan.price).toFixed(2)}</div>
+      <h2>${plan.title}</h2>
+      <p>${plan.description || 'Una aventura genial t\'espera!'}</p>
+    `;
+            deckEl.appendChild(card);
+        });
+
+        const showCard = (index) => {
+            // Reset all
+            document.querySelectorAll('.vote-card').forEach((c, i) => {
+                c.classList.remove('active', 'swiped-left', 'swiped-right');
+                if (i < index) {
+                    c.style.display = 'none'; // hide old ones
+                    document.getElementById(`progress-${i}`).classList.add('done');
+                    document.getElementById(`progress-${i}`).style.width = '100%';
+                }
+            });
+
+            if (index >= plans.length) {
+                deckEl.style.display = "none";
+                controlsEl.style.display = "none";
+                document.querySelector(".vote-header").style.display = "none";
+                emptyStateEl.style.display = "flex";
+                cancelTimer();
+                return;
+            }
+
+            const currentCard = document.getElementById(`card-${index}`);
+            currentCard.style.display = 'flex';
+            // Trigger reflow
+            void currentCard.offsetWidth;
+            currentCard.classList.add('active');
+
+            counterEl.textContent = index + 1;
+            startTimer(index);
+        };
+
+        const startTimer = (index) => {
+            cancelTimer();
+            const progressFill = document.getElementById(`progress-${index}`);
+            progressFill.style.transition = 'none';
+            progressFill.style.width = '0%';
+            progressFill.classList.remove('done');
+
+            // small timeout to allow 0% to render without transition
+            setTimeout(() => {
+                progressFill.style.transition = `width ${TIME_PER_CARD_MS}ms linear`;
+                progressFill.style.width = '100%';
+            }, 50);
+
+            startTime = Date.now();
+            timerInterval = setTimeout(() => {
+                // time ran out, implicit skip
+                vote(index, -1, 'swiped-left');
+            }, TIME_PER_CARD_MS);
+        };
+
+        const cancelTimer = () => {
+            if (timerInterval) clearTimeout(timerInterval);
+        };
+
+        const vote = (index, value, animationClass) => {
+            cancelTimer();
+            const currentCard = document.getElementById(`card-${index}`);
+            currentCard.classList.remove('active');
+            currentCard.classList.add(animationClass);
+
+            // Stop progress bar exactly where it is
+            const progressFill = document.getElementById(`progress-${index}`);
+            if (value > 0) {
+                progressFill.classList.add('done'); // Mark as green/full or keep white?
+                progressFill.style.width = '100%';
+            } else {
+                progressFill.style.background = 'rgba(255,255,255,0.3)'; // Dimmer if skipped
+            }
+
+            const planId = plans[index].id;
+
+            // Fire and forget fetch request
+            fetch(`/api/vote/${planId}/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: JSON.stringify({ value })
+            }).catch(e => console.error("Vote error:", e));
+
+            currentIndex++;
+            setTimeout(() => {
+                showCard(currentIndex);
+            }, 300); // Wait for swipe animation
+        };
+
+        // Button logic
+        document.getElementById("btn-skip").addEventListener("click", () => {
+            if (currentIndex < plans.length) vote(currentIndex, -1, 'swiped-left');
+        });
+
+        document.getElementById("btn-love").addEventListener("click", () => {
+            if (currentIndex < plans.length) vote(currentIndex, 1, 'swiped-right');
+        });
+
+        // CSRF token helper
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Init
+        showCard(currentIndex);
+    });
+</script>
+{% endblock %}
