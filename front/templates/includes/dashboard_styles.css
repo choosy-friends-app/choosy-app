@@ -631,6 +631,105 @@ button {
   line-height: 1.7;
 }
 
+.plan-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.8rem;
+}
+
+.plan-choice {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1.15rem;
+  border-radius: 1.4rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.plan-choice--active {
+  border-color: rgba(165, 165, 255, 0.28);
+  background: linear-gradient(180deg, rgba(165, 165, 255, 0.1), rgba(255, 255, 255, 0.03));
+  box-shadow: 0 18px 30px -24px rgba(165, 165, 255, 0.55);
+}
+
+.plan-choice__tag,
+.plan-preview__block span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.plan-choice h3,
+.plan-preview__block strong,
+.plan-slot strong {
+  font-family: "Manrope", sans-serif;
+  letter-spacing: -0.03em;
+}
+
+.plan-choice h3 {
+  font-size: 1.2rem;
+}
+
+.plan-choice p,
+.plan-slot span {
+  color: #beb9c4;
+  line-height: 1.6;
+}
+
+.plan-slot-list {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1.8rem;
+}
+
+.plan-slot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.15rem;
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.plan-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-top: 1.8rem;
+}
+
+.plan-pill {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #cdc8d2;
+  font-size: 0.95rem;
+}
+
+.plan-preview {
+  display: grid;
+  gap: 0.95rem;
+  margin-top: 1.8rem;
+}
+
+.plan-preview__block {
+  display: grid;
+  gap: 0.45rem;
+  padding: 1rem 1.15rem;
+  border-radius: 1.35rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.plan-preview__block strong {
+  font-size: 1.05rem;
+}
+
 .plan-card__icon {
   width: 2.85rem;
   height: 2.85rem;
@@ -655,6 +754,10 @@ button {
   .plan-layout,
   .plan-row,
   .plan-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .plan-choice-grid {
     grid-template-columns: 1fr;
   }
 }

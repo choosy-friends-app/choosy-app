@@ -6,7 +6,6 @@
       <div class="plan-hero__copy">
         <p class="page-kicker">Plan Setup</p>
         <h1>Start New Plan</h1>
-        <p>Esquelet inicial de la pantalla per definir el flux visual abans d afegir tots els blocs i detalls.</p>
       </div>
 
       <div class="plan-hero__badge">
@@ -18,35 +17,45 @@
       <div class="plan-main">
         <article class="plan-card plan-card--large">
           <div class="plan-card__head">
-            <span class="plan-card__icon">
-              <span class="material-symbols-outlined">edit_note</span>
+            <span class="plan-card__icon plan-card__icon--secondary">
+              <span class="material-symbols-outlined">groups</span>
             </span>
             <div>
-              <h2>Basic Details</h2>
-              <p>Aqui anira la configuracio principal.</p>
+              <h2>Choose Group</h2>
+              <p>Selecciona amb quin grup d amics vols crear aquest plan.</p>
             </div>
           </div>
 
-          <div class="plan-card__body-copy">
-            <p>Aixo es un exemple de bloc base.</p>
-            <p>Text provisional per definir estructura.</p>
+          <div class="plan-choice-grid">
+            <article class="plan-choice">
+              <span class="plan-choice__tag">Exemple</span>
+              <h3>Friend Group 01</h3>
+            </article>
+            <article class="plan-choice plan-choice--active">
+              <span class="plan-choice__tag">Seleccionat</span>
+              <h3>Friend Group 02</h3>
+            </article>
+            <article class="plan-choice">
+              <span class="plan-choice__tag">Exemple</span>
+              <h3>Friend Group 03</h3>
+            </article>
           </div>
         </article>
 
         <div class="plan-row">
           <article class="plan-card">
             <div class="plan-card__head">
-              <span class="plan-card__icon plan-card__icon--secondary">
-                <span class="material-symbols-outlined">group</span>
+              <span class="plan-card__icon">
+                <span class="material-symbols-outlined">lightbulb</span>
               </span>
               <div>
-                <h2>People</h2>
-                <p>Bloc simple de prova.</p>
+                <h2>Plan Idea</h2>
+                <p>Idea principal.</p>
               </div>
             </div>
 
             <div class="plan-card__body-copy">
-              <p>Exemple de seccio petita.</p>
+              <p>Proposta de prova.</p>
             </div>
           </article>
 
@@ -56,16 +65,42 @@
                 <span class="material-symbols-outlined">calendar_month</span>
               </span>
               <div>
-                <h2>Timing</h2>
-                <p>Mes espai reservat per omplir despres.</p>
+                <h2>Date & Time</h2>
+                <p>Dia i hora.</p>
               </div>
             </div>
 
-            <div class="plan-card__body-copy">
-              <p>Aquest bloc tambe es provisional.</p>
+            <div class="plan-slot-list">
+              <div class="plan-slot">
+                <strong>Friday</strong>
+                <span>Aixo es un exemple</span>
+              </div>
+              <div class="plan-slot">
+                <strong>Saturday</strong>
+                <span>Text provisional</span>
+              </div>
             </div>
           </article>
         </div>
+
+        <article class="plan-card">
+          <div class="plan-card__head">
+            <span class="plan-card__icon plan-card__icon--secondary">
+              <span class="material-symbols-outlined">tune</span>
+            </span>
+              <div>
+                <h2>Preferences</h2>
+                <p>Filters basics.</p>
+              </div>
+            </div>
+
+          <div class="plan-pill-row">
+            <span class="plan-pill">Outdoor exemple</span>
+            <span class="plan-pill">Budget exemple</span>
+            <span class="plan-pill">Night plan</span>
+            <span class="plan-pill">Text provisional</span>
+          </div>
+        </article>
       </div>
 
       <aside class="plan-side">
@@ -74,14 +109,29 @@
             <span class="plan-card__icon">
               <span class="material-symbols-outlined">visibility</span>
             </span>
-            <div>
-              <h2>Preview</h2>
-              <p>Resum visual provisional.</p>
+              <div>
+                <h2>Preview</h2>
+                <p>Resum visual.</p>
+              </div>
             </div>
-          </div>
 
-          <div class="plan-card__body-copy">
-            <p>Aixo es un exemple de resum.</p>
+          <div class="plan-preview">
+            <div class="plan-preview__block">
+              <span>Group</span>
+              <strong>Friend Group 02</strong>
+            </div>
+            <div class="plan-preview__block">
+              <span>Idea</span>
+              <strong>Aixo es un exemple de plan</strong>
+            </div>
+            <div class="plan-preview__block">
+              <span>Date</span>
+              <strong>Saturday evening</strong>
+            </div>
+            <div class="plan-preview__block">
+              <span>Status</span>
+              <strong>Draft visual</strong>
+            </div>
           </div>
         </article>
       </aside>
