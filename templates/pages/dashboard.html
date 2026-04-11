@@ -1,73 +1,19 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <section class="hero">
-    <p class="page-kicker">Dashboard</p>
-
-    <div class="hero-grid">
-      <div class="hero-copy">
-        <h1>Panel principal</h1>
-        <p>Base visual del dashboard de Choosy. Solo estructura, sin interacciones ni contenido final.</p>
-      </div>
-
-      <article class="summary-card">
-        <span>Resumen</span>
-        <strong>Estado general</strong>
-        <p>Zona reservada para informacion global del proyecto.</p>
-      </article>
-    </div>
-  </section>
+  {% include "includes/dashboard/hero.html" %}
 
   <section class="dashboard-grid">
     <div class="dashboard-main">
-      <article class="surface-card">
-        <div class="section-head">
-          <div>
-            <p class="section-kicker">Bloque principal</p>
-            <h2>Espacio para grupos</h2>
-          </div>
-        </div>
+      <div class="section-header">
+        <h2>My Groups</h2>
+        <span>View all groups</span>
+      </div>
 
-        <div class="placeholder-card placeholder-card--large"></div>
-      </article>
-
-      <article class="surface-card">
-        <div class="section-head">
-          <div>
-            <p class="section-kicker">Bloque secundario</p>
-            <h2>Zona de decisiones</h2>
-          </div>
-        </div>
-
-        <div class="placeholder-stack">
-          <div class="placeholder-card"></div>
-          <div class="placeholder-card"></div>
-        </div>
-      </article>
+      {% include "includes/dashboard/group_card_primary.html" %}
+      {% include "includes/dashboard/group_card_secondary.html" %}
     </div>
 
-    <aside class="dashboard-side">
-      <article class="surface-card">
-        <div class="section-head">
-          <div>
-            <p class="section-kicker">Panel lateral</p>
-            <h2>Actividad</h2>
-          </div>
-        </div>
-
-        <div class="placeholder-list" aria-hidden="true">
-          <span class="placeholder-line placeholder-line--short"></span>
-          <span class="placeholder-line"></span>
-          <span class="placeholder-line placeholder-line--short"></span>
-          <span class="placeholder-line placeholder-line--tiny"></span>
-        </div>
-      </article>
-
-      <article class="surface-card surface-card--accent">
-        <p class="section-kicker">Modulo futuro</p>
-        <h2>Zona secundaria</h2>
-        <p>Reservada para ampliar el dashboard cuando construyas el resto de pantallas.</p>
-      </article>
-    </aside>
+    {% include "includes/dashboard/side_panel.html" %}
   </section>
 {% endblock %}

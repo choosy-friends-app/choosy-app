@@ -11,42 +11,20 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="{% static 'css/app.css' %}" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@0..1&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      {% include "includes/dashboard_styles.css" %}
+    </style>
   </head>
   <body>
     <div class="app-shell">
-      <aside class="app-rail">
-        <div class="rail-panel">
-          <div class="brand">
-            <span class="brand-title">Choosy</span>
-            <span class="brand-subtitle">Group Decisions</span>
-          </div>
-
-          <nav class="rail-nav" aria-label="Estructura principal">
-            <span class="rail-link is-active">Dashboard</span>
-            <span class="rail-link">Planes</span>
-            <span class="rail-link">Grupos</span>
-            <span class="rail-link">Ajustes</span>
-          </nav>
-
-          <div class="rail-foot">
-            <span class="rail-link rail-link--muted">Perfil</span>
-          </div>
-        </div>
-      </aside>
+      {% include "includes/layout/sidebar.html" %}
 
       <div class="main-shell">
-        <header class="topbar">
-          <div class="search-shell" aria-hidden="true">
-            <span class="search-shell__dot"></span>
-            <span>Buscar grupos o planes...</span>
-          </div>
-
-          <div class="session-chip">
-            <span>Vista activa</span>
-            <strong>Principal</strong>
-          </div>
-        </header>
+        {% include "includes/layout/topbar.html" %}
 
         <main class="page-shell">
           {% block content %}{% endblock %}
