@@ -51,10 +51,15 @@ def groups(request):
 def start_new_plan(request):
     if request.method == "POST":
         group_id = request.POST.get("group_id")
-        title = request.POST.get("title")
-        description = request.POST.get("description", "")
-        price = request.POST.get("price", 0)
+        global_title = request.POST.get("title")
+        global_description = request.POST.get("description", "")
         
+        options_data = request.POST.get("options_json", "[]")
+        try:
+            options = json.loads(options_data)
+        except json.JSONDecodeError:
+            options = []
+
         if not group_id:
             user_groups = Group.objects.all()
             return render(
@@ -71,13 +76,30 @@ def start_new_plan(request):
             
         group = get_object_or_404(Group, id=group_id)
         
-        Plan.objects.create(
-            group=group,
-            title=title,
-            description=description,
-            price=price or 0,
-            status=Plan.Status.VOTING,
-        )
+        # If no options provided, create one default plan from the global info
+        if not options:
+            Plan.objects.create(
+                group=group,
+                title=global_title,
+                description=global_description,
+                price=request.POST.get("price") or 0,
+                status=Plan.Status.VOTING,
+            )
+        else:
+            # Create a separate Plan for each option
+            for opt in options:
+                Plan.objects.create(
+                    group=group,
+                    title=opt.get("title") or global_title,
+                    description=global_description,
+                    price=opt.get("price") or 0,
+                    scheduled_for=opt.get("scheduled_for"),
+                    place_name=opt.get("place_name", ""),
+                    address=opt.get("address", ""),
+                    tag=opt.get("tag", ""),
+                    status=Plan.Status.VOTING,
+                )
+                
         return redirect("active_plans")
         
     user_groups = Group.objects.all()
