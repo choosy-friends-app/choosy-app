@@ -13,6 +13,18 @@ def dashboard(request):
     )
 
 
+def active_plans(request):
+    return render(
+        request,
+        "pages/active_plans.html",
+        {
+            "meta_title": "Active Plans",
+            "active_page": "active_plans",
+            "topbar_context": "Active Plans",
+        },
+    )
+
+
 def groups(request):
     return render(
         request,

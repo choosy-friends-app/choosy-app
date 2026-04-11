@@ -10,10 +10,10 @@
         <span class="material-symbols-outlined">dashboard</span>
         <span>Dashboard</span>
       </a>
-      <span class="rail-link">
+      <a class="rail-link {% if active_page == 'active_plans' %}is-active{% endif %}" href="{% url 'active_plans' %}">
         <span class="material-symbols-outlined">event_repeat</span>
         <span>Active Plans</span>
-      </span>
+      </a>
       <a class="rail-link {% if active_page == 'groups' %}is-active{% endif %}" href="{% url 'groups' %}">
         <span class="material-symbols-outlined">groups</span>
         <span>Groups</span>

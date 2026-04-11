@@ -760,6 +760,10 @@ button {
   .plan-choice-grid {
     grid-template-columns: 1fr;
   }
+
+  .plans-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .promo-node--one {
@@ -790,6 +794,89 @@ button {
 .groups-page {
   display: grid;
   gap: 3rem;
+}
+
+.plans-page {
+  display: grid;
+  gap: 2rem;
+}
+
+.plans-hero__copy {
+  display: grid;
+  gap: 0.9rem;
+  max-width: 38rem;
+}
+
+.plans-hero__copy h1 {
+  font-family: "Manrope", sans-serif;
+  font-size: clamp(3rem, 5vw, 4.8rem);
+  letter-spacing: -0.04em;
+  line-height: 0.94;
+}
+
+.plans-hero__copy p:last-child {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.plans-layout,
+.plans-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.plans-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.plans-card {
+  min-height: 15rem;
+  padding: 1.75rem;
+  border-radius: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(180deg, rgba(40, 40, 40, 0.34), rgba(24, 24, 24, 0.44));
+  box-shadow: 0 28px 50px -24px rgba(0, 0, 0, 0.5);
+}
+
+.plans-card--wide {
+  min-height: 18rem;
+}
+
+.plans-card__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.plans-card__head h2 {
+  font-family: "Manrope", sans-serif;
+  font-size: 1.65rem;
+  letter-spacing: -0.03em;
+}
+
+.plans-card__head p {
+  margin-top: 0.35rem;
+  color: var(--muted);
+}
+
+.plans-card__icon {
+  width: 2.85rem;
+  height: 2.85rem;
+  display: grid;
+  place-items: center;
+  border-radius: 1rem;
+  color: var(--primary);
+  background: linear-gradient(135deg, rgba(165, 165, 255, 0.18), rgba(210, 119, 255, 0.12));
+}
+
+.plans-card__icon--secondary {
+  color: #ffb36d;
+  background: linear-gradient(135deg, rgba(255, 179, 109, 0.16), rgba(255, 141, 102, 0.12));
+}
+
+.plans-card__icon--tertiary {
+  color: var(--tertiary);
+  background: linear-gradient(135deg, rgba(105, 218, 255, 0.16), rgba(165, 165, 255, 0.12));
 }
 
 .groups-hero {

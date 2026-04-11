@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="plans-page">
+    <header class="plans-hero">
+      <div class="plans-hero__copy">
+        <p class="page-kicker">Plans Overview</p>
+        <h1>Active Plans</h1>
+        <p>Primera versio simple de la pantalla de plans actius.</p>
+      </div>
+    </header>
+
+    <section class="plans-layout">
+      <article class="plans-card plans-card--wide">
+        <div class="plans-card__head">
+          <span class="plans-card__icon">
+            <span class="material-symbols-outlined">event_available</span>
+          </span>
+          <div>
+            <h2>Plan principal</h2>
+          </div>
+        </div>
+      </article>
+
+      <div class="plans-grid">
+        <article class="plans-card">
+          <div class="plans-card__head">
+            <span class="plans-card__icon plans-card__icon--secondary">
+              <span class="material-symbols-outlined">schedule</span>
+            </span>
+            <div>
+              <h2>Next Plan</h2>
+              <p>Bloc provisional.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="plans-card">
+          <div class="plans-card__head">
+            <span class="plans-card__icon plans-card__icon--tertiary">
+              <span class="material-symbols-outlined">groups</span>
+            </span>
+            <div>
+              <h2>Group Plan</h2>
+              <p>Estructura base.</p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </section>
+{% endblock %}
