@@ -483,6 +483,11 @@
     position: relative;
     cursor: pointer;
     transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+  }
+
+  .custom-picker-box.is-open {
+    z-index: 100 !important;
   }
 
   .custom-picker-box:hover {
@@ -956,23 +961,33 @@
       dateBox.onclick = (e) => {
         e.stopPropagation();
         document.querySelectorAll(".calendar-overlay, .time-picker-overlay").forEach(o => {
-          if (o !== calOverlay) o.classList.remove("is-active");
+          if (o !== calOverlay) {
+            o.classList.remove("is-active");
+            o.closest(".custom-picker-box").classList.remove("is-open");
+          }
         });
         calOverlay.classList.toggle("is-active");
+        dateBox.classList.toggle("is-open");
         renderCal();
       };
 
       timeBox.onclick = (e) => {
         e.stopPropagation();
         document.querySelectorAll(".calendar-overlay, .time-picker-overlay").forEach(o => {
-          if (o !== tpOverlay) o.classList.remove("is-active");
+          if (o !== tpOverlay) {
+            o.classList.remove("is-active");
+            o.closest(".custom-picker-box").classList.remove("is-open");
+          }
         });
         tpOverlay.classList.toggle("is-active");
+        timeBox.classList.toggle("is-open");
       };
 
       document.addEventListener("click", () => {
         calOverlay.classList.remove("is-active");
         tpOverlay.classList.remove("is-active");
+        dateBox.classList.remove("is-open");
+        timeBox.classList.remove("is-open");
       });
       timeInput.addEventListener("change", () => {
         timeDisplay.textContent = timeInput.value;
