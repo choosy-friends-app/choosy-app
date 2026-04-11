@@ -8,6 +8,7 @@ def dashboard(request):
         {
             "meta_title": "Dashboard",
             "active_page": "dashboard",
+            "topbar_context": "Dashboard",
         },
     )
 
@@ -19,5 +20,6 @@ def groups(request):
         {
             "meta_title": "Groups",
             "active_page": "groups",
+            "topbar_context": "Groups",
         },
     )
