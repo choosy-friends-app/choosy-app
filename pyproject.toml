@@ -1,0 +1,8 @@
+[project]
+name = "choosy-app"
+version = "0.1.0"
+description = "Dashboard skeleton for Choosy"
+requires-python = ">=3.11"
+dependencies = [
+  "Django>=5.1,<6.0",
+]

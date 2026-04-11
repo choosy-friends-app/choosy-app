@@ -1,42 +1,15 @@
 # choosy-app
 
-Choosy es una app mobile-first para proponer planes con amigos, votar juntos y decidir rapido.
+Base Django del dashboard principal de Choosy.
 
-## Migracion a Django
+Ahora mismo el proyecto solo incluye la pagina principal del dashboard, planteada como esqueleto visual para seguir construyendo el resto de vistas despues.
 
-La version visual de v0 se migro a Django manteniendo las 4 pantallas principales:
-- Home: `/`
-- Groups: `/groups/`
-- Discover: `/discover/`
-- Profile: `/profile/`
-
-La carpeta original de v0 (`/social-plan-app`) se conserva como referencia.
-
-## Ejecutar el proyecto
-
-1. Crear y activar entorno virtual:
+## Ejecutar con uv
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-2. Instalar dependencias:
-
-```bash
-pip install -r requirements.txt
-```
-
-3. Aplicar migraciones:
-
-```bash
-python manage.py migrate
-```
-
-4. Ejecutar servidor:
-
-```bash
-python manage.py runserver
+uv sync
+uv run python manage.py migrate
+uv run python manage.py runserver
 ```
 
 Abre `http://127.0.0.1:8000/`.

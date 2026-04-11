@@ -1,0 +1,57 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ meta_title|default:"Dashboard" }} · Choosy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{% static 'css/app.css' %}" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="app-rail">
+        <div class="rail-panel">
+          <div class="brand">
+            <span class="brand-title">Choosy</span>
+            <span class="brand-subtitle">Group Decisions</span>
+          </div>
+
+          <nav class="rail-nav" aria-label="Estructura principal">
+            <span class="rail-link is-active">Dashboard</span>
+            <span class="rail-link">Planes</span>
+            <span class="rail-link">Grupos</span>
+            <span class="rail-link">Ajustes</span>
+          </nav>
+
+          <div class="rail-foot">
+            <span class="rail-link rail-link--muted">Perfil</span>
+          </div>
+        </div>
+      </aside>
+
+      <div class="main-shell">
+        <header class="topbar">
+          <div class="search-shell" aria-hidden="true">
+            <span class="search-shell__dot"></span>
+            <span>Buscar grupos o planes...</span>
+          </div>
+
+          <div class="session-chip">
+            <span>Vista activa</span>
+            <strong>Principal</strong>
+          </div>
+        </header>
+
+        <main class="page-shell">
+          {% block content %}{% endblock %}
+        </main>
+      </div>
+    </div>
+  </body>
+</html>
