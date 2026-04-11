@@ -18,10 +18,10 @@
         <span class="material-symbols-outlined">groups</span>
         <span>Groups</span>
       </a>
-      <span class="rail-link">
+      <a class="rail-link {% if active_page == 'archive' %}is-active{% endif %}" href="{% url 'archive' %}">
         <span class="material-symbols-outlined">inventory_2</span>
         <span>Archive</span>
-      </span>
+      </a>
       <span class="rail-link">
         <span class="material-symbols-outlined">settings</span>
         <span>Settings</span>

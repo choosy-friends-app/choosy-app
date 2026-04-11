@@ -25,6 +25,18 @@ def active_plans(request):
     )
 
 
+def archive(request):
+    return render(
+        request,
+        "pages/archive.html",
+        {
+            "meta_title": "Archive",
+            "active_page": "archive",
+            "topbar_context": "Archive",
+        },
+    )
+
+
 def groups(request):
     return render(
         request,
