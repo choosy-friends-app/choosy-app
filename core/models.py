@@ -2,6 +2,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 
 
 class TimestampedModel(models.Model):
@@ -166,6 +167,14 @@ class PlanProposal(TimestampedModel):
     @property
     def is_open(self) -> bool:
         return self.status in {self.Status.DRAFT, self.Status.VOTING}
+
+    @property
+    def is_expired(self) -> bool:
+        return bool(self.voting_ends_at and self.voting_ends_at <= timezone.now())
+
+    @property
+    def can_accept_votes(self) -> bool:
+        return self.status == self.Status.VOTING and not self.is_expired
 
     def clean(self) -> None:
         if self.chosen_plan and self.chosen_plan.proposal_id != self.id:

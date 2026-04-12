@@ -132,15 +132,51 @@ def _decorate_proposal(proposal):
         if member.display_name not in completed_voters and member.display_name not in partial_voters
     ]
     proposal.completed_voter_count = len(completed_voters)
+    proposal.is_closed = proposal.status in {PlanProposal.Status.CHOSEN, PlanProposal.Status.CANCELLED}
+    proposal.can_accept_votes = proposal.status == PlanProposal.Status.VOTING and not (
+        proposal.voting_ends_at and proposal.voting_ends_at <= timezone.now()
+    )
     return proposal
 
 
-def _decorate_groups(groups):
+def _decorate_proposal_for_user(proposal, user):
+    proposal = _decorate_proposal(proposal)
+    if proposal is None:
+        return None
+
+    vote_map = {}
+    voted_option_ids = set()
+    voted_option_count = 0
+
+    if user and user.is_authenticated:
+        member = proposal.group.members.filter(user=user, status=GroupMember.Status.ACTIVE).first()
+        if member is not None:
+            votes = Vote.objects.filter(plan__proposal=proposal, member=member).select_related("plan")
+            for vote in votes:
+                vote_map[vote.plan_id] = vote.value
+                voted_option_ids.add(vote.plan_id)
+            voted_option_count = len(vote_map)
+
+    proposal.current_user_vote_map = vote_map
+    proposal.current_user_voted_option_ids = voted_option_ids
+    proposal.current_user_voted_option_count = voted_option_count
+    proposal.current_user_completed = proposal.option_count > 0 and voted_option_count >= proposal.option_count
+
+    for option in proposal.options:
+        option.current_user_vote = vote_map.get(option.id)
+
+    return proposal
+
+
+def _decorate_groups(groups, user=None):
     decorated = []
     for group in groups:
         members = list(group.members.filter(status=GroupMember.Status.ACTIVE)[:4])
-        active_proposal = _sync_proposal_status(
-            group.proposals.filter(status=PlanProposal.Status.VOTING).order_by("-created_at").first()
+        active_proposal = _decorate_proposal_for_user(
+            _sync_proposal_status(
+                group.proposals.filter(status=PlanProposal.Status.VOTING).order_by("-created_at").first()
+            ),
+            user,
         )
         group.member_count = group.members.filter(status=GroupMember.Status.ACTIVE).count()
         group.active_proposal = active_proposal
@@ -202,7 +238,7 @@ def dashboard(request):
         _seed_demo_groups()
         user_groups = _user_groups_queryset(request)
 
-    user_groups = _decorate_groups(user_groups)
+    user_groups = _decorate_groups(user_groups, request.user)
     recent_votes = (
         Vote.objects.select_related("plan", "plan__group", "member", "user")
         .order_by("-created_at")[:5]
@@ -303,7 +339,7 @@ def active_plans(request):
         user_groups = _user_groups_queryset(request)
 
     for group in user_groups:
-        proposal = _decorate_proposal(_active_group_proposal(group))
+        proposal = _decorate_proposal_for_user(_active_group_proposal(group), request.user)
         if proposal is not None:
             proposal.group = group
             proposals.append(proposal)
@@ -414,7 +450,7 @@ def groups(request):
 
         user_groups = _user_groups_queryset(request)
 
-    user_groups = _decorate_groups(user_groups)
+    user_groups = _decorate_groups(user_groups, request.user)
     total_members = sum(group.member_count for group in user_groups)
     total_pending_votes = sum(group.voting_plans_count for group in user_groups)
 
@@ -641,7 +677,7 @@ def start_new_plan(request):
 
 def vote(request, group_id):
     group = _resolve_group_for_request(request, group_id)
-    active_proposal = _decorate_proposal(_active_group_proposal(group))
+    active_proposal = _decorate_proposal_for_user(_active_group_proposal(group), request.user)
     active_plans = active_proposal.options if active_proposal else Plan.objects.none()
     if request.user.is_authenticated:
         current_voter = _resolve_member(group, request.user).display_name
