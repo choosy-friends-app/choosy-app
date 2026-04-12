@@ -28,6 +28,18 @@ def _seed_demo_groups():
     Group.objects.create(name="Adventure Seekers", description="Outdoor stuff")
 
 
+def _decorate_groups(groups):
+    decorated = []
+    for group in groups:
+        members = list(group.members.filter(status=GroupMember.Status.ACTIVE)[:4])
+        group.member_count = group.members.filter(status=GroupMember.Status.ACTIVE).count()
+        group.voting_plans_count = Plan.objects.filter(group=group, status=Plan.Status.VOTING).count()
+        group.preview_members = members
+        group.extra_members_count = max(group.member_count - len(members), 0)
+        decorated.append(group)
+    return decorated
+
+
 def _resolve_member(group, user):
     if group.owner_id == user.id:
         return group.add_member(user=user, role=GroupMember.Role.OWNER)
@@ -75,8 +87,11 @@ def dashboard(request):
         _seed_demo_groups()
         user_groups = _user_groups_queryset(request)
 
-    for group in user_groups:
-        group.voting_plans_count = Plan.objects.filter(group=group, status=Plan.Status.VOTING).count()
+    user_groups = _decorate_groups(user_groups)
+    recent_votes = (
+        Vote.objects.select_related("plan", "plan__group", "member", "user")
+        .order_by("-created_at")[:5]
+    )
 
     return render(
         request,
@@ -86,6 +101,7 @@ def dashboard(request):
             "active_page": "dashboard",
             "topbar_context": "Dashboard",
             "groups": user_groups,
+            "recent_votes": recent_votes,
         },
     )
 
@@ -115,6 +131,59 @@ def archive(request):
 
 
 def groups(request):
+    user_groups = _user_groups_queryset(request)
+    success_message = ""
+    error_message = ""
+
+    if not request.user.is_authenticated and not user_groups.exists():
+        _seed_demo_groups()
+        user_groups = _user_groups_queryset(request)
+
+    if request.method == "POST":
+        if not request.user.is_authenticated:
+            error_message = "Necesitas iniciar sesion para crear grupos o invitar miembros."
+        else:
+            action = request.POST.get("action")
+            try:
+                if action == "create_group":
+                    name = (request.POST.get("name") or "").strip()
+                    description = (request.POST.get("description") or "").strip()
+                    if not name:
+                        raise ValueError("El nombre del grupo es obligatorio.")
+                    group = Group.objects.create(
+                        name=name,
+                        description=description,
+                        owner=request.user,
+                    )
+                    group.add_member(user=request.user, role=GroupMember.Role.OWNER)
+                    success_message = f"Grupo '{group.name}' creado correctamente."
+                elif action == "add_member":
+                    group = _resolve_group_for_request(request, request.POST.get("group_id"))
+                    _require_group_admin(group, request.user)
+                    username = (request.POST.get("username") or "").strip()
+                    if not username:
+                        raise ValueError("Debes indicar un username para invitar.")
+                    user = get_object_or_404(User, username=username)
+                    member = group.add_member(
+                        user=user,
+                        display_name=request.POST.get("display_name", ""),
+                        role=GroupMember.Role.MEMBER,
+                        invited_by=request.user,
+                    )
+                    success_message = f"{member.display_name} ya forma parte de {group.name}."
+                else:
+                    error_message = "Accion no soportada."
+            except PermissionDenied as exc:
+                error_message = str(exc)
+            except ValueError as exc:
+                error_message = str(exc)
+
+        user_groups = _user_groups_queryset(request)
+
+    user_groups = _decorate_groups(user_groups)
+    total_members = sum(group.member_count for group in user_groups)
+    total_pending_votes = sum(group.voting_plans_count for group in user_groups)
+
     return render(
         request,
         "pages/groups.html",
@@ -122,6 +191,12 @@ def groups(request):
             "meta_title": "Groups",
             "active_page": "groups",
             "topbar_context": "Groups",
+            "groups": user_groups,
+            "total_groups": len(user_groups),
+            "total_members": total_members,
+            "total_pending_votes": total_pending_votes,
+            "success_message": success_message,
+            "error_message": error_message,
         },
     )
 
@@ -283,6 +358,10 @@ def start_new_plan(request):
 def vote(request, group_id):
     group = _resolve_group_for_request(request, group_id)
     active_plans = Plan.objects.filter(group=group, status=Plan.Status.VOTING)
+    if request.user.is_authenticated:
+        current_voter = _resolve_member(group, request.user).display_name
+    else:
+        current_voter = "Guest session"
 
     return render(
         request,
@@ -293,6 +372,7 @@ def vote(request, group_id):
             "topbar_context": f"Voting - {group.name}",
             "group": group,
             "plans": active_plans,
+            "current_voter": current_voter,
         },
     )
 
