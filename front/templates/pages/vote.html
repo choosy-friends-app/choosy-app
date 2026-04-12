@@ -372,41 +372,44 @@
     }
 
     .swipe-feedback {
-        position: absolute;
-        top: 5%;
-        z-index: 1000;
-        padding: 1rem 2.5rem;
-        border: 5px solid;
-        border-radius: 1.5rem;
+        position: fixed;
+        /* Fixed to viewport corners */
+        top: 10%;
+        z-index: 10000;
+        padding: 1.5rem 3rem;
+        border: 8px solid;
+        border-radius: 2rem;
         font-family: "Manrope", sans-serif;
-        font-size: 2.5rem;
-        font-weight: 900;
+        font-size: 4rem;
+        /* Massive */
+        font-weight: 1000;
         text-transform: uppercase;
         letter-spacing: 0.1em;
         opacity: 0;
         pointer-events: none;
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        transition: opacity 0.1s linear, transform 0.1s linear;
     }
 
     .swipe-like {
-        color: #4ade80;
-        border-color: #4ade80;
-        background: rgba(74, 222, 128, 0.15);
-        left: 5%;
-        transform: rotate(-15deg);
-        text-shadow: 0 0 30px rgba(74, 222, 128, 0.8);
-        box-shadow: 0 0 60px rgba(74, 222, 128, 0.5), inset 0 0 20px rgba(74, 222, 128, 0.15);
+        color: #00ff00;
+        /* Neon Green */
+        border-color: #00ff00;
+        background: rgba(0, 255, 0, 0.2);
+        left: 10%;
+        transform: rotate(-15deg) scale(0.8);
+        box-shadow: 0 0 100px rgba(0, 255, 0, 0.5);
     }
 
     .swipe-nope {
-        color: #ef4444;
-        border-color: #ef4444;
-        background: rgba(239, 68, 68, 0.15);
-        right: 5%;
-        transform: rotate(15deg);
-        text-shadow: 0 0 30px rgba(239, 68, 68, 0.8);
-        box-shadow: 0 0 60px rgba(239, 68, 68, 0.5), inset 0 0 20px rgba(239, 68, 68, 0.15);
+        color: #ff0000;
+        /* Solid Red */
+        border-color: #ff0000;
+        background: rgba(255, 0, 0, 0.2);
+        right: 10%;
+        transform: rotate(15deg) scale(0.8);
+        box-shadow: 0 0 100px rgba(255, 0, 0, 0.5);
     }
 
     /* Global tint for decision direction */
@@ -416,7 +419,7 @@
         z-index: 9998;
         pointer-events: none;
         opacity: 0;
-        transition: opacity 0.05s;
+        transition: opacity 0.1s linear, background-color 0.1s linear;
     }
 
     /* Float Actions - REDESIGNED FOR GOD MODE */
@@ -662,19 +665,18 @@
         }
 
         const mainLoop = () => {
+            requestAnimationFrame(mainLoop);
+
             if (!plans.length || isVoted) {
-                requestAnimationFrame(mainLoop);
+                // Keep tint hidden during transition
+                document.getElementById("vote-tint").style.opacity = 0;
+                document.getElementById("fb-like").style.opacity = 0;
+                document.getElementById("fb-nope").style.opacity = 0;
                 return;
             }
 
             const topCard = deck.querySelector(".card-container:first-child");
-            if (!topCard) {
-                requestAnimationFrame(mainLoop);
-                return;
-            }
-
-            const overlayLike = topCard.querySelector(".overlay-like");
-            const overlayNope = topCard.querySelector(".overlay-nope");
+            if (!topCard) return;
 
             const voteTint = document.getElementById("vote-tint");
             const fbLike = document.getElementById("fb-like");
@@ -683,8 +685,8 @@
             // Magnetic logic if NOT dragging
             if (!isDragging) {
                 const xPct = currentMouseX / window.innerWidth;
-                targetX = (xPct - 0.5) * 180;
-                targetRotate = (xPct - 0.5) * 25;
+                targetX = (xPct - 0.5) * 300; // Even wider
+                targetRotate = (xPct - 0.5) * 30;
             }
 
             // Lerp physics
@@ -694,31 +696,31 @@
 
             topCard.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${currentRotate}deg)`;
 
-            // --- DECISION FEEDBACK ---
+            // --- EXTREME FEEDBACK ---
             const intensity = Math.min(1, Math.abs(currentX) / 60);
 
             if (currentX > 5) {
-                // GREEN: LIKE
+                // LIME GREEN
                 fbLike.style.opacity = intensity;
+                fbLike.style.transform = `rotate(-15deg) scale(${0.8 + intensity * 0.4})`;
                 fbNope.style.opacity = 0;
-                voteTint.style.background = `rgba(74, 222, 128, ${intensity * 0.25})`;
+                voteTint.style.backgroundColor = `rgba(0, 255, 0, ${intensity * 0.4})`;
                 voteTint.style.opacity = 1;
-                topCard.style.boxShadow = `0 0 120px rgba(74, 222, 128, ${intensity * 0.9})`;
+                topCard.style.boxShadow = `0 0 150px rgba(0, 255, 0, ${intensity})`;
             } else if (currentX < -5) {
-                // RED: NOPE
+                // PURE RED
                 fbNope.style.opacity = intensity;
+                fbNope.style.transform = `rotate(15deg) scale(${0.8 + intensity * 0.4})`;
                 fbLike.style.opacity = 0;
-                voteTint.style.background = `rgba(239, 68, 68, ${intensity * 0.25})`;
+                voteTint.style.backgroundColor = `rgba(255, 0, 0, ${intensity * 0.4})`;
                 voteTint.style.opacity = 1;
-                topCard.style.boxShadow = `0 0 120px rgba(239, 68, 68, ${intensity * 0.9})`;
+                topCard.style.boxShadow = `0 0 150px rgba(255, 0, 0, ${intensity})`;
             } else {
                 fbLike.style.opacity = 0;
                 fbNope.style.opacity = 0;
                 voteTint.style.opacity = 0;
                 topCard.style.boxShadow = '';
             }
-
-            requestAnimationFrame(mainLoop);
         };
 
         window.onmousemove = (e) => {
@@ -813,6 +815,7 @@
         }
 
         renderStack();
+        mainLoop();
     });
 </script>
 {% endblock %}
