@@ -27,6 +27,11 @@
             </div>
         </div>
 
+        <div class="vote-identity-chip">
+            <span class="material-symbols-outlined">person</span>
+            <span>Voting as {{ current_voter }}</span>
+        </div>
+
         <!-- Empty State -->
         <div class="vote-empty-state" id="empty-state" style="display: none;">
             <div class="empty-icon">✨</div>
@@ -161,6 +166,27 @@
         align-items: center;
         gap: 1.2rem;
         margin-bottom: 2.5rem;
+    }
+
+    .vote-identity-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+        align-self: flex-start;
+        margin-bottom: 1.4rem;
+        padding: 0.7rem 1rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+    }
+
+    .vote-identity-chip .material-symbols-outlined {
+        font-size: 1rem;
+        color: var(--primary);
     }
 
     .tl-progress-bar {

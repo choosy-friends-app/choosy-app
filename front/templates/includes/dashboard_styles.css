@@ -1634,6 +1634,56 @@ button {
   box-shadow: 0 22px 38px rgba(165, 165, 255, 0.16);
 }
 
+.groups-hero__form {
+  display: grid;
+  gap: 0.8rem;
+  width: min(24rem, 100%);
+}
+
+.groups-input {
+  min-height: 3.1rem;
+  padding: 0 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+}
+
+.groups-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.groups-input--compact {
+  min-height: 2.8rem;
+}
+
+.groups-auth-note,
+.groups-flash {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.95rem 1.1rem;
+  border-radius: 1rem;
+  font-size: 0.92rem;
+}
+
+.groups-auth-note {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.groups-flash--success {
+  background: rgba(74, 222, 128, 0.14);
+  border: 1px solid rgba(74, 222, 128, 0.22);
+  color: #98f0b5;
+}
+
+.groups-flash--error {
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  color: #ff9d9d;
+}
+
 .squad-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1803,10 +1853,49 @@ button {
   background: rgba(38, 38, 38, 1);
 }
 
+.avatar-cluster--named span,
+.avatar-cluster__extra {
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.avatar-cluster__extra {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
 .squad-card__link {
   color: var(--primary);
   font-size: 0.92rem;
   font-weight: 700;
+}
+
+.group-inline-form {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.group-inline-form__button {
+  min-height: 2.8rem;
+  border-radius: 0.9rem;
+  background: rgba(165, 165, 255, 0.16);
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.squad-card--empty {
+  min-height: 12rem;
+}
+
+.avav--initial {
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 800;
 }
 
 .squad-highlight {

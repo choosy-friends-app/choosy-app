@@ -27,7 +27,24 @@
 
   <section class="side-panel">
     <h2>Recent Activity</h2>
-    <p class="muted" style="font-size: 0.85rem; margin-top: 0.5rem; opacity: 0.5;">No recent updates in your groups.</p>
+    <div class="vote-stack-preview">
+      {% for vote in recent_votes %}
+      <div class="vote-item-godmode">
+        <div class="vi-icon">
+          <span class="material-symbols-outlined">{% if vote.value > 0 %}thumb_up{% else %}thumb_down{% endif %}</span>
+        </div>
+        <div class="vi-details">
+          <strong>{% firstof vote.member.display_name vote.user.username "Guest session" %}</strong>
+          <span>{% if vote.value > 0 %}voto positivo{% else %}voto negativo{% endif %} en {{ vote.plan.title }}</span>
+        </div>
+        <a href="{% url 'vote' vote.plan.group.id %}" class="vi-jump">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </a>
+      </div>
+      {% empty %}
+      <p class="muted" style="font-size: 0.85rem; margin-top: 0.5rem; opacity: 0.5;">Aun no hay votos reales registrados.</p>
+      {% endfor %}
+    </div>
   </section>
 
   <article class="promo-card" onclick="showBetaNotice()">
