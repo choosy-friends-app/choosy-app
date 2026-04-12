@@ -903,6 +903,49 @@ button {
   gap: 3rem;
 }
 
+.auth-page {
+  min-height: calc(100vh - 12rem);
+  display: grid;
+  place-items: center;
+}
+
+.auth-card {
+  width: min(30rem, 100%);
+  display: grid;
+  gap: 1.2rem;
+  padding: 2rem;
+  border-radius: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(180deg, rgba(40, 40, 40, 0.34), rgba(24, 24, 24, 0.44));
+  box-shadow: 0 28px 50px -24px rgba(0, 0, 0, 0.5);
+}
+
+.auth-card h1 {
+  font-family: "Manrope", sans-serif;
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  letter-spacing: -0.04em;
+}
+
+.auth-copy,
+.auth-switch {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.auth-switch a {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.auth-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.auth-submit {
+  justify-content: center;
+}
+
 .plans-page {
   display: grid;
   gap: 2rem;
