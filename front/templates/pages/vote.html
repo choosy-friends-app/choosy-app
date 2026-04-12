@@ -515,20 +515,27 @@
         const deck = document.getElementById("deck");
         const counter = document.getElementById("plan-counter");
         const masterProgress = document.getElementById("master-progress");
-        const emptyState = document.getElementById("empty-state");
-        const controls = document.getElementById("controls");
-        const viewport = document.getElementById("viewport");
-        const feedbackLike = document.querySelector(".swipe-like");
-        const feedbackNope = document.querySelector(".swipe-nope");
         const ambientBg = document.getElementById("ambient-bg");
         const universe = document.getElementById("universe");
+        const feedbackLike = document.querySelector(".swipe-like");
+        const feedbackNope = document.querySelector(".swipe-nope");
 
-        const STORY_DURATION = 6000; // 6 seconds per plan
+        const STORY_DURATION = 7000;
         let storyTimer = null;
         let storyStart = 0;
+        let isDragging = false;
+        let isVoted = false;
+        let dragStartX = 0, dragStartY = 0;
+        let currentMouseX = window.innerWidth / 2;
+        let currentMouseY = window.innerHeight / 2;
+
+        // Physics state
+        let targetX = 0, targetY = 0, targetRotate = 0;
+        let currentX = 0, currentY = 0, currentRotate = 0;
+        const LERP_FACTOR = 0.15;
 
         if (!plans.length) {
-            showEmpty();
+            showEmpty(); // Fallback if no plans
             return;
         }
 
@@ -536,25 +543,29 @@
             if (plans.length > 0) {
                 ambientBg.style.backgroundImage = `url(${plans[0].image})`;
                 ambientBg.style.opacity = "0.7";
-            } else {
-                ambientBg.style.opacity = "0.2";
             }
         };
 
         const renderStack = () => {
             deck.innerHTML = "";
+            isVoted = false;
+            targetX = 0; targetY = 0; targetRotate = 0;
+            currentX = 0; currentY = 0; currentRotate = 0;
+
             plans.forEach((plan, idx) => {
                 const container = document.createElement("div");
                 container.className = "card-container";
                 container.style.zIndex = plans.length - idx;
-                container.style.transform = `scale(${1 - idx * 0.05}) translateY(${idx * 20}px)`;
+
+                // Static stack effect
+                const scale = 1 - Math.min(idx, 3) * 0.05;
+                const yPos = Math.min(idx, 3) * 20;
+                container.style.transform = `scale(${scale}) translateY(${yPos}px)`;
                 container.style.opacity = idx > 3 ? 0 : 1;
 
                 container.innerHTML = `
                     <article class="adv-vote-card">
-                        <div class="card-bg">
-                            <img src="${plan.image}" alt="">
-                        </div>
+                        <div class="card-bg"><img src="${plan.image}" alt=""></div>
                         <div class="card-content-adv">
                             <div class="card-details-panel">
                                 <div class="card-tags">
@@ -563,16 +574,10 @@
                                 </div>
                                 <div class="card-info">
                                     <h2>${plan.title}</h2>
-                                    <p>${plan.description || "A premium escape curated exclusively for your group's next milestone."}</p>
+                                    <p>${plan.description || "A premium escape curated exclusively for your group."}</p>
                                     <div class="card-meta-row">
-                                        <div class="meta-item">
-                                            <span class="material-symbols-outlined">location_on</span>
-                                            <span>${plan.place || 'Lleida'}</span>
-                                        </div>
-                                        <div class="meta-item">
-                                            <span class="material-symbols-outlined">schedule</span>
-                                            <span>Tomorrow</span>
-                                        </div>
+                                        <div class="meta-item"><span class="material-symbols-outlined">location_on</span><span>${plan.place || 'Lleida'}</span></div>
+                                        <div class="meta-item"><span class="material-symbols-outlined">schedule</span><span>Tomorrow</span></div>
                                     </div>
                                 </div>
                             </div>
@@ -580,7 +585,7 @@
                     </article>
                 `;
 
-                if (idx === 0) initDrag(container);
+                if (idx === 0) initPointer(container);
                 deck.appendChild(container);
             });
             updateProgress();
@@ -595,109 +600,106 @@
                 const elapsed = Date.now() - storyStart;
                 const progress = (elapsed / STORY_DURATION) * 100;
                 masterProgress.style.width = `${progress}%`;
-
-                if (elapsed >= STORY_DURATION) {
+                if (elapsed >= STORY_DURATION && !isDragging) {
                     clearInterval(storyTimer);
-                    vote(-1); // Auto-pass if time runs out
+                    vote(-1);
                 }
             }, 16);
         };
 
-        // Mouse-Magnetic Physics
-        window.onmousemove = (e) => {
-            if (!plans.length || isDragging) return;
+        function initPointer(el) {
+            el.onpointerdown = (e) => {
+                isDragging = true;
+                dragStartX = e.clientX;
+                dragStartY = e.clientY;
+                el.setPointerCapture(e.pointerId);
+            };
+
+            el.onpointermove = (e) => {
+                if (!isDragging) return;
+                targetX = e.clientX - dragStartX;
+                targetY = e.clientY - dragStartY;
+                targetRotate = targetX / 20;
+            };
+
+            el.onpointerup = (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                el.releasePointerCapture(e.pointerId);
+
+                if (Math.abs(targetX) > 150) {
+                    vote(targetX > 0 ? 1 : -1);
+                } else {
+                    targetX = 0; targetY = 0; targetRotate = 0;
+                }
+            };
+        }
+
+        const mainLoop = () => {
+            if (!plans.length || isVoted) {
+                requestAnimationFrame(mainLoop);
+                return;
+            }
 
             const topCard = deck.querySelector(".card-container:first-child");
-            if (!topCard) return;
+            if (!topCard) {
+                requestAnimationFrame(mainLoop);
+                return;
+            }
 
-            const xPct = e.clientX / window.innerWidth;
-            const tilt = (xPct - 0.5) * 30; // Max 15deg tilt
-            const moveX = (xPct - 0.5) * 100; // Max 50px move
+            // Magnetic logic if NOT dragging
+            if (!isDragging) {
+                const xPct = currentMouseX / window.innerWidth;
+                targetX = (xPct - 0.5) * 60;
+                targetRotate = (xPct - 0.5) * 15;
+            }
 
-            topCard.style.transform = `translate(${moveX}px, 0) rotate(${tilt}deg)`;
+            // Lerp physics
+            currentX += (targetX - currentX) * LERP_FACTOR;
+            currentY += (targetY - currentY) * LERP_FACTOR;
+            currentRotate += (targetRotate - currentRotate) * LERP_FACTOR;
 
-            // Dynamic Feedback
-            if (xPct > 0.8) {
-                feedbackLike.style.opacity = (xPct - 0.8) * 5;
+            topCard.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${currentRotate}deg)`;
+
+            // Adaptive Feedback
+            const feedbackVal = Math.max(0, (Math.abs(currentX) - 30) / 100);
+            if (currentX > 30) {
+                feedbackLike.style.opacity = Math.min(1, feedbackVal);
                 feedbackNope.style.opacity = 0;
-            } else if (xPct < 0.2) {
-                feedbackNope.style.opacity = (0.2 - xPct) * 5;
+            } else if (currentX < -30) {
+                feedbackNope.style.opacity = Math.min(1, feedbackVal);
                 feedbackLike.style.opacity = 0;
             } else {
                 feedbackLike.style.opacity = 0;
                 feedbackNope.style.opacity = 0;
             }
+
+            requestAnimationFrame(mainLoop);
         };
 
-        // Universal Click Handler
+        window.onmousemove = (e) => {
+            currentMouseX = e.clientX;
+            currentMouseY = e.clientY;
+        };
+
         universe.onclick = (e) => {
-            if (isDragging) return;
+            if (Math.abs(targetX) > 5 || isDragging) return; // Prevent if was drag
             const xPct = e.clientX / window.innerWidth;
             vote(xPct > 0.5 ? 1 : -1);
         };
 
-        let isDragging = false;
-        let startX, startY, moveX, moveY;
-
-        function initDrag(el) {
-            el.onpointerdown = (e) => {
-                isDragging = true;
-                startX = e.clientX;
-                startY = e.clientY;
-                el.style.transition = "none";
-            };
-
-            window.onpointermove = (e) => {
-                if (!isDragging) return;
-                moveX = e.clientX - startX;
-                moveY = e.clientY - startY;
-                const rotation = moveX / 20;
-                el.style.transform = `translate(${moveX}px, ${moveY}px) rotate(${rotation}deg)`;
-
-                // Feedback
-                if (moveX > 80) {
-                    feedbackLike.style.opacity = Math.min(1, (moveX - 80) / 100);
-                    feedbackNope.style.opacity = 0;
-                } else if (moveX < -80) {
-                    feedbackNope.style.opacity = Math.min(1, (Math.abs(moveX) - 80) / 100);
-                    feedbackLike.style.opacity = 0;
-                } else {
-                    feedbackLike.style.opacity = 0;
-                    feedbackNope.style.opacity = 0;
-                }
-            };
-
-            window.onpointerup = () => {
-                if (!isDragging) return;
-                isDragging = false;
-                el.style.transition = "transform 0.5s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.5s";
-
-                if (Math.abs(moveX) > 150) {
-                    vote(moveX > 0 ? 1 : -1);
-                } else {
-                    el.style.transform = `translate(0,0) rotate(0deg)`;
-                    feedbackLike.style.opacity = 0;
-                    feedbackNope.style.opacity = 0;
-                }
-                moveX = 0; moveY = 0;
-            };
-        }
-
-        const updateProgress = () => {
-            const total = parseInt("{{ plans.count }}");
-            const voted = total - plans.length;
-            counter.textContent = voted + 1;
-        };
-
         const vote = (value) => {
-            if (!plans.length) return;
+            if (isVoted) return;
+            isVoted = true;
             if (storyTimer) clearInterval(storyTimer);
 
             const topCard = deck.querySelector(".card-container:first-child");
-            const feedback = value > 0 ? feedbackLike : feedbackNope;
+            topCard.style.transition = "transform 0.8s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.5s";
+            topCard.style.pointerEvents = "none";
 
-            feedback.style.opacity = "1";
-            topCard.classList.add(value > 0 ? "is-removed-right" : "is-removed-left");
+            const outX = value > 0 ? 1000 : -1000;
+            topCard.style.transform = `translate(${outX}px, 0) rotate(${value > 0 ? 45 : -45}deg)`;
+            topCard.style.opacity = "0";
 
             const planId = plans[0].id;
             fetch(`/api/vote/${planId}/`, {
@@ -710,42 +712,36 @@
                 plans.shift();
                 feedbackLike.style.opacity = "0";
                 feedbackNope.style.opacity = "0";
-                renderStack();
                 if (plans.length === 0) showFinishedPopup();
-            }, 500);
+                else renderStack();
+            }, 600);
         };
 
         function showFinishedPopup() {
-            viewport.style.display = "none";
-            controls.style.display = "none";
-            document.querySelector(".vote-timeline").style.display = "none";
-            ambientBg.style.opacity = "0.3";
-
-            const popup = document.createElement("div");
-            popup.innerHTML = `
-                <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(20px); z-index: 20000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.8s ease;">
-                    <div style="text-align: center; max-width: 440px; padding: 3rem; border-radius: 3rem; background: #111; border: 1px solid rgba(165,165,255,0.2); box-shadow: 0 40px 100px rgba(0,0,0,0.8);">
-                        <div class="empty-icon" style="margin-bottom: 2rem;">👑</div>
-                        <h2 style="font-family: Manrope, sans-serif; font-size: 2.22rem; color: #fff; margin-bottom: 1rem;">Decisions Locked</h2>
-                        <p style="color: #7f7b84; line-height: 1.6; margin-bottom: 2.5rem;">The voting session is complete. We are now calculating the best path for your group.</p>
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; color: var(--primary); font-weight: 800; letter-spacing: 0.1em; font-size: 0.75rem;">
-                            <div class="pulse-dot"></div>
-                            SYNCHRONIZING RESULTS...
-                        </div>
+            universe.innerHTML = `
+                <div style="position: fixed; inset: 0; background: #000; z-index: 30000; display: flex; align-items: center; justify-content: center;">
+                    <div style="text-align: center; animation: popIn 0.8s cubic-bezier(0.19, 1, 0.22, 1);">
+                        <div class="empty-icon" style="font-size: 5rem; margin-bottom: 2rem;">🚀</div>
+                        <h1 style="font-family: Manrope, sans-serif; font-size: 3rem; font-weight: 900; color: #fff;">Mission Complete</h1>
+                        <p style="color: rgba(255,255,255,0.4); font-size: 1.1rem; margin-top: 1rem;">Calculant resultats per al grup...</p>
+                        <div class="pulse-dot" style="margin: 3rem auto;"></div>
                     </div>
                 </div>
-                <style>
-                    @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-                </style>
+                <style> @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } } </style>
             `;
-            document.body.appendChild(popup);
-
-            setTimeout(() => {
-                window.location.href = "/dashboard/";
-            }, 3000);
+            setTimeout(() => window.location.href = "/", 3000);
         }
 
+        const updateProgress = () => {
+            const total = parseInt("{{ plans.count }}");
+            const voted = total - plans.length;
+            if (counter) counter.textContent = voted + 1;
+        };
+
         function showEmpty() {
+            const viewport = document.getElementById("viewport");
+            const controls = document.getElementById("controls");
+            const emptyState = document.getElementById("empty-state");
             viewport.style.display = "none";
             controls.style.display = "none";
             emptyState.style.display = "block";
