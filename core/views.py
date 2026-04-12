@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import Group, GroupMember, Plan, Vote
+from .models import Group, GroupMember, Plan, PlanProposal, Vote
 
 User = get_user_model()
 
@@ -33,8 +33,14 @@ def _decorate_groups(groups):
     decorated = []
     for group in groups:
         members = list(group.members.filter(status=GroupMember.Status.ACTIVE)[:4])
+        active_proposal = (
+            group.proposals.filter(status=PlanProposal.Status.VOTING)
+            .order_by("-created_at")
+            .first()
+        )
         group.member_count = group.members.filter(status=GroupMember.Status.ACTIVE).count()
-        group.voting_plans_count = Plan.objects.filter(group=group, status=Plan.Status.VOTING).count()
+        group.active_proposal = active_proposal
+        group.voting_plans_count = active_proposal.plans.count() if active_proposal else 0
         group.preview_members = members
         group.extra_members_count = max(group.member_count - len(members), 0)
         decorated.append(group)
@@ -79,6 +85,10 @@ def _vote_identity_for_request(request, plan):
         request.session.save()
         session_key = request.session.session_key
     return {"user": None, "member": None, "session_key": session_key}
+
+
+def _active_group_proposal(group):
+    return group.proposals.filter(status=PlanProposal.Status.VOTING).order_by("-created_at").first()
 
 
 def dashboard(request):
@@ -394,19 +404,44 @@ def start_new_plan(request):
             )
 
         group = _resolve_group_for_request(request, group_id)
+        if _active_group_proposal(group):
+            return render(
+                request,
+                "pages/start_new_plan.html",
+                {
+                    "meta_title": "Start New Plan",
+                    "active_page": "start_new_plan",
+                    "topbar_context": "Start New Plan",
+                    "groups": user_groups,
+                    "error": "Aquest grup ja te una votacio activa. Tanca-la abans de crear-ne una altra.",
+                },
+            )
+
+        proposal = PlanProposal.objects.create(
+            group=group,
+            created_by=created_by,
+            title=global_title,
+            description=global_description,
+            status=PlanProposal.Status.VOTING,
+        )
+        group.status = Group.Status.VOTING
+        group.save(update_fields=["status"])
 
         if not options:
             Plan.objects.create(
+                proposal=proposal,
                 group=group,
                 created_by=created_by,
                 title=global_title,
                 description=global_description,
                 price=request.POST.get("price") or 0,
-                status=Plan.Status.VOTING,
+                status=Plan.Status.PROPOSED,
+                option_order=1,
             )
         else:
-            for opt in options:
+            for idx, opt in enumerate(options, start=1):
                 Plan.objects.create(
+                    proposal=proposal,
                     group=group,
                     created_by=created_by,
                     title=opt.get("title") or global_title,
@@ -416,7 +451,8 @@ def start_new_plan(request):
                     place_name=opt.get("place_name", ""),
                     address=opt.get("address", ""),
                     tag=opt.get("tag", ""),
-                    status=Plan.Status.VOTING,
+                    status=Plan.Status.PROPOSED,
+                    option_order=idx,
                 )
 
         return redirect("dashboard")
@@ -435,7 +471,8 @@ def start_new_plan(request):
 
 def vote(request, group_id):
     group = _resolve_group_for_request(request, group_id)
-    active_plans = Plan.objects.filter(group=group, status=Plan.Status.VOTING)
+    active_proposal = _active_group_proposal(group)
+    active_plans = active_proposal.plans.order_by("option_order", "created_at") if active_proposal else Plan.objects.none()
     if request.user.is_authenticated:
         current_voter = _resolve_member(group, request.user).display_name
     else:
@@ -449,6 +486,7 @@ def vote(request, group_id):
             "active_page": "active_plans",
             "topbar_context": f"Voting - {group.name}",
             "group": group,
+            "proposal": active_proposal,
             "plans": active_plans,
             "current_voter": current_voter,
         },
@@ -461,7 +499,9 @@ def api_submit_vote(request, plan_id):
         plan = get_object_or_404(Plan, id=plan_id)
         try:
             data = json.loads(request.body)
-            value = data.get("value", 1)
+            value = Vote.Value.UP if int(data.get("value", 1)) > 0 else Vote.Value.DOWN
+            if plan.proposal.status != PlanProposal.Status.VOTING:
+                return JsonResponse({"status": "error", "message": "This voting round is closed."}, status=400)
             identity = _vote_identity_for_request(request, plan)
 
             Vote.objects.update_or_create(

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.db.models import Count, Q
 
-from .models import Group, GroupMember, Plan, Vote
+from .models import Group, GroupMember, Plan, PlanProposal, Vote
 
 
 class GroupMemberInline(admin.TabularInline):
@@ -13,33 +13,63 @@ class GroupMemberInline(admin.TabularInline):
 class PlanInline(admin.TabularInline):
     model = Plan
     extra = 0
-    fields = ("title", "status", "price", "tag")
+    fields = ("title", "proposal", "status", "price", "tag", "option_order")
     show_change_link = True
 
 
 @admin.register(Group)
 class GroupAdmin(admin.ModelAdmin):
-    list_display = ("name", "status", "owner", "member_count", "plan_count", "created_at")
+    list_display = ("name", "status", "owner", "member_count", "proposal_count", "plan_count", "created_at")
     list_filter = ("status",)
     search_fields = ("name", "description")
     inlines = [GroupMemberInline, PlanInline]
 
     def get_queryset(self, request):
-        return super().get_queryset(request).annotate(_member_count=Count("members"), _plan_count=Count("plans"))
+        return super().get_queryset(request).annotate(
+            _member_count=Count("members"),
+            _proposal_count=Count("proposals"),
+            _plan_count=Count("plans"),
+        )
 
     @admin.display(ordering="_member_count")
     def member_count(self, obj):
         return obj._member_count
+
+    @admin.display(ordering="_proposal_count")
+    def proposal_count(self, obj):
+        return obj._proposal_count
 
     @admin.display(ordering="_plan_count")
     def plan_count(self, obj):
         return obj._plan_count
 
 
+class PlanOptionInline(admin.TabularInline):
+    model = Plan
+    extra = 0
+    fields = ("option_order", "title", "status", "scheduled_for", "place_name", "price")
+    ordering = ("option_order",)
+
+
+@admin.register(PlanProposal)
+class PlanProposalAdmin(admin.ModelAdmin):
+    list_display = ("title", "group", "status", "option_count", "created_by", "created_at")
+    list_filter = ("status", "group")
+    search_fields = ("title", "description", "group__name")
+    inlines = [PlanOptionInline]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(_option_count=Count("plans"))
+
+    @admin.display(ordering="_option_count")
+    def option_count(self, obj):
+        return obj._option_count
+
+
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):
-    list_display = ("title", "group", "status", "price", "vote_score", "vote_count", "created_at")
-    list_filter = ("status", "group")
+    list_display = ("title", "proposal", "group", "status", "option_order", "price", "vote_score", "vote_count", "created_at")
+    list_filter = ("status", "group", "proposal")
     search_fields = ("title", "description", "place_name", "address")
 
     def get_queryset(self, request):

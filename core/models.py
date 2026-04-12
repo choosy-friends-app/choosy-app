@@ -119,13 +119,67 @@ class GroupMember(TimestampedModel):
             raise ValidationError("Owner membership requires a linked user.")
 
 
-class Plan(TimestampedModel):
+class PlanProposal(TimestampedModel):
     class Status(models.TextChoices):
         DRAFT = "draft", "Draft"
         VOTING = "voting", "Voting"
         CHOSEN = "chosen", "Chosen"
         CANCELLED = "cancelled", "Cancelled"
 
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name="proposals")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="created_plan_proposals",
+    )
+    title = models.CharField(max_length=120)
+    description = models.CharField(max_length=255, blank=True)
+    voting_ends_at = models.DateTimeField(null=True, blank=True)
+    chosen_plan = models.ForeignKey(
+        "Plan",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="chosen_for_proposals",
+    )
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.VOTING)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["group", "status"]),
+            models.Index(fields=["status", "created_at"]),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["group"],
+                condition=Q(status__in=["draft", "voting"]),
+                name="unique_open_proposal_per_group",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return self.title
+
+    @property
+    def is_open(self) -> bool:
+        return self.status in {self.Status.DRAFT, self.Status.VOTING}
+
+    def clean(self) -> None:
+        if self.chosen_plan and self.chosen_plan.proposal_id != self.id:
+            raise ValidationError("Chosen plan must belong to this proposal.")
+
+
+class Plan(TimestampedModel):
+    class Status(models.TextChoices):
+        PROPOSED = "proposed", "Proposed"
+        SHORTLISTED = "shortlisted", "Shortlisted"
+        CHOSEN = "chosen", "Chosen"
+        ARCHIVED = "archived", "Archived"
+
+    proposal = models.ForeignKey(PlanProposal, on_delete=models.CASCADE, related_name="plans")
     group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name="plans")
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -142,18 +196,29 @@ class Plan(TimestampedModel):
     image_url = models.URLField(blank=True)
     place_name = models.CharField(max_length=120, blank=True)
     address = models.CharField(max_length=255, blank=True)
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.VOTING)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PROPOSED)
     scheduled_for = models.DateTimeField(null=True, blank=True)
+    option_order = models.PositiveSmallIntegerField(default=0)
 
     class Meta:
         ordering = ["-created_at"]
         indexes = [
+            models.Index(fields=["proposal", "option_order"]),
             models.Index(fields=["group", "status"]),
-            models.Index(fields=["status", "created_at"]),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["proposal", "option_order"],
+                name="unique_plan_option_order_per_proposal",
+            )
         ]
 
     def __str__(self) -> str:
         return self.title
+
+    def clean(self) -> None:
+        if self.proposal and self.group_id != self.proposal.group_id:
+            raise ValidationError("Plan option must belong to the same group as its proposal.")
 
 
 class Vote(TimestampedModel):
