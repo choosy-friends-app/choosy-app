@@ -31,7 +31,7 @@
               >
                 <div>
                   <strong>{{ proposal.title }}</strong>
-                  <span>{{ proposal.group.name }} · {{ proposal.option_count }} opciones · {{ proposal.total_votes }} votos</span>
+                  <span>{{ proposal.group.name }} · {{ proposal.option_count }} opciones · cierra {{ proposal.voting_ends_at|date:"d/m H:i" }}</span>
                 </div>
                 <span class="material-symbols-outlined">chevron_right</span>
               </a>
@@ -53,11 +53,16 @@
                 </span>
                 <div>
                   <h2>{{ selected_proposal.title }}</h2>
-                  <p>{{ selected_proposal.group.name }} · {{ selected_proposal.total_votes }} votos emitidos</p>
+                  <p>{{ selected_proposal.group.name }} · {{ selected_proposal.total_votes }} votos emitidos · cierra {{ selected_proposal.voting_ends_at|date:"d/m H:i" }}</p>
                 </div>
               </div>
 
               <a href="{% url 'vote' selected_proposal.group.id %}" class="group-row__link group-row__link--primary">Open vote</a>
+            </div>
+
+            <div class="plans-deadline-note">
+              <span class="material-symbols-outlined">schedule</span>
+              <span>Puedes votar o cambiar tu voto hasta el cierre de esta ronda.</span>
             </div>
 
             <div class="plans-progress-list">

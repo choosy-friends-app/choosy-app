@@ -10,7 +10,7 @@
         <h3>{{ group.name }}</h3>
         <p>
           {% if group.active_proposal %}
-            {{ group.active_proposal.title }} · {{ group.active_proposal.option_count }} opciones en votacion
+            {{ group.active_proposal.title }} · cierra {{ group.active_proposal.voting_ends_at|date:"d/m H:i" }}
           {% else %}
             {{ group.description|default:"Coordinating the next big group decision together." }}
           {% endif %}

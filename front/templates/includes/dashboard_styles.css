@@ -1219,6 +1219,20 @@ body.groups-modal-open {
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+.plans-deadline-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  padding: 0.75rem 0.95rem;
+  border-radius: 999px;
+  background: rgba(165, 165, 255, 0.1);
+  border: 1px solid rgba(165, 165, 255, 0.16);
+  color: #e5e1ff;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
 .plans-progress-item__head,
 .plans-voters-card__head {
   display: flex;
