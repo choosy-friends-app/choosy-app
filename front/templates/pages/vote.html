@@ -174,7 +174,34 @@
         height: 100%;
         background: var(--primary);
         box-shadow: 0 0 15px var(--primary);
-        transition: width 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+        transition: width 0.05s linear;
+        /* Smooth for timer */
+    }
+
+    .pulse-dot {
+        width: 8px;
+        height: 8px;
+        background: var(--primary);
+        border-radius: 50%;
+        box-shadow: 0 0 10px var(--primary);
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        50% {
+            transform: scale(1.5);
+            opacity: 0.5;
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
     }
 
     .tl-label {
@@ -494,6 +521,11 @@
         const feedbackLike = document.querySelector(".swipe-like");
         const feedbackNope = document.querySelector(".swipe-nope");
         const ambientBg = document.getElementById("ambient-bg");
+        const universe = document.getElementById("universe");
+
+        const STORY_DURATION = 6000; // 6 seconds per plan
+        let storyTimer = null;
+        let storyStart = 0;
 
         if (!plans.length) {
             showEmpty();
@@ -503,7 +535,7 @@
         const updateAmbient = () => {
             if (plans.length > 0) {
                 ambientBg.style.backgroundImage = `url(${plans[0].image})`;
-                ambientBg.style.opacity = "0.6";
+                ambientBg.style.opacity = "0.7";
             } else {
                 ambientBg.style.opacity = "0.2";
             }
@@ -553,6 +585,55 @@
             });
             updateProgress();
             updateAmbient();
+            startStoryTimer();
+        };
+
+        const startStoryTimer = () => {
+            if (storyTimer) clearInterval(storyTimer);
+            storyStart = Date.now();
+            storyTimer = setInterval(() => {
+                const elapsed = Date.now() - storyStart;
+                const progress = (elapsed / STORY_DURATION) * 100;
+                masterProgress.style.width = `${progress}%`;
+
+                if (elapsed >= STORY_DURATION) {
+                    clearInterval(storyTimer);
+                    vote(-1); // Auto-pass if time runs out
+                }
+            }, 16);
+        };
+
+        // Mouse-Magnetic Physics
+        window.onmousemove = (e) => {
+            if (!plans.length || isDragging) return;
+
+            const topCard = deck.querySelector(".card-container:first-child");
+            if (!topCard) return;
+
+            const xPct = e.clientX / window.innerWidth;
+            const tilt = (xPct - 0.5) * 30; // Max 15deg tilt
+            const moveX = (xPct - 0.5) * 100; // Max 50px move
+
+            topCard.style.transform = `translate(${moveX}px, 0) rotate(${tilt}deg)`;
+
+            // Dynamic Feedback
+            if (xPct > 0.8) {
+                feedbackLike.style.opacity = (xPct - 0.8) * 5;
+                feedbackNope.style.opacity = 0;
+            } else if (xPct < 0.2) {
+                feedbackNope.style.opacity = (0.2 - xPct) * 5;
+                feedbackLike.style.opacity = 0;
+            } else {
+                feedbackLike.style.opacity = 0;
+                feedbackNope.style.opacity = 0;
+            }
+        };
+
+        // Universal Click Handler
+        universe.onclick = (e) => {
+            if (isDragging) return;
+            const xPct = e.clientX / window.innerWidth;
+            vote(xPct > 0.5 ? 1 : -1);
         };
 
         let isDragging = false;
@@ -606,11 +687,11 @@
             const total = parseInt("{{ plans.count }}");
             const voted = total - plans.length;
             counter.textContent = voted + 1;
-            masterProgress.style.width = `${((voted + 1) / total) * 100}%`;
         };
 
         const vote = (value) => {
             if (!plans.length) return;
+            if (storyTimer) clearInterval(storyTimer);
 
             const topCard = deck.querySelector(".card-container:first-child");
             const feedback = value > 0 ? feedbackLike : feedbackNope;
@@ -630,9 +711,39 @@
                 feedbackLike.style.opacity = "0";
                 feedbackNope.style.opacity = "0";
                 renderStack();
-                if (plans.length === 0) showEmpty();
+                if (plans.length === 0) showFinishedPopup();
             }, 500);
         };
+
+        function showFinishedPopup() {
+            viewport.style.display = "none";
+            controls.style.display = "none";
+            document.querySelector(".vote-timeline").style.display = "none";
+            ambientBg.style.opacity = "0.3";
+
+            const popup = document.createElement("div");
+            popup.innerHTML = `
+                <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(20px); z-index: 20000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.8s ease;">
+                    <div style="text-align: center; max-width: 440px; padding: 3rem; border-radius: 3rem; background: #111; border: 1px solid rgba(165,165,255,0.2); box-shadow: 0 40px 100px rgba(0,0,0,0.8);">
+                        <div class="empty-icon" style="margin-bottom: 2rem;">👑</div>
+                        <h2 style="font-family: Manrope, sans-serif; font-size: 2.22rem; color: #fff; margin-bottom: 1rem;">Decisions Locked</h2>
+                        <p style="color: #7f7b84; line-height: 1.6; margin-bottom: 2.5rem;">The voting session is complete. We are now calculating the best path for your group.</p>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; color: var(--primary); font-weight: 800; letter-spacing: 0.1em; font-size: 0.75rem;">
+                            <div class="pulse-dot"></div>
+                            SYNCHRONIZING RESULTS...
+                        </div>
+                    </div>
+                </div>
+                <style>
+                    @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+                </style>
+            `;
+            document.body.appendChild(popup);
+
+            setTimeout(() => {
+                window.location.href = "/dashboard/";
+            }, 3000);
+        }
 
         function showEmpty() {
             viewport.style.display = "none";
