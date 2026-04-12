@@ -33,7 +33,11 @@
 
         <!-- Cards Carrousel Container -->
         <div class="vote-viewport" id="viewport">
-            <div class="vote-deck-adv" id="deck">
+            <!-- Swipe Feedback -->
+            <div class="swipe-feedback swipe-like">INTERESTED</div>
+            <div class="swipe-feedback swipe-nope">PASSED</div>
+
+            <div class="vote-deck-stack" id="deck">
                 <!-- Cards rendered via JS -->
             </div>
         </div>
@@ -47,7 +51,7 @@
                 <span class="material-symbols-outlined">star</span>
             </button>
             <button class="fa-btn fa-btn-vote" id="btn-love">
-                <span class="material-symbols-outlined">move_to_inbox</span>
+                <span class="material-symbols-outlined">done_all</span>
             </button>
         </div>
     </div>
@@ -95,13 +99,13 @@
 
     .vote-app-adv {
         width: 100%;
-        max-width: 460px;
-        height: 88vh;
-        min-height: 750px;
+        max-width: 440px;
+        height: 85vh;
+        min-height: 700px;
         display: flex;
         flex-direction: column;
         position: relative;
-        padding: 2rem;
+        padding: 1.5rem;
         z-index: 1;
     }
 
@@ -109,36 +113,24 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 2.5rem;
+        margin-bottom: 2rem;
     }
 
     .brand-logo {
         font-weight: 900;
-        font-size: 1.5rem;
+        font-size: 1.3rem;
         letter-spacing: 0.15em;
         color: white;
-        filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
     }
 
     .brand-accent {
         color: var(--secondary);
-        text-shadow: 0 0 15px var(--secondary);
     }
 
     .brand-actions {
         display: flex;
-        gap: 1.8rem;
-        color: #888;
-    }
-
-    .brand-actions .material-symbols-outlined {
-        cursor: pointer;
-        transition: 0.2s;
-    }
-
-    .brand-actions .material-symbols-outlined:hover {
-        color: white;
-        transform: scale(1.1);
+        gap: 1.5rem;
+        color: #555;
     }
 
     .vote-timeline {
@@ -150,272 +142,224 @@
 
     .tl-progress-bar {
         flex: 1;
-        height: 6px;
+        height: 4px;
         background: rgba(255, 255, 255, 0.05);
         border-radius: 99px;
         overflow: hidden;
-        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
     }
 
     .tl-fill {
         width: 0%;
         height: 100%;
-        background: linear-gradient(90deg, #a5a5ff, #d277ff, #a5a5ff);
-        background-size: 200% 100%;
-        animation: shimmer 2s linear infinite;
-        border-radius: 99px;
-        transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    @keyframes shimmer {
-        0% {
-            background-position: 200% 0;
-        }
-
-        100% {
-            background-position: -200% 0;
-        }
+        background: var(--accent);
+        box-shadow: 0 0 10px var(--accent-glow);
+        transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     .tl-label {
-        font-size: 0.85rem;
-        font-weight: 800;
-        color: #666;
-        font-variant-numeric: tabular-nums;
+        font-size: 0.8rem;
+        font-weight: 900;
+        color: #444;
     }
 
+    /* Tinder Stack Specifics */
     .vote-viewport {
         flex: 1;
         position: relative;
-        margin-bottom: 3rem;
-        perspective: 1000px;
+        margin-bottom: 4rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 
-    .vote-deck-adv {
+    .vote-deck-stack {
+        position: relative;
+        width: 100%;
         height: 100%;
-        display: flex;
-        transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);
     }
 
     .card-container {
-        flex: 0 0 100%;
+        position: absolute;
+        width: 100%;
         height: 100%;
-        padding: 0 10px;
-        transition: transform 0.6s ease, opacity 0.6s ease;
+        transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
+        cursor: grab;
+    }
+
+    .card-container:active {
+        cursor: grabbing;
     }
 
     .adv-vote-card {
         height: 100%;
-        background: #141416;
-        border-radius: 3rem;
+        background: #111;
+        border-radius: 2.5rem;
         overflow: hidden;
         position: relative;
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
         box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.8);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        transition: transform 0.3s;
+        border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .card-bg {
         position: absolute;
         inset: 0;
         pointer-events: none;
-        overflow: hidden;
     }
 
     .card-bg img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        filter: brightness(0.65) saturate(1.1);
-        transform: scale(1.05);
-        transition: transform 6s linear;
-    }
-
-    .adv-vote-card:hover .card-bg img {
-        transform: scale(1);
+        filter: brightness(0.6);
     }
 
     .card-bg::after {
         content: "";
         position: absolute;
         inset: 0;
-        background: linear-gradient(to top,
-                rgba(10, 10, 12, 1) 0%,
-                rgba(10, 10, 12, 0.8) 25%,
-                rgba(10, 10, 12, 0.2) 60%,
-                transparent 100%);
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, transparent 60%);
     }
 
     .card-content-adv {
         position: relative;
-        padding: 3.5rem 2.5rem;
+        padding: 3rem 2rem;
         z-index: 2;
     }
 
     .card-tags {
         display: flex;
-        gap: 0.6rem;
-        margin-bottom: 1.5rem;
+        gap: 0.5rem;
+        margin-bottom: 1.2rem;
     }
 
     .tag-pill {
-        background: rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 0.4rem 0.8rem;
         border-radius: 99px;
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         font-weight: 900;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
-    }
-
-    .tag-pill--price {
-        color: #4ade80;
-        border-color: rgba(74, 222, 128, 0.2);
-    }
-
-    .tag-pill--cat {
-        color: #a78bfa;
-        border-color: rgba(167, 139, 250, 0.2);
+        color: var(--accent);
+        border: 1px solid rgba(165, 165, 255, 0.1);
     }
 
     .card-content-adv h2 {
-        font-size: 2.8rem;
+        font-size: 2.5rem;
         font-weight: 900;
-        margin-bottom: 1rem;
-        line-height: 1;
-        letter-spacing: -0.05em;
+        margin-bottom: 0.8rem;
+        line-height: 1.1;
         color: white;
     }
 
     .card-content-adv p {
-        color: #999;
-        font-size: 1.05rem;
-        line-height: 1.6;
+        color: #888;
+        font-size: 0.95rem;
+        line-height: 1.5;
         margin-bottom: 2rem;
-        font-weight: 500;
     }
 
-    .card-loc {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
+    /* Swipe Animations */
+    .card-container.is-removed-left {
+        transform: translate(-150%, 10%) rotate(-30deg) !important;
+        opacity: 0;
     }
 
-    .loc-icon {
-        width: 2.8rem;
-        height: 2.8rem;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--accent);
+    .card-container.is-removed-right {
+        transform: translate(150%, 10%) rotate(30deg) !important;
+        opacity: 0;
     }
 
-    .card-loc span:last-child {
-        font-size: 1rem;
-        font-weight: 700;
-        color: white;
+    .swipe-feedback {
+        position: absolute;
+        top: 20%;
+        z-index: 100;
+        padding: 1rem 2rem;
+        border: 4px solid;
+        border-radius: 12px;
+        font-size: 2rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        opacity: 0;
+        transform: scale(0.8) rotate(-15deg);
+        pointer-events: none;
+        transition: 0.2s;
     }
 
-    .card-loc small {
-        display: block;
-        color: #555;
-        font-size: 0.75rem;
-        font-weight: 800;
-        letter-spacing: 0.05em;
-        margin-top: 0.1rem;
+    .swipe-like {
+        color: #4ade80;
+        border-color: #4ade80;
+        left: 10%;
+        transform: scale(1) rotate(-15deg);
     }
 
+    .swipe-nope {
+        color: #ef4444;
+        border-color: #ef4444;
+        right: 10%;
+        transform: scale(1) rotate(15deg);
+    }
+
+    /* Float Actions */
     .vote-float-actions {
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 1.8rem;
-        position: relative;
+        gap: 1.5rem;
         z-index: 10;
+        margin-bottom: 1rem;
     }
 
     .fa-btn {
-        width: 4.5rem;
-        height: 4.5rem;
+        width: 4rem;
+        height: 4rem;
         border-radius: 50%;
+        background: #1a1a1c;
         border: 1px solid rgba(255, 255, 255, 0.1);
-        background: rgba(255, 255, 255, 0.05);
         color: white;
-        cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        backdrop-filter: blur(20px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        cursor: pointer;
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .fa-btn .material-symbols-outlined {
-        font-size: 2rem;
+    .fa-btn:hover {
+        transform: scale(1.1);
     }
 
     .fa-btn-skip:hover {
         background: #ef4444;
+        color: white;
         border-color: #ef4444;
-        transform: scale(1.1);
-        box-shadow: 0 15px 40px rgba(239, 68, 68, 0.4);
-    }
-
-    .fa-btn-star:hover {
-        background: #fbbf24;
-        border-color: #fbbf24;
-        color: #000;
-        transform: scale(1.1);
-        box-shadow: 0 15px 40px rgba(251, 191, 36, 0.4);
     }
 
     .fa-btn-love {
-        width: 5.5rem;
-        height: 5.5rem;
-        background: linear-gradient(135deg, #a5a5ff, #d277ff);
+        width: 5rem;
+        height: 5rem;
+        background: var(--accent);
         color: #000;
+        box-shadow: 0 10px 40px var(--accent-glow);
         border: none;
-        box-shadow: 0 20px 50px rgba(165, 165, 255, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.5);
     }
 
     .fa-btn-love:hover {
-        transform: scale(1.15) rotate(8deg);
-        box-shadow: 0 25px 60px rgba(210, 119, 255, 0.6);
+        transform: scale(1.15) rotate(12deg);
     }
 
     .vote-empty-state {
-        flex: 1;
+        text-align: center;
+        padding: 4rem 2rem;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        text-align: center;
         gap: 1.5rem;
     }
-
-    .empty-icon {
-        font-size: 5rem;
-        filter: drop-shadow(0 0 20px var(--accent));
-    }
-
-    .vote-empty-state h2 {
-        font-size: 2.5rem;
-        font-weight: 900;
-    }
-
-    .vote-empty-state p {
-        color: var(--muted);
-        font-size: 1.1rem;
-        max-width: 300px;
-    }
+</style>
 </style>
 
 <script>
@@ -430,73 +374,89 @@
         const emptyState = document.getElementById("empty-state");
         const controls = document.getElementById("controls");
         const viewport = document.getElementById("viewport");
+        const feedbackLike = document.querySelector(".swipe-like");
+        const feedbackNope = document.querySelector(".swipe-nope");
 
-        let currentIndex = 0;
+        let currentActiveId = 0;
 
         if (!plans.length) {
-            emptyState.style.display = "flex";
-            controls.style.display = "none";
-            viewport.style.display = "none";
+            showEmpty();
             return;
         }
 
-        plans.forEach((plan, idx) => {
-            const container = document.createElement("div");
-            container.className = "card-container";
-            container.innerHTML = `
-      <article class="adv-vote-card">
-        <div class="card-bg">
-          <img src="${plan.image}" alt="">
-        </div>
-        <div class="card-content-adv">
-          <div class="card-tags">
-            <span class="tag-pill tag-pill--price">$ $ $</span>
-            <span class="tag-pill tag-pill--cat">${plan.tag || 'Activity'}</span>
-            <span class="tag-pill">Top Rated</span>
-          </div>
-          <h2>${plan.title}</h2>
-          <p>${plan.description || 'Una experiència inoblidable per compartir amb el grup.'}</p>
-          <div class="card-loc">
-            <div class="loc-icon"><span class="material-symbols-outlined">location_on</span></div>
-            <div>
-              <span>${plan.place || 'Localització per confirmar'}</span>
-              <small>0.8 MILES AWAY</small>
-            </div>
-          </div>
-        </div>
-      </article>
-    `;
-            deck.appendChild(container);
-        });
+        const renderStack = () => {
+            deck.innerHTML = "";
+            plans.forEach((plan, idx) => {
+                const container = document.createElement("div");
+                container.className = "card-container";
+                container.style.zIndex = plans.length - idx;
+                container.style.transform = `scale(${1 - idx * 0.05}) translateY(${idx * 20}px)`;
+                container.style.opacity = idx > 3 ? 0 : 1;
 
-        const updateUI = () => {
-            deck.style.transform = `translateX(-${currentIndex * 100}%)`;
-            counter.textContent = currentIndex + 1;
-            masterProgress.style.width = `${((currentIndex + 1) / plans.length) * 100}%`;
+                container.innerHTML = `
+                    <article class="adv-vote-card">
+                        <div class="card-bg">
+                            <img src="${plan.image}" alt="">
+                        </div>
+                        <div class="card-content-adv">
+                            <div class="card-tags">
+                                <span class="tag-pill">$ $ $</span>
+                                <span class="tag-pill">${plan.tag || 'Activity'}</span>
+                            </div>
+                            <h2>${plan.title}</h2>
+                            <p>${plan.description || 'Una experiència inoblidable per compartir amb el grup.'}</p>
+                        </div>
+                    </article>
+                `;
+                deck.appendChild(container);
+            });
+            updateProgress();
+        };
+
+        const updateProgress = () => {
+            const total = parseInt("{{ plans.count }}");
+            const voted = total - plans.length;
+            counter.textContent = voted + 1;
+            masterProgress.style.width = `${((voted + 1) / total) * 100}%`;
         };
 
         const vote = (value) => {
-            const planId = plans[currentIndex].id;
+            if (!plans.length) return;
+
+            const topCard = deck.querySelector(".card-container:first-child");
+            const feedback = value > 0 ? feedbackLike : feedbackNope;
+
+            // Show feedback
+            feedback.style.opacity = "1";
+            setTimeout(() => feedback.style.opacity = "0", 300);
+
+            // Animate card out
+            topCard.classList.add(value > 0 ? "is-removed-right" : "is-removed-left");
+
+            const planId = plans[0].id;
             fetch(`/api/vote/${planId}/`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken") },
                 body: JSON.stringify({ value })
             });
 
-            if (currentIndex < plans.length - 1) {
-                currentIndex++;
-                updateUI();
-            } else {
-                viewport.style.display = "none";
-                controls.style.display = "none";
-                emptyState.style.display = "flex";
-                document.querySelector('.vote-timeline').style.opacity = "0";
-            }
+            setTimeout(() => {
+                plans.shift();
+                renderStack();
+                if (plans.length === 0) showEmpty();
+            }, 500);
         };
+
+        function showEmpty() {
+            viewport.style.display = "none";
+            controls.style.display = "none";
+            emptyState.style.display = "block";
+            document.querySelector(".vote-timeline").style.display = "none";
+        }
 
         document.getElementById("btn-skip").onclick = () => vote(-1);
         document.getElementById("btn-love").onclick = () => vote(1);
-        document.getElementById("btn-star").onclick = () => vote(2); // Star as super-vote
+        document.getElementById("btn-star").onclick = () => vote(2);
 
         function getCookie(name) {
             let cv = null;
@@ -513,7 +473,7 @@
             return cv;
         }
 
-        updateUI();
+        renderStack();
     });
 </script>
 {% endblock %}
