@@ -36,8 +36,8 @@
         <!-- Cards Carrousel Container -->
         <div class="vote-viewport" id="viewport">
             <!-- Swipe Feedback -->
-            <div class="swipe-feedback swipe-like">INTERESTED</div>
-            <div class="swipe-feedback swipe-nope">PASSED</div>
+            <div class="swipe-feedback swipe-like">LIKE</div>
+            <div class="swipe-feedback swipe-nope">NOPE</div>
 
             <div class="vote-deck-stack" id="deck">
                 <!-- Cards rendered via JS -->
@@ -256,9 +256,10 @@
     .card-decision-overlay {
         position: absolute;
         inset: 0;
-        z-index: 5;
+        z-index: 20;
+        /* High enough to be over content */
         opacity: 0;
-        transition: opacity 0.1s linear;
+        transition: opacity 0.05s linear;
         pointer-events: none;
     }
 
@@ -276,6 +277,7 @@
         position: absolute;
         inset: 0;
         pointer-events: none;
+        z-index: 1;
     }
 
     .card-bg img {
@@ -688,26 +690,26 @@
             topCard.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${currentRotate}deg)`;
 
             // Adaptive Feedback (Colors & Stickers)
-            const intensity = Math.min(1, Math.abs(currentX) / 120);
+            const intensity = Math.min(1, Math.abs(currentX) / 80);
 
-            if (currentX > 20) {
-                overlayLike.style.opacity = intensity;
+            if (currentX > 15) {
+                overlayLike.style.opacity = intensity * 0.8;
                 overlayNope.style.opacity = 0;
                 feedbackLike.style.opacity = intensity;
-                feedbackLike.style.transform = `scale(${0.8 + intensity * 0.4}) rotate(-12deg)`;
+                feedbackLike.style.transform = `scale(${0.7 + intensity * 0.5}) rotate(-12deg)`;
                 feedbackNope.style.opacity = 0;
 
-                // Ambient tint
-                ambientBg.style.filter = `blur(80px) brightness(0.4) sepia(0.5) hue-rotate(80deg)`;
-            } else if (currentX < -20) {
-                overlayNope.style.opacity = intensity;
+                // Aggressive Ambient tint
+                ambientBg.style.filter = `blur(40px) brightness(0.6) sepia(1) hue-rotate(80deg) saturate(2)`;
+            } else if (currentX < -15) {
+                overlayNope.style.opacity = intensity * 0.8;
                 overlayLike.style.opacity = 0;
                 feedbackNope.style.opacity = intensity;
-                feedbackNope.style.transform = `scale(${0.8 + intensity * 0.4}) rotate(12deg)`;
+                feedbackNope.style.transform = `scale(${0.7 + intensity * 0.5}) rotate(12deg)`;
                 feedbackLike.style.opacity = 0;
 
-                // Ambient tint
-                ambientBg.style.filter = `blur(80px) brightness(0.4) sepia(0.5) hue-rotate(-50deg)`;
+                // Aggressive Ambient tint
+                ambientBg.style.filter = `blur(40px) brightness(0.6) sepia(1) hue-rotate(-50deg) saturate(2)`;
             } else {
                 overlayLike.style.opacity = 0;
                 overlayNope.style.opacity = 0;
