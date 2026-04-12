@@ -5,6 +5,18 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import Group, Plan, Vote
 
 def dashboard(request):
+    user_groups = Group.objects.all()
+    
+    # Seed data if empty
+    if not user_groups.exists():
+        Group.objects.create(name="The Foodies Collective", description="Culinary adventures")
+        Group.objects.create(name="Adventure Seekers", description="Outdoor stuff")
+        user_groups = Group.objects.all()
+
+    # Populate counts for each group
+    for group in user_groups:
+        group.voting_plans_count = Plan.objects.filter(group=group, status=Plan.Status.VOTING).count()
+
     return render(
         request,
         "pages/dashboard.html",
@@ -12,6 +24,7 @@ def dashboard(request):
             "meta_title": "Dashboard",
             "active_page": "dashboard",
             "topbar_context": "Dashboard",
+            "groups": user_groups,
         },
     )
 
@@ -100,7 +113,7 @@ def start_new_plan(request):
                     status=Plan.Status.VOTING,
                 )
                 
-        return redirect("active_plans")
+        return redirect("dashboard")
         
     user_groups = Group.objects.all()
     
@@ -151,10 +164,10 @@ def api_submit_vote(request, plan_id):
                 request.session.save()
                 session_key = request.session.session_key
                 
-            Vote.objects.create(
+            Vote.objects.update_or_create(
                 plan=plan,
-                value=value,
-                session_key=session_key
+                session_key=session_key,
+                defaults={"value": value}
             )
             return JsonResponse({"status": "success"})
         except Exception as e:

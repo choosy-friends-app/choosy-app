@@ -742,6 +742,7 @@ button {
 }
 
 @media (max-width: 720px) {
+
   .topbar,
   .page-shell {
     padding-left: 1.25rem;
@@ -786,4 +787,338 @@ button {
   .hero-copy h1 {
     font-size: 2.7rem;
   }
+}
+
+/* Side Panel Hooks */
+.side-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.badge {
+  background: var(--accent);
+  color: #000;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.2rem 0.6rem;
+  border-radius: 2rem;
+  box-shadow: 0 0 15px var(--accent-glow);
+}
+
+.vote-stack-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.vote-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  padding: 0.75rem 1rem;
+  border-radius: 1.25rem;
+  transition: 0.3s;
+}
+
+.vote-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+.vote-item__icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: rgba(165, 165, 255, 0.1);
+  color: var(--accent);
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vote-item__info {
+  flex: 1;
+}
+
+.vote-item__info strong {
+  display: block;
+  font-size: 0.9rem;
+  color: white;
+}
+
+.vote-item__info span {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.vote-item__go {
+  color: var(--muted);
+}
+
+.vote-item:hover .vote-item__go {
+  color: var(--accent);
+}
+
+/* ==========================================================================
+   GOD MODE DASHBOARD - SENIOR SAAS AESTHETIC
+   ========================================================================== */
+
+.group-card-godmode {
+  background: rgba(20, 20, 22, 0.6);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 2.2rem;
+  padding: 2.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.group-card-godmode:hover {
+  transform: translateY(-8px);
+  border-color: rgba(165, 165, 255, 0.3);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), 0 0 40px rgba(165, 165, 255, 0.05);
+}
+
+.gc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.gc-identity {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.gc-icon-hex {
+  width: 3.5rem;
+  height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(165, 165, 255, 0.15), rgba(210, 119, 255, 0.05));
+  border: 1px solid rgba(165, 165, 255, 0.2);
+  border-radius: 1rem;
+  color: var(--primary);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.gc-title h3 {
+  font-size: 1.8rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.2rem;
+}
+
+.gc-title p {
+  color: #7f7b84;
+  font-size: 0.9rem;
+}
+
+.badge-pulse {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 1.1rem;
+  background: rgba(165, 165, 255, 0.1);
+  border: 1px solid var(--primary);
+  border-radius: 999px;
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--primary);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--primary);
+  animation: badgePulse 1.5s infinite;
+}
+
+@keyframes badgePulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.8);
+    opacity: 0.4;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.gc-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.gc-avatars {
+  display: flex;
+  align-items: center;
+}
+
+.avav {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  border: 2px solid #141416;
+  margin-left: -0.8rem;
+}
+
+.avav:first-child {
+  margin-left: 0;
+}
+
+.avav-more {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  background: #2a2a2d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border: 2px solid #141416;
+  margin-left: -0.8rem;
+}
+
+.gc-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #555;
+  font-size: 0.85rem;
+}
+
+.gc-actions {
+  display: grid;
+  gap: 1rem;
+}
+
+.btn-god-mode {
+  width: 100%;
+  padding: 1.2rem;
+  border-radius: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  font-weight: 800;
+  font-size: 1rem;
+  transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-god-mode--primary {
+  background: var(--primary);
+  color: #000;
+  border: none;
+  box-shadow: 0 10px 30px rgba(165, 165, 255, 0.4);
+}
+
+.btn-god-mode--primary:hover {
+  transform: scale(1.02);
+  box-shadow: 0 15px 40px rgba(165, 165, 255, 0.6);
+}
+
+.btn-shine {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transform: skewX(-25deg);
+  animation: shineLoop 3s infinite;
+}
+
+@keyframes shineLoop {
+  0% {
+    left: -100%;
+  }
+
+  100% {
+    left: 200%;
+  }
+}
+
+.vote-item-godmode {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+  margin-bottom: 0.8rem;
+}
+
+.vote-item-godmode:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--primary);
+  transform: translateX(8px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.vi-icon {
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(165, 165, 255, 0.1);
+  color: var(--primary);
+  border-radius: 1rem;
+}
+
+.vi-details {
+  flex: 1;
+}
+
+.vi-details strong {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 0.15rem;
+  color: #eee;
+}
+
+.vi-details span {
+  font-size: 0.85rem;
+  color: #7f7b84;
+}
+
+.vi-jump {
+  color: #444;
+  transition: 0.3s;
+}
+
+.vote-item-godmode:hover .vi-jump {
+  color: var(--primary);
+  transform: scale(1.2);
 }
