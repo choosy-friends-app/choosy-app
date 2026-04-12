@@ -164,10 +164,10 @@ def api_submit_vote(request, plan_id):
                 request.session.save()
                 session_key = request.session.session_key
                 
-            Vote.objects.create(
+            Vote.objects.update_or_create(
                 plan=plan,
-                value=value,
-                session_key=session_key
+                session_key=session_key,
+                defaults={"value": value}
             )
             return JsonResponse({"status": "success"})
         except Exception as e:

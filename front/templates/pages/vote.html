@@ -529,7 +529,6 @@
         }
     }
 </style>
-</style>
 
 <script>
     document.addEventListener("DOMContentLoaded", () => {
@@ -680,8 +679,8 @@
             // Magnetic logic if NOT dragging
             if (!isDragging) {
                 const xPct = currentMouseX / window.innerWidth;
-                targetX = (xPct - 0.5) * 80;
-                targetRotate = (xPct - 0.5) * 20;
+                targetX = (xPct - 0.5) * 180; // Dramatically wider range
+                targetRotate = (xPct - 0.5) * 25;
             }
 
             // Lerp physics
@@ -692,32 +691,32 @@
             topCard.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${currentRotate}deg)`;
 
             // Adaptive Feedback (Colors & Stickers)
-            const intensity = Math.min(1, Math.abs(currentX) / 60); // Even faster ramp
+            const intensity = Math.min(1, Math.abs(currentX) / 60);
 
-            if (currentX > 10) {
-                overlayLike.style.opacity = intensity * 0.95;
+            if (currentX > 5) { // Immediate response
+                overlayLike.style.opacity = intensity * 1.0;
                 overlayNope.style.opacity = 0;
                 feedbackLike.style.opacity = intensity;
-                feedbackLike.style.transform = `scale(${0.6 + intensity * 0.6}) rotate(-12deg)`;
+                feedbackLike.style.transform = `scale(${0.6 + intensity * 0.7}) rotate(-12deg)`;
                 feedbackNope.style.opacity = 0;
 
                 topCard.querySelector('.adv-vote-card').style.borderColor = `rgba(74, 222, 128, ${intensity})`;
 
-                // Nuclear Ambient tint
-                ambientBg.style.filter = `blur(40px) brightness(0.8) saturate(3)`;
-                ambientBg.style.backgroundColor = `rgba(74, 222, 128, ${intensity * 0.4})`;
-            } else if (currentX < -10) {
-                overlayNope.style.opacity = intensity * 0.95;
+                // Aggressive Ambient Color Shift
+                ambientBg.style.filter = `blur(30px) brightness(1) saturate(3)`;
+                ambientBg.style.backgroundColor = `rgba(74, 222, 128, ${intensity * 0.6})`;
+            } else if (currentX < -5) {
+                overlayNope.style.opacity = intensity * 1.0;
                 overlayLike.style.opacity = 0;
                 feedbackNope.style.opacity = intensity;
-                feedbackNope.style.transform = `scale(${0.6 + intensity * 0.6}) rotate(12deg)`;
+                feedbackNope.style.transform = `scale(${0.6 + intensity * 0.7}) rotate(12deg)`;
                 feedbackLike.style.opacity = 0;
 
                 topCard.querySelector('.adv-vote-card').style.borderColor = `rgba(239, 68, 68, ${intensity})`;
 
-                // Nuclear Ambient tint
-                ambientBg.style.filter = `blur(40px) brightness(0.8) saturate(3)`;
-                ambientBg.style.backgroundColor = `rgba(239, 68, 68, ${intensity * 0.4})`;
+                // Aggressive Ambient Color Shift
+                ambientBg.style.filter = `blur(30px) brightness(1) saturate(3)`;
+                ambientBg.style.backgroundColor = `rgba(239, 68, 68, ${intensity * 0.6})`;
             } else {
                 overlayLike.style.opacity = 0;
                 overlayNope.style.opacity = 0;
