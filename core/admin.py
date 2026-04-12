@@ -7,7 +7,7 @@ from .models import Group, GroupMember, Plan, Vote
 class GroupMemberInline(admin.TabularInline):
     model = GroupMember
     extra = 0
-    fields = ("display_name", "user", "is_admin", "avatar_url")
+    fields = ("display_name", "user", "role", "status", "avatar_url")
 
 
 class PlanInline(admin.TabularInline):
@@ -60,8 +60,8 @@ class PlanAdmin(admin.ModelAdmin):
 
 @admin.register(GroupMember)
 class GroupMemberAdmin(admin.ModelAdmin):
-    list_display = ("display_name", "group", "user", "is_admin", "created_at")
-    list_filter = ("is_admin", "group")
+    list_display = ("display_name", "group", "user", "role", "status", "created_at")
+    list_filter = ("role", "status", "group")
     search_fields = ("display_name", "group__name", "user__username")
 
 
