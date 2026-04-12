@@ -3,6 +3,8 @@
 {% block content %}
 <div class="vote-immersive-universe" id="universe">
     <div class="dynamic-ambient-bg" id="ambient-bg"></div>
+    <!-- Fullscreen tint layer -->
+    <div id="vote-tint"></div>
 
     <div class="vote-app-adv" id="vote-app">
 
@@ -35,9 +37,9 @@
 
         <!-- Cards Carrousel Container -->
         <div class="vote-viewport" id="viewport">
-            <!-- Swipe Feedback -->
-            <div class="swipe-feedback swipe-like">LIKE</div>
-            <div class="swipe-feedback swipe-nope">NOPE</div>
+            <!-- Swipe Feedback - positioned over viewport -->
+            <div class="swipe-feedback swipe-like" id="fb-like">👍 LIKE</div>
+            <div class="swipe-feedback swipe-nope" id="fb-nope">👎 NOPE</div>
 
             <div class="vote-deck-stack" id="deck">
                 <!-- Cards rendered via JS -->
@@ -254,25 +256,10 @@
         transition: border-color 0.1s linear;
     }
 
-    /* Decision Overlays */
+    /* Decision Overlays - on card-container, outside overflow:hidden */
     .card-decision-overlay {
-        position: absolute;
-        inset: 0;
-        z-index: 20;
-        /* High enough to be over content */
-        opacity: 0;
-        transition: opacity 0.05s linear;
-        pointer-events: none;
-    }
-
-    .overlay-like {
-        background: linear-gradient(135deg, rgba(74, 222, 128, 0.8), rgba(74, 222, 128, 0.2));
-        box-shadow: inset 0 0 150px rgba(74, 222, 128, 0.9);
-    }
-
-    .overlay-nope {
-        background: linear-gradient(-135deg, rgba(239, 68, 68, 0.8), rgba(239, 68, 68, 0.2));
-        box-shadow: inset 0 0 150px rgba(239, 68, 68, 0.9);
+        display: none;
+        /* Using box-shadow glow on container instead */
     }
 
     .card-bg {
@@ -386,37 +373,50 @@
 
     .swipe-feedback {
         position: absolute;
-        top: 22%;
-        z-index: 100;
-        padding: 0.8rem 1.5rem;
-        border: 4px solid;
-        border-radius: 1rem;
+        top: 5%;
+        z-index: 1000;
+        padding: 1rem 2.5rem;
+        border: 5px solid;
+        border-radius: 1.5rem;
         font-family: "Manrope", sans-serif;
-        font-size: 3rem;
-        font-weight: 1000;
+        font-size: 2.5rem;
+        font-weight: 900;
         text-transform: uppercase;
         letter-spacing: 0.1em;
         opacity: 0;
-        transform: scale(0.5) rotate(-15deg);
         pointer-events: none;
-        transition: all 0.15s cubic-bezier(0.19, 1, 0.22, 1);
-        backdrop-filter: blur(12px);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
     }
 
     .swipe-like {
         color: #4ade80;
         border-color: #4ade80;
-        left: 12%;
-        transform: scale(0.8) rotate(-12deg);
-        box-shadow: 0 0 60px rgba(74, 222, 128, 0.5), inset 0 0 20px rgba(74, 222, 128, 0.2);
+        background: rgba(74, 222, 128, 0.15);
+        left: 5%;
+        transform: rotate(-15deg);
+        text-shadow: 0 0 30px rgba(74, 222, 128, 0.8);
+        box-shadow: 0 0 60px rgba(74, 222, 128, 0.5), inset 0 0 20px rgba(74, 222, 128, 0.15);
     }
 
     .swipe-nope {
         color: #ef4444;
         border-color: #ef4444;
-        right: 12%;
-        transform: scale(0.8) rotate(12deg);
-        box-shadow: 0 0 60px rgba(239, 68, 68, 0.5), inset 0 0 20px rgba(239, 68, 68, 0.2);
+        background: rgba(239, 68, 68, 0.15);
+        right: 5%;
+        transform: rotate(15deg);
+        text-shadow: 0 0 30px rgba(239, 68, 68, 0.8);
+        box-shadow: 0 0 60px rgba(239, 68, 68, 0.5), inset 0 0 20px rgba(239, 68, 68, 0.15);
+    }
+
+    /* Global tint for decision direction */
+    #vote-tint {
+        position: fixed;
+        inset: 0;
+        z-index: 9998;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.05s;
     }
 
     /* Float Actions - REDESIGNED FOR GOD MODE */
@@ -676,10 +676,14 @@
             const overlayLike = topCard.querySelector(".overlay-like");
             const overlayNope = topCard.querySelector(".overlay-nope");
 
+            const voteTint = document.getElementById("vote-tint");
+            const fbLike = document.getElementById("fb-like");
+            const fbNope = document.getElementById("fb-nope");
+
             // Magnetic logic if NOT dragging
             if (!isDragging) {
                 const xPct = currentMouseX / window.innerWidth;
-                targetX = (xPct - 0.5) * 180; // Dramatically wider range
+                targetX = (xPct - 0.5) * 180;
                 targetRotate = (xPct - 0.5) * 25;
             }
 
@@ -690,41 +694,28 @@
 
             topCard.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${currentRotate}deg)`;
 
-            // Adaptive Feedback (Colors & Stickers)
+            // --- DECISION FEEDBACK ---
             const intensity = Math.min(1, Math.abs(currentX) / 60);
 
-            if (currentX > 5) { // Immediate response
-                overlayLike.style.opacity = intensity * 1.0;
-                overlayNope.style.opacity = 0;
-                feedbackLike.style.opacity = intensity;
-                feedbackLike.style.transform = `scale(${0.6 + intensity * 0.7}) rotate(-12deg)`;
-                feedbackNope.style.opacity = 0;
-
-                topCard.querySelector('.adv-vote-card').style.borderColor = `rgba(74, 222, 128, ${intensity})`;
-
-                // Aggressive Ambient Color Shift
-                ambientBg.style.filter = `blur(30px) brightness(1) saturate(3)`;
-                ambientBg.style.backgroundColor = `rgba(74, 222, 128, ${intensity * 0.6})`;
+            if (currentX > 5) {
+                // GREEN: LIKE
+                fbLike.style.opacity = intensity;
+                fbNope.style.opacity = 0;
+                voteTint.style.background = `rgba(74, 222, 128, ${intensity * 0.25})`;
+                voteTint.style.opacity = 1;
+                topCard.style.boxShadow = `0 0 120px rgba(74, 222, 128, ${intensity * 0.9})`;
             } else if (currentX < -5) {
-                overlayNope.style.opacity = intensity * 1.0;
-                overlayLike.style.opacity = 0;
-                feedbackNope.style.opacity = intensity;
-                feedbackNope.style.transform = `scale(${0.6 + intensity * 0.7}) rotate(12deg)`;
-                feedbackLike.style.opacity = 0;
-
-                topCard.querySelector('.adv-vote-card').style.borderColor = `rgba(239, 68, 68, ${intensity})`;
-
-                // Aggressive Ambient Color Shift
-                ambientBg.style.filter = `blur(30px) brightness(1) saturate(3)`;
-                ambientBg.style.backgroundColor = `rgba(239, 68, 68, ${intensity * 0.6})`;
+                // RED: NOPE
+                fbNope.style.opacity = intensity;
+                fbLike.style.opacity = 0;
+                voteTint.style.background = `rgba(239, 68, 68, ${intensity * 0.25})`;
+                voteTint.style.opacity = 1;
+                topCard.style.boxShadow = `0 0 120px rgba(239, 68, 68, ${intensity * 0.9})`;
             } else {
-                overlayLike.style.opacity = 0;
-                overlayNope.style.opacity = 0;
-                feedbackLike.style.opacity = 0;
-                feedbackNope.style.opacity = 0;
-                topCard.querySelector('.adv-vote-card').style.borderColor = 'rgba(255, 255, 255, 0.08)';
-                ambientBg.style.filter = `blur(80px) brightness(0.4)`;
-                ambientBg.style.backgroundColor = 'transparent';
+                fbLike.style.opacity = 0;
+                fbNope.style.opacity = 0;
+                voteTint.style.opacity = 0;
+                topCard.style.boxShadow = '';
             }
 
             requestAnimationFrame(mainLoop);
