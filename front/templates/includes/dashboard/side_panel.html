@@ -6,18 +6,21 @@
     <div class="vote-stack-preview">
       {% for group in groups %}
       {% if group.voting_plans_count > 0 %}
-      <div class="vote-item">
-        <div class="vote-item__icon"><span class="material-symbols-outlined">how_to_vote</span></div>
-        <div class="vote-item__info">
-          <strong>{{ group.name }}</strong>
-          <span>{{ group.voting_plans_count }} options to choose from</span>
+      <div class="vote-item-godmode">
+        <div class="vi-icon">
+          <span class="material-symbols-outlined">how_to_vote</span>
         </div>
-        <a href="{% url 'vote' group.id %}" class="vote-item__go"><span
-            class="material-symbols-outlined">chevron_right</span></a>
+        <div class="vi-details">
+          <strong>{{ group.name }}</strong>
+          <span>{{ group.voting_plans_count }} options pending</span>
+        </div>
+        <a href="{% url 'vote' group.id %}" class="vi-jump">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </a>
       </div>
       {% endif %}
       {% empty %}
-      <p class="muted" style="font-size: 0.8rem;">No pending votes. Relax!</p>
+      <p class="muted" style="font-size: 0.8rem; opacity: 0.6;">All caught up! No votes pending.</p>
       {% endfor %}
     </div>
   </section>

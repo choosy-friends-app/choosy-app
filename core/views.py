@@ -6,6 +6,13 @@ from .models import Group, Plan, Vote
 
 def dashboard(request):
     user_groups = Group.objects.all()
+    
+    # Seed data if empty
+    if not user_groups.exists():
+        Group.objects.create(name="The Foodies Collective", description="Culinary adventures")
+        Group.objects.create(name="Adventure Seekers", description="Outdoor stuff")
+        user_groups = Group.objects.all()
+
     # Populate counts for each group
     for group in user_groups:
         group.voting_plans_count = Plan.objects.filter(group=group, status=Plan.Status.VOTING).count()
