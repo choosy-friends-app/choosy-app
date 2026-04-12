@@ -4,26 +4,20 @@
   <section class="groups-page">
     <header class="groups-hero">
       <div class="groups-hero__copy">
-        <p class="page-kicker">Live Group Directory</p>
-        <h1>Your Squads</h1>
-        <p>Aqui ya no se renderizan ejemplos. Lo que ves sale del backend real de Django y de los grupos que vayas creando en localhost.</p>
+        <p class="page-kicker">Your Real Groups</p>
+        <h1>Groups</h1>
+        <p>Aqui se muestran solo los grupos que pertenecen al usuario actual. Ya no se ve el formulario de creacion hasta que pulses el boton.</p>
       </div>
 
       {% if request.user.is_authenticated %}
-        <form class="groups-hero__form" method="post">
-          {% csrf_token %}
-          <input type="hidden" name="action" value="create_group" />
-          <input class="groups-input" type="text" name="name" placeholder="Nombre del grupo" required />
-          <input class="groups-input" type="text" name="description" placeholder="Descripcion corta" />
-          <button class="groups-hero__action" type="submit">
-            <span class="material-symbols-outlined">add</span>
-            <span>Create New Squad</span>
-          </button>
-        </form>
+        <button class="groups-hero__action" type="button" data-open-create-group>
+          <span class="material-symbols-outlined">add</span>
+          <span>Create Group</span>
+        </button>
       {% else %}
         <div class="groups-auth-note">
           <span class="material-symbols-outlined">lock</span>
-          <span>Sin autenticacion final, la creacion desde UI requiere que tu sesion de Django ya este logueada.</span>
+          <span>Inicia sesion para crear grupos y ver solo tus squads reales.</span>
         </div>
       {% endif %}
     </header>
@@ -35,86 +29,67 @@
       <div class="groups-flash groups-flash--error">{{ error_message }}</div>
     {% endif %}
 
-    <article class="squad-highlight">
-      <div class="squad-highlight__copy">
-        <h2>Estado real del ecosistema</h2>
-        <p>Los contadores y grupos de esta pantalla salen directamente de base de datos. Si creas o editas datos en localhost, esta vista cambia en la siguiente recarga.</p>
-
-        <div class="squad-highlight__stats">
-          <div>
-            <strong>{{ total_groups }}</strong>
-            <span>Groups</span>
-          </div>
-          <div>
-            <strong>{{ total_members }}</strong>
-            <span>Active Members</span>
-          </div>
-          <div>
-            <strong>{{ total_pending_votes }}</strong>
-            <span>Voting Options</span>
-          </div>
-        </div>
+    <article class="groups-overview">
+      <div class="groups-overview__copy">
+        <h2>Vista de pertenencia</h2>
+        <p>Esta pestaña cruza usuario, membresía activa y estado de votación para que veas tus grupos de verdad y no contenido ficticio.</p>
       </div>
-
-      <div class="squad-highlight__panel">
-        <span class="material-symbols-outlined">hub</span>
-        <p>{% if request.user.is_authenticated %}Sesion activa como {{ request.user.username }}{% else %}Modo local sin login final{% endif %}</p>
-        <div class="squad-highlight__track" aria-hidden="true">
-          <div class="squad-highlight__fill" style="width: {% widthratio total_pending_votes|add:1 total_groups|add:1 100 %}%;"></div>
+      <div class="groups-overview__stats">
+        <div class="groups-stat">
+          <strong>{{ total_groups }}</strong>
+          <span>Groups</span>
+        </div>
+        <div class="groups-stat">
+          <strong>{{ total_members }}</strong>
+          <span>Members</span>
+        </div>
+        <div class="groups-stat">
+          <strong>{{ total_pending_votes }}</strong>
+          <span>Votes Pending</span>
         </div>
       </div>
     </article>
 
-    <section class="squad-grid">
+    <section class="groups-list">
       {% for group in groups %}
-        <article class="squad-card {% if forloop.counter0|divisibleby:2 %}squad-card--offset{% endif %}">
-          <div class="squad-card__ghost">
-            <span class="material-symbols-outlined">
-              {% if group.voting_plans_count > 0 %}how_to_vote{% else %}groups{% endif %}
-            </span>
-          </div>
-          <div class="squad-card__body">
-            <div class="squad-card__head">
-              <span class="squad-card__icon {% cycle 'squad-card__icon--primary' 'squad-card__icon--secondary' 'squad-card__icon--tertiary' %}">
-                <span class="material-symbols-outlined">
-                  {% if group.voting_plans_count > 0 %}bolt{% else %}forum{% endif %}
-                </span>
+        <article class="group-row">
+          <div class="group-row__main">
+            <div class="group-row__icon">
+              <span class="material-symbols-outlined">
+                {% if group.voting_plans_count > 0 %}how_to_vote{% else %}groups{% endif %}
               </span>
-              <div>
+            </div>
+            <div class="group-row__copy">
+              <div class="group-row__title">
                 <h3>{{ group.name }}</h3>
-                <p class="squad-card__sub">{{ group.description|default:"Grupo listo para decidir el siguiente plan." }}</p>
+                <span class="group-row__status">{{ group.get_status_display }}</span>
+              </div>
+              <p>{{ group.description|default:"Grupo listo para organizar el siguiente plan." }}</p>
+              <div class="group-row__meta">
+                <span><span class="material-symbols-outlined">group</span>{{ group.member_count }} miembro{{ group.member_count|pluralize }}</span>
+                <span><span class="material-symbols-outlined">how_to_vote</span>{{ group.voting_plans_count }} opcion{{ group.voting_plans_count|pluralize:"es" }} en votacion</span>
+                <span><span class="material-symbols-outlined">history</span>Actualizado hace {{ group.updated_at|timesince }}</span>
               </div>
             </div>
+          </div>
 
-            <div class="squad-card__meta">
-              <span class="squad-card__line">
-                <span class="material-symbols-outlined">group</span>
-                <span>{{ group.member_count }} miembro{{ group.member_count|pluralize }}</span>
-              </span>
-              <span class="squad-card__line">
-                <span class="material-symbols-outlined">how_to_vote</span>
-                <span>{{ group.voting_plans_count }} opcion{{ group.voting_plans_count|pluralize:"es" }} en votacion</span>
-              </span>
-              <p>Estado: {{ group.get_status_display }}</p>
+          <div class="group-row__side">
+            <div class="avatar-cluster avatar-cluster--named">
+              {% for member in group.preview_members %}
+                <span title="{{ member.display_name }}">{{ member.display_name|slice:":1"|upper }}</span>
+              {% empty %}
+                <span title="No members">?</span>
+              {% endfor %}
+              {% if group.extra_members_count > 0 %}
+                <span class="avatar-cluster__extra">+{{ group.extra_members_count }}</span>
+              {% endif %}
             </div>
 
-            <div class="squad-card__accent {% cycle 'squad-card__accent--primary' 'squad-card__accent--secondary' 'squad-card__accent--tertiary' %}" aria-hidden="true"></div>
-
-            <div class="squad-card__foot">
-              <div class="avatar-cluster avatar-cluster--named">
-                {% for member in group.preview_members %}
-                  <span title="{{ member.display_name }}">{{ member.display_name|slice:":1"|upper }}</span>
-                {% empty %}
-                  <span title="No members">?</span>
-                {% endfor %}
-                {% if group.extra_members_count > 0 %}
-                  <span class="avatar-cluster__extra">+{{ group.extra_members_count }}</span>
-                {% endif %}
-              </div>
+            <div class="group-row__actions">
               {% if group.voting_plans_count > 0 %}
-                <a class="squad-card__link" href="{% url 'vote' group.id %}">Open voting</a>
+                <a class="group-row__link group-row__link--primary" href="{% url 'vote' group.id %}">Open voting</a>
               {% else %}
-                <a class="squad-card__link" href="{% url 'start_new_plan' %}?group_id={{ group.id }}">Create plan</a>
+                <a class="group-row__link" href="{% url 'start_new_plan' %}?group_id={{ group.id }}">Create plan</a>
               {% endif %}
             </div>
 
@@ -131,20 +106,92 @@
           </div>
         </article>
       {% empty %}
-        <article class="squad-card squad-card--empty">
-          <div class="squad-card__body">
-            <div class="squad-card__head">
-              <span class="squad-card__icon squad-card__icon--primary">
-                <span class="material-symbols-outlined">group_off</span>
-              </span>
-              <div>
+        <article class="group-row group-row--empty">
+          <div class="group-row__main">
+            <div class="group-row__icon">
+              <span class="material-symbols-outlined">group_off</span>
+            </div>
+            <div class="group-row__copy">
+              <div class="group-row__title">
                 <h3>No groups yet</h3>
-                <p class="squad-card__sub">Cuando crees grupos reales en localhost apareceran aqui sin mocks.</p>
               </div>
+              <p>Cuando crees tu primer grupo en localhost aparecerá aquí y podrás empezar a invitar usuarios.</p>
             </div>
           </div>
         </article>
       {% endfor %}
     </section>
   </section>
+
+  {% if request.user.is_authenticated %}
+    <div class="groups-modal {% if open_create_modal %}is-open{% endif %}" id="create-group-modal" aria-hidden="{% if open_create_modal %}false{% else %}true{% endif %}">
+      <div class="groups-modal__backdrop" data-close-create-group></div>
+      <div class="groups-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="create-group-title">
+        <button class="groups-modal__close" type="button" data-close-create-group>
+          <span class="material-symbols-outlined">close</span>
+        </button>
+
+        <div class="groups-modal__hero">
+          <p class="page-kicker">Create A New Squad</p>
+          <h2 id="create-group-title">Define your next group</h2>
+          <p>Primero creas el grupo. Después ya podrás invitar gente desde la propia tarjeta del grupo.</p>
+        </div>
+
+        <form class="groups-modal__form" method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="create_group" />
+          <label class="groups-field">
+            <span>Group title</span>
+            <input class="groups-input groups-input--modal" type="text" name="name" placeholder="Ej. Choosy Friends" required />
+          </label>
+          <label class="groups-field">
+            <span>Description</span>
+            <textarea class="groups-textarea" name="description" rows="4" placeholder="Que tipo de grupo es, que planes organiza o cualquier contexto util."></textarea>
+          </label>
+          <div class="groups-modal__actions">
+            <button class="group-row__link group-row__link--ghost" type="button" data-close-create-group>Cancel</button>
+            <button class="groups-hero__action groups-hero__action--modal" type="submit">
+              <span class="material-symbols-outlined">rocket_launch</span>
+              <span>Create Group</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const modal = document.getElementById("create-group-modal");
+        if (!modal) return;
+
+        const openButtons = document.querySelectorAll("[data-open-create-group]");
+        const closeButtons = document.querySelectorAll("[data-close-create-group]");
+
+        const openModal = () => {
+          modal.classList.add("is-open");
+          modal.setAttribute("aria-hidden", "false");
+          document.body.classList.add("groups-modal-open");
+        };
+
+        const closeModal = () => {
+          modal.classList.remove("is-open");
+          modal.setAttribute("aria-hidden", "true");
+          document.body.classList.remove("groups-modal-open");
+        };
+
+        openButtons.forEach((button) => button.addEventListener("click", openModal));
+        closeButtons.forEach((button) => button.addEventListener("click", closeModal));
+
+        if (modal.classList.contains("is-open")) {
+          document.body.classList.add("groups-modal-open");
+        }
+
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape" && modal.classList.contains("is-open")) {
+            closeModal();
+          }
+        });
+      });
+    </script>
+  {% endif %}
 {% endblock %}

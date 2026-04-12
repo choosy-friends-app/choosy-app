@@ -208,6 +208,7 @@ def groups(request):
     user_groups = _user_groups_queryset(request)
     success_message = ""
     error_message = ""
+    open_create_modal = False
 
     if not request.user.is_authenticated and not user_groups.exists():
         _seed_demo_groups()
@@ -220,6 +221,7 @@ def groups(request):
             action = request.POST.get("action")
             try:
                 if action == "create_group":
+                    open_create_modal = True
                     name = (request.POST.get("name") or "").strip()
                     description = (request.POST.get("description") or "").strip()
                     if not name:
@@ -231,6 +233,7 @@ def groups(request):
                     )
                     group.add_member(user=request.user, role=GroupMember.Role.OWNER)
                     success_message = f"Grupo '{group.name}' creado correctamente."
+                    open_create_modal = False
                 elif action == "add_member":
                     group = _resolve_group_for_request(request, request.POST.get("group_id"))
                     _require_group_admin(group, request.user)
@@ -271,6 +274,7 @@ def groups(request):
             "total_pending_votes": total_pending_votes,
             "success_message": success_message,
             "error_message": error_message,
+            "open_create_modal": open_create_modal,
         },
     )
 
