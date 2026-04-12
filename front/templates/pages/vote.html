@@ -252,6 +252,26 @@
         border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
+    /* Decision Overlays */
+    .card-decision-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        opacity: 0;
+        transition: opacity 0.1s linear;
+        pointer-events: none;
+    }
+
+    .overlay-like {
+        background: radial-gradient(circle at center, rgba(74, 222, 128, 0.3), rgba(74, 222, 128, 0.1));
+        box-shadow: inset 0 0 100px rgba(74, 222, 128, 0.4);
+    }
+
+    .overlay-nope {
+        background: radial-gradient(circle at center, rgba(239, 68, 68, 0.3), rgba(239, 68, 68, 0.1));
+        box-shadow: inset 0 0 100px rgba(239, 68, 68, 0.4);
+    }
+
     .card-bg {
         position: absolute;
         inset: 0;
@@ -362,36 +382,37 @@
 
     .swipe-feedback {
         position: absolute;
-        top: 25%;
+        top: 22%;
         z-index: 100;
-        padding: 1.2rem 2.5rem;
+        padding: 0.8rem 1.5rem;
         border: 4px solid;
-        border-radius: 1.5rem;
+        border-radius: 1rem;
         font-family: "Manrope", sans-serif;
-        font-size: 2.22rem;
-        font-weight: 900;
+        font-size: 3rem;
+        font-weight: 1000;
         text-transform: uppercase;
-        letter-spacing: 0.15em;
+        letter-spacing: 0.1em;
         opacity: 0;
-        transform: scale(0.7) rotate(-15deg);
+        transform: scale(0.5) rotate(-15deg);
         pointer-events: none;
-        transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
-        backdrop-filter: blur(8px);
+        transition: all 0.15s cubic-bezier(0.19, 1, 0.22, 1);
+        backdrop-filter: blur(12px);
     }
 
     .swipe-like {
         color: #4ade80;
         border-color: #4ade80;
-        left: 8%;
-        box-shadow: 0 0 50px rgba(74, 222, 128, 0.4);
+        left: 12%;
+        transform: scale(0.8) rotate(-12deg);
+        box-shadow: 0 0 60px rgba(74, 222, 128, 0.5), inset 0 0 20px rgba(74, 222, 128, 0.2);
     }
 
     .swipe-nope {
         color: #ef4444;
         border-color: #ef4444;
-        right: 8%;
-        box-shadow: 0 0 50px rgba(239, 68, 68, 0.4);
-        transform: scale(0.7) rotate(15deg);
+        right: 12%;
+        transform: scale(0.8) rotate(12deg);
+        box-shadow: 0 0 60px rgba(239, 68, 68, 0.5), inset 0 0 20px rgba(239, 68, 68, 0.2);
     }
 
     /* Float Actions - REDESIGNED FOR GOD MODE */
@@ -565,6 +586,8 @@
 
                 container.innerHTML = `
                     <article class="adv-vote-card">
+                        <div class="card-decision-overlay overlay-like"></div>
+                        <div class="card-decision-overlay overlay-nope"></div>
                         <div class="card-bg"><img src="${plan.image}" alt=""></div>
                         <div class="card-content-adv">
                             <div class="card-details-panel">
@@ -647,11 +670,14 @@
                 return;
             }
 
+            const overlayLike = topCard.querySelector(".overlay-like");
+            const overlayNope = topCard.querySelector(".overlay-nope");
+
             // Magnetic logic if NOT dragging
             if (!isDragging) {
                 const xPct = currentMouseX / window.innerWidth;
-                targetX = (xPct - 0.5) * 60;
-                targetRotate = (xPct - 0.5) * 15;
+                targetX = (xPct - 0.5) * 80;
+                targetRotate = (xPct - 0.5) * 20;
             }
 
             // Lerp physics
@@ -661,17 +687,33 @@
 
             topCard.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${currentRotate}deg)`;
 
-            // Adaptive Feedback
-            const feedbackVal = Math.max(0, (Math.abs(currentX) - 30) / 100);
-            if (currentX > 30) {
-                feedbackLike.style.opacity = Math.min(1, feedbackVal);
+            // Adaptive Feedback (Colors & Stickers)
+            const intensity = Math.min(1, Math.abs(currentX) / 120);
+
+            if (currentX > 20) {
+                overlayLike.style.opacity = intensity;
+                overlayNope.style.opacity = 0;
+                feedbackLike.style.opacity = intensity;
+                feedbackLike.style.transform = `scale(${0.8 + intensity * 0.4}) rotate(-12deg)`;
                 feedbackNope.style.opacity = 0;
-            } else if (currentX < -30) {
-                feedbackNope.style.opacity = Math.min(1, feedbackVal);
+
+                // Ambient tint
+                ambientBg.style.filter = `blur(80px) brightness(0.4) sepia(0.5) hue-rotate(80deg)`;
+            } else if (currentX < -20) {
+                overlayNope.style.opacity = intensity;
+                overlayLike.style.opacity = 0;
+                feedbackNope.style.opacity = intensity;
+                feedbackNope.style.transform = `scale(${0.8 + intensity * 0.4}) rotate(12deg)`;
                 feedbackLike.style.opacity = 0;
+
+                // Ambient tint
+                ambientBg.style.filter = `blur(80px) brightness(0.4) sepia(0.5) hue-rotate(-50deg)`;
             } else {
+                overlayLike.style.opacity = 0;
+                overlayNope.style.opacity = 0;
                 feedbackLike.style.opacity = 0;
                 feedbackNope.style.opacity = 0;
+                ambientBg.style.filter = `blur(80px) brightness(0.4)`;
             }
 
             requestAnimationFrame(mainLoop);
