@@ -30,10 +30,25 @@
 
     <div class="rail-foot">
       <a class="rail-cta {% if active_page == 'start_new_plan' %}is-active{% endif %}" href="{% url 'start_new_plan' %}">Start New Plan</a>
-      <span class="rail-profile">
+      {% if request.user.is_authenticated %}
+      <a class="rail-profile" href="{% url 'groups' %}">
         <span class="material-symbols-outlined">account_circle</span>
-        <span>Profile</span>
-      </span>
+        <span>{{ request.user.username }}</span>
+      </a>
+      <a class="rail-link" href="{% url 'logout' %}">
+        <span class="material-symbols-outlined">logout</span>
+        <span>Logout</span>
+      </a>
+      {% else %}
+      <a class="rail-profile" href="{% url 'login' %}">
+        <span class="material-symbols-outlined">login</span>
+        <span>Login</span>
+      </a>
+      <a class="rail-link" href="{% url 'register' %}">
+        <span class="material-symbols-outlined">person_add</span>
+        <span>Register</span>
+      </a>
+      {% endif %}
     </div>
   </div>
 </aside>

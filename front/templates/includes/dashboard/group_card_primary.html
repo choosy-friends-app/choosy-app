@@ -8,7 +8,13 @@
       </div>
       <div class="gc-title">
         <h3>{{ group.name }}</h3>
-        <p>{{ group.description|default:"Coordinating the next big group decision together." }}</p>
+        <p>
+          {% if group.active_proposal %}
+            {{ group.active_proposal.title }} · cierra {{ group.active_proposal.voting_ends_at|date:"d/m H:i" }}
+          {% else %}
+            {{ group.description|default:"Coordinating the next big group decision together." }}
+          {% endif %}
+        </p>
       </div>
     </div>
     <div class="gc-status">
@@ -25,14 +31,24 @@
 
   <div class="gc-content">
     <div class="gc-avatars">
-      <div class="avav" style="background: linear-gradient(135deg, #a5a5ff, #d277ff);"></div>
-      <div class="avav" style="background: linear-gradient(135deg, #69daff, #a5a5ff);"></div>
-      <div class="avav" style="background: linear-gradient(135deg, #ff89ff, #69daff);"></div>
-      <div class="avav-more">+3</div>
+      {% for member in group.preview_members %}
+      <div class="avav avav--initial" title="{{ member.display_name }}">{{ member.display_name|slice:":1"|upper }}</div>
+      {% empty %}
+      <div class="avav avav--initial">?</div>
+      {% endfor %}
+      {% if group.extra_members_count > 0 %}
+      <div class="avav-more">+{{ group.extra_members_count }}</div>
+      {% endif %}
     </div>
     <div class="gc-meta">
       <span class="material-symbols-outlined">history</span>
-      <span>{{ group.updated_at|timesince }} ago</span>
+      <span>
+        {% if group.active_proposal and group.active_proposal.leading_option %}
+          Lidera {{ group.active_proposal.leading_option.title }}
+        {% else %}
+          {{ group.updated_at|timesince }} ago
+        {% endif %}
+      </span>
     </div>
   </div>
 

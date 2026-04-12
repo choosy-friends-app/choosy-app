@@ -11,6 +11,10 @@
     </div>
   </header>
 
+  {% if error %}
+  <div class="plan-error-banner">{{ error }}</div>
+  {% endif %}
+
   <form method="POST" action="{% url 'start_new_plan' %}" id="plan-form" class="plan-grid">
     {% csrf_token %}
     <input type="hidden" name="options_json" id="options-json-input" value="[]">
@@ -62,6 +66,20 @@
             </div>
           </label>
           {% endfor %}
+        </div>
+      </article>
+
+      <article class="glass-card">
+        <label class="s-label">VOTING DEADLINE</label>
+        <div class="deadline-grid">
+          <div class="field-item">
+            <label class="s-label s-label--sub">DATE</label>
+            <input type="date" name="voting_end_date" class="s-input" value="{{ default_voting_end_date }}" required>
+          </div>
+          <div class="field-item">
+            <label class="s-label s-label--sub">TIME</label>
+            <input type="time" name="voting_end_time" class="s-input" value="{{ default_voting_end_time }}" required>
+          </div>
         </div>
       </article>
 
@@ -162,6 +180,16 @@
     align-items: start;
   }
 
+  .plan-error-banner {
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.2rem;
+    border-radius: 16px;
+    background: rgba(239, 68, 68, 0.16);
+    border: 1px solid rgba(239, 68, 68, 0.24);
+    color: #ffb4b4;
+    font-weight: 700;
+  }
+
   .glass-card {
     background: var(--glass);
     border: 1px solid var(--glass-border);
@@ -179,6 +207,11 @@
     letter-spacing: 0.12em;
     margin-bottom: 1rem;
     display: block;
+  }
+
+  .s-label--sub {
+    margin-bottom: 0.6rem;
+    font-size: 0.62rem;
   }
 
   .s-input {
@@ -301,6 +334,12 @@
   .group-select-list {
     display: grid;
     gap: 0.75rem;
+  }
+
+  .deadline-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem;
   }
 
   .group-radio-item {

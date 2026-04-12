@@ -12,7 +12,9 @@
         </div>
         <div class="vi-details">
           <strong>{{ group.name }}</strong>
-          <span>{{ group.voting_plans_count }} options pending</span>
+          <span>
+            {{ group.active_proposal.title }} · {{ group.voting_plans_count }} opciones
+          </span>
         </div>
         <a href="{% url 'vote' group.id %}" class="vi-jump">
           <span class="material-symbols-outlined">chevron_right</span>
@@ -27,7 +29,24 @@
 
   <section class="side-panel">
     <h2>Recent Activity</h2>
-    <p class="muted" style="font-size: 0.85rem; margin-top: 0.5rem; opacity: 0.5;">No recent updates in your groups.</p>
+    <div class="vote-stack-preview">
+      {% for vote in recent_votes %}
+      <div class="vote-item-godmode">
+        <div class="vi-icon">
+          <span class="material-symbols-outlined">how_to_vote</span>
+        </div>
+        <div class="vi-details">
+          <strong>{% firstof vote.member.display_name vote.user.username "Guest session" %}</strong>
+          <span>ha votado {{ vote.plan.title }} en {{ vote.plan.proposal.title }}</span>
+        </div>
+        <a href="{% url 'vote' vote.plan.group.id %}" class="vi-jump">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </a>
+      </div>
+      {% empty %}
+      <p class="muted" style="font-size: 0.85rem; margin-top: 0.5rem; opacity: 0.5;">Aun no hay votos reales registrados.</p>
+      {% endfor %}
+    </div>
   </section>
 
   <article class="promo-card" onclick="showBetaNotice()">
