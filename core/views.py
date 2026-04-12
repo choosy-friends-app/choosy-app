@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timedelta
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate, login, logout
@@ -6,11 +7,32 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
 from .models import Group, GroupMember, Plan, PlanProposal, Vote
 
 User = get_user_model()
+
+
+def _default_voting_end():
+    return timezone.now() + timedelta(hours=24)
+
+
+def _parse_voting_end(request):
+    date_value = (request.POST.get("voting_end_date") or "").strip()
+    time_value = (request.POST.get("voting_end_time") or "").strip()
+    if not date_value:
+        return _default_voting_end()
+
+    if not time_value:
+        time_value = "21:00"
+
+    naive_dt = datetime.fromisoformat(f"{date_value}T{time_value}")
+    end_dt = timezone.make_aware(naive_dt, timezone.get_current_timezone())
+    if end_dt <= timezone.now():
+        raise ValueError("La fecha de cierre debe estar en el futuro.")
+    return end_dt
 
 
 def _user_groups_queryset(request):
@@ -40,6 +62,36 @@ def _decorate_plan_option(plan):
         for vote in votes[:4]
     ]
     return plan
+
+
+def _close_proposal(proposal):
+    proposal = _decorate_proposal(proposal)
+    if proposal is None or proposal.status != PlanProposal.Status.VOTING:
+        return proposal
+
+    leading_option = proposal.leading_option
+    if leading_option is not None:
+        leading_option.status = Plan.Status.CHOSEN
+        leading_option.save(update_fields=["status"])
+        proposal.chosen_plan = leading_option
+        proposal.status = PlanProposal.Status.CHOSEN
+        proposal.group.status = Group.Status.ACTIVE
+        proposal.group.save(update_fields=["status"])
+    else:
+        proposal.status = PlanProposal.Status.CANCELLED
+        proposal.group.status = Group.Status.PLANNING
+        proposal.group.save(update_fields=["status"])
+
+    proposal.save(update_fields=["status", "chosen_plan"])
+    return _decorate_proposal(proposal)
+
+
+def _sync_proposal_status(proposal):
+    if proposal is None:
+        return None
+    if proposal.status == PlanProposal.Status.VOTING and proposal.voting_ends_at and proposal.voting_ends_at <= timezone.now():
+        return _close_proposal(proposal)
+    return _decorate_proposal(proposal)
 
 
 def _decorate_proposal(proposal):
@@ -87,7 +139,7 @@ def _decorate_groups(groups):
     decorated = []
     for group in groups:
         members = list(group.members.filter(status=GroupMember.Status.ACTIVE)[:4])
-        active_proposal = _decorate_proposal(
+        active_proposal = _sync_proposal_status(
             group.proposals.filter(status=PlanProposal.Status.VOTING).order_by("-created_at").first()
         )
         group.member_count = group.members.filter(status=GroupMember.Status.ACTIVE).count()
@@ -140,7 +192,7 @@ def _vote_identity_for_request(request, plan):
 
 
 def _active_group_proposal(group):
-    return group.proposals.filter(status=PlanProposal.Status.VOTING).order_by("-created_at").first()
+    return _sync_proposal_status(group.proposals.filter(status=PlanProposal.Status.VOTING).order_by("-created_at").first())
 
 
 def dashboard(request):
@@ -468,6 +520,7 @@ def api_add_group_member(request, group_id):
 
 def start_new_plan(request):
     user_groups = _user_groups_queryset(request)
+    default_voting_end = _default_voting_end()
 
     if not request.user.is_authenticated and not user_groups.exists():
         _seed_demo_groups()
@@ -509,6 +562,25 @@ def start_new_plan(request):
                     "topbar_context": "Start New Plan",
                     "groups": user_groups,
                     "error": "Aquest grup ja te una votacio activa. Tanca-la abans de crear-ne una altra.",
+                    "default_voting_end_date": request.POST.get("voting_end_date") or default_voting_end.date().isoformat(),
+                    "default_voting_end_time": request.POST.get("voting_end_time") or default_voting_end.strftime("%H:%M"),
+                },
+            )
+
+        try:
+            voting_ends_at = _parse_voting_end(request)
+        except ValueError as exc:
+            return render(
+                request,
+                "pages/start_new_plan.html",
+                {
+                    "meta_title": "Start New Plan",
+                    "active_page": "start_new_plan",
+                    "topbar_context": "Start New Plan",
+                    "groups": user_groups,
+                    "error": str(exc),
+                    "default_voting_end_date": request.POST.get("voting_end_date") or default_voting_end.date().isoformat(),
+                    "default_voting_end_time": request.POST.get("voting_end_time") or default_voting_end.strftime("%H:%M"),
                 },
             )
 
@@ -517,6 +589,7 @@ def start_new_plan(request):
             created_by=created_by,
             title=global_title,
             description=global_description,
+            voting_ends_at=voting_ends_at,
             status=PlanProposal.Status.VOTING,
         )
         group.status = Group.Status.VOTING
@@ -560,6 +633,8 @@ def start_new_plan(request):
             "active_page": "start_new_plan",
             "topbar_context": "Start New Plan",
             "groups": user_groups,
+            "default_voting_end_date": default_voting_end.date().isoformat(),
+            "default_voting_end_time": default_voting_end.strftime("%H:%M"),
         },
     )
 
