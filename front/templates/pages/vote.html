@@ -37,6 +37,10 @@
             <span class="material-symbols-outlined">ballot</span>
             <span>{{ proposal.title }} · {{ proposal.option_count }} opciones · {{ proposal.total_votes }} votos</span>
         </div>
+        <div class="vote-deadline-chip" id="vote-deadline-chip" data-deadline="{% if proposal.voting_ends_at %}{{ proposal.voting_ends_at|date:'c' }}{% endif %}">
+            <span class="material-symbols-outlined">schedule</span>
+            <span id="vote-deadline-label">Voting closes soon</span>
+        </div>
         {% endif %}
 
         <!-- Empty State -->
@@ -245,6 +249,35 @@
     .vote-round-chip .material-symbols-outlined {
         font-size: 1rem;
         color: var(--primary);
+    }
+
+    .vote-deadline-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+        align-self: flex-start;
+        margin-bottom: 1.2rem;
+        padding: 0.7rem 1rem;
+        border-radius: 999px;
+        background: rgba(251, 191, 36, 0.12);
+        border: 1px solid rgba(251, 191, 36, 0.18);
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 0.82rem;
+        font-weight: 700;
+    }
+
+    .vote-deadline-chip.is-closed {
+        background: rgba(239, 68, 68, 0.14);
+        border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .vote-deadline-chip .material-symbols-outlined {
+        font-size: 1rem;
+        color: #fbbf24;
+    }
+
+    .vote-deadline-chip.is-closed .material-symbols-outlined {
+        color: #ff9d9d;
     }
 
     .tl-progress-bar {
@@ -800,9 +833,13 @@
         let storyStart = 0;
         let isDragging = false;
         let isVoted = false;
+        let votingLocked = false;
         let dragStartX = 0, dragStartY = 0;
         let currentMouseX = window.innerWidth / 2;
         let currentMouseY = window.innerHeight / 2;
+        const deadlineChip = document.getElementById("vote-deadline-chip");
+        const deadlineLabel = document.getElementById("vote-deadline-label");
+        const deadlineValue = deadlineChip ? deadlineChip.dataset.deadline : "";
 
         // Physics state
         let targetX = 0, targetY = 0, targetRotate = 0;
@@ -818,6 +855,32 @@
             if (value > 0) return ["LIKE", "vote-state-badge--up"];
             if (value < 0) return ["PASS", "vote-state-badge--down"];
             return ["PENDING", "vote-state-badge--none"];
+        };
+
+        const lockVoting = () => {
+            votingLocked = true;
+            document.getElementById("btn-skip").disabled = true;
+            document.getElementById("btn-love").disabled = true;
+            document.getElementById("btn-star").disabled = true;
+            if (deadlineChip) deadlineChip.classList.add("is-closed");
+            if (deadlineLabel) deadlineLabel.textContent = "Voting closed";
+        };
+
+        const updateDeadline = () => {
+            if (!deadlineValue || !deadlineLabel) return;
+            const deadline = new Date(deadlineValue);
+            const remaining = deadline.getTime() - Date.now();
+            if (remaining <= 0) {
+                lockVoting();
+                return;
+            }
+
+            const totalMinutes = Math.floor(remaining / 60000);
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            deadlineLabel.textContent = hours > 0
+                ? `Voting closes in ${hours}h ${minutes}m`
+                : `Voting closes in ${minutes}m`;
         };
 
         const syncVoteCounter = () => {
@@ -847,6 +910,9 @@
             });
 
             voteStateList.querySelectorAll(".vote-state-btn").forEach((button) => {
+                if (votingLocked) {
+                    button.disabled = true;
+                }
                 button.onclick = () => submitVote(parseInt(button.dataset.planId, 10), parseInt(button.dataset.vote, 10));
             });
             syncVoteCounter();
@@ -1021,6 +1087,7 @@
         };
 
         const submitVote = (planId, value) => {
+            if (votingLocked) return;
             fetch(`/api/vote/${planId}/`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken") },
@@ -1035,7 +1102,7 @@
         };
 
         const vote = (value) => {
-            if (isVoted) return;
+            if (isVoted || votingLocked) return;
             isVoted = true;
             if (storyTimer) clearInterval(storyTimer);
 
@@ -1110,6 +1177,10 @@
             return cv;
         }
 
+        updateDeadline();
+        if (deadlineValue) {
+            window.setInterval(updateDeadline, 1000);
+        }
         renderVoteState();
         renderStack();
         mainLoop();
