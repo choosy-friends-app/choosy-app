@@ -90,6 +90,16 @@
             </div>
         </div>
         {% endif %}
+
+        {% if proposal %}
+        <div class="vote-my-state" id="vote-my-state">
+            <div class="vote-my-state__header">
+                <strong>Your voting state</strong>
+                <span id="vote-state-counter">{{ proposal.current_user_voted_option_count }} / {{ proposal.option_count }}</span>
+            </div>
+            <div class="vote-my-state__list" id="vote-state-list"></div>
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -103,6 +113,7 @@
     "price": "{{ plan.price|escapejs }}",
     "tag": "{{ plan.tag|escapejs }}",
     "place": "{{ plan.place_name|escapejs }}",
+    "currentVote": {% if plan.current_user_vote %}{{ plan.current_user_vote }}{% else %}0{% endif %},
     "image": "{% if plan.image_url %}{{ plan.image_url }}{% else %}https://images.unsplash.com/photo-1517457373958-b7bdd4587205?q=80&w=800&auto=format&fit=crop{% endif %}"
   }{% if not forloop.last %},{% endif %}
   {% endfor %}
@@ -647,6 +658,107 @@
         font-size: 1rem;
     }
 
+    .vote-my-state {
+        display: grid;
+        gap: 0.8rem;
+        margin-top: 0.9rem;
+        padding: 1rem 1.1rem 1.1rem;
+        border-radius: 1.4rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(16px);
+    }
+
+    .vote-my-state__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+    }
+
+    .vote-my-state__header strong {
+        color: white;
+        font-size: 0.84rem;
+    }
+
+    .vote-my-state__list {
+        display: grid;
+        gap: 0.7rem;
+    }
+
+    .vote-state-item {
+        display: grid;
+        gap: 0.7rem;
+        padding: 0.9rem;
+        border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.04);
+    }
+
+    .vote-state-item__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .vote-state-item__head strong {
+        color: white;
+        font-size: 0.95rem;
+    }
+
+    .vote-state-badge {
+        padding: 0.35rem 0.6rem;
+        border-radius: 999px;
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+    }
+
+    .vote-state-badge--up {
+        background: rgba(74, 222, 128, 0.16);
+        color: #98f0b5;
+    }
+
+    .vote-state-badge--down {
+        background: rgba(239, 68, 68, 0.16);
+        color: #ff9d9d;
+    }
+
+    .vote-state-badge--none {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .vote-state-actions {
+        display: flex;
+        gap: 0.65rem;
+    }
+
+    .vote-state-btn {
+        flex: 1;
+        min-height: 2.5rem;
+        border-radius: 0.9rem;
+        background: rgba(255, 255, 255, 0.06);
+        color: white;
+        font-size: 0.78rem;
+        font-weight: 800;
+    }
+
+    .vote-state-btn.is-active-up {
+        background: rgba(74, 222, 128, 0.18);
+        color: #98f0b5;
+    }
+
+    .vote-state-btn.is-active-down {
+        background: rgba(239, 68, 68, 0.18);
+        color: #ff9d9d;
+    }
+
     .empty-icon {
         font-size: 4rem;
         filter: drop-shadow(0 0 20px rgba(165, 165, 255, 0.5));
@@ -669,8 +781,9 @@
 <script>
     document.addEventListener("DOMContentLoaded", () => {
         const plansData = document.getElementById("plans-data");
-        let plans = [];
-        try { plans = JSON.parse(plansData.textContent); } catch (e) { console.error(e); }
+        let allPlans = [];
+        try { allPlans = JSON.parse(plansData.textContent); } catch (e) { console.error(e); }
+        let plans = [...allPlans];
 
         const deck = document.getElementById("deck");
         const counter = document.getElementById("plan-counter");
@@ -679,6 +792,8 @@
         const universe = document.getElementById("universe");
         const feedbackLike = document.querySelector(".swipe-like");
         const feedbackNope = document.querySelector(".swipe-nope");
+        const voteStateList = document.getElementById("vote-state-list");
+        const voteStateCounter = document.getElementById("vote-state-counter");
 
         const STORY_DURATION = 7000;
         let storyTimer = null;
@@ -698,6 +813,44 @@
             showEmpty(); // Fallback if no plans
             return;
         }
+
+        const voteLabel = (value) => {
+            if (value > 0) return ["LIKE", "vote-state-badge--up"];
+            if (value < 0) return ["PASS", "vote-state-badge--down"];
+            return ["PENDING", "vote-state-badge--none"];
+        };
+
+        const syncVoteCounter = () => {
+            if (!voteStateCounter) return;
+            const votedCount = allPlans.filter((plan) => plan.currentVote !== 0).length;
+            voteStateCounter.textContent = `${votedCount} / ${allPlans.length}`;
+        };
+
+        const renderVoteState = () => {
+            if (!voteStateList) return;
+            voteStateList.innerHTML = "";
+            allPlans.forEach((plan) => {
+                const [label, badgeClass] = voteLabel(plan.currentVote);
+                const item = document.createElement("div");
+                item.className = "vote-state-item";
+                item.innerHTML = `
+                    <div class="vote-state-item__head">
+                        <strong>${plan.title}</strong>
+                        <span class="vote-state-badge ${badgeClass}">${label}</span>
+                    </div>
+                    <div class="vote-state-actions">
+                        <button class="vote-state-btn ${plan.currentVote > 0 ? 'is-active-up' : ''}" data-plan-id="${plan.id}" data-vote="1" type="button">Like</button>
+                        <button class="vote-state-btn ${plan.currentVote < 0 ? 'is-active-down' : ''}" data-plan-id="${plan.id}" data-vote="-1" type="button">Pass</button>
+                    </div>
+                `;
+                voteStateList.appendChild(item);
+            });
+
+            voteStateList.querySelectorAll(".vote-state-btn").forEach((button) => {
+                button.onclick = () => submitVote(parseInt(button.dataset.planId, 10), parseInt(button.dataset.vote, 10));
+            });
+            syncVoteCounter();
+        };
 
         const updateAmbient = () => {
             if (plans.length > 0) {
@@ -867,6 +1020,20 @@
             vote(xPct > 0.5 ? 1 : -1);
         };
 
+        const submitVote = (planId, value) => {
+            fetch(`/api/vote/${planId}/`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken") },
+                body: JSON.stringify({ value })
+            }).then(() => {
+                const target = allPlans.find((plan) => plan.id === planId);
+                if (target) {
+                    target.currentVote = value;
+                    renderVoteState();
+                }
+            });
+        };
+
         const vote = (value) => {
             if (isVoted) return;
             isVoted = true;
@@ -881,11 +1048,7 @@
             topCard.style.opacity = "0";
 
             const planId = plans[0].id;
-            fetch(`/api/vote/${planId}/`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken") },
-                body: JSON.stringify({ value })
-            });
+            submitVote(planId, value);
 
             setTimeout(() => {
                 plans.shift();
@@ -947,6 +1110,7 @@
             return cv;
         }
 
+        renderVoteState();
         renderStack();
         mainLoop();
     });
