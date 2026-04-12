@@ -2,17 +2,23 @@
   <section class="side-panel">
     <div class="side-panel__header">
       <h2>Pending Votes</h2>
-      <span class="badge badge--accent">3</span>
     </div>
     <div class="vote-stack-preview">
+      {% for group in groups %}
+      {% if group.voting_plans_count > 0 %}
       <div class="vote-item">
-        <div class="vote-item__icon"><span class="material-symbols-outlined">restaurant</span></div>
+        <div class="vote-item__icon"><span class="material-symbols-outlined">how_to_vote</span></div>
         <div class="vote-item__info">
-          <strong>UdL Welcome Dinner</strong>
-          <span>3 options left</span>
+          <strong>{{ group.name }}</strong>
+          <span>{{ group.voting_plans_count }} options to choose from</span>
         </div>
-        <a href="/vote/1/" class="vote-item__go"><span class="material-symbols-outlined">chevron_right</span></a>
+        <a href="{% url 'vote' group.id %}" class="vote-item__go"><span
+            class="material-symbols-outlined">chevron_right</span></a>
       </div>
+      {% endif %}
+      {% empty %}
+      <p class="muted" style="font-size: 0.8rem;">No pending votes. Relax!</p>
+      {% endfor %}
     </div>
   </section>
 

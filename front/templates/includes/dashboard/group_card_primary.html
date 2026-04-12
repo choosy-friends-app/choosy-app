@@ -3,9 +3,10 @@
     <div class="group-card__copy">
       <div class="group-card__title">
         <span class="group-card__icon">
-          <span class="material-symbols-outlined">restaurant</span>
+          <span class="material-symbols-outlined">{% if group.status == 'voting' %}how_to_vote{% else %}groups{% endif
+            %}</span>
         </span>
-        <h3>Zona principal del grup</h3>
+        <h3>{{ group.name }}</h3>
       </div>
       <div class="avatar-strip" aria-hidden="true">
         <span></span>
@@ -14,11 +15,24 @@
     </div>
 
     <div class="group-card__meta">
-      <span class="status-chip">State</span>
+      {% if group.voting_plans_count > 0 %}
+      <span class="status-chip status-chip--accent">{{ group.voting_plans_count }} Plans to Vote</span>
+      {% else %}
+      <span class="status-chip">{{ group.get_status_display }}</span>
+      {% endif %}
       <span class="subtle-meta">
         <span class="material-symbols-outlined">history</span>
-        <span>Last active</span>
+        <span>{% if group.updated_at %}Active {{ group.updated_at|timesince }} ago{% else %}Just now{% endif %}</span>
       </span>
     </div>
+  </div>
+
+  <div class="group-card__actions" style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+    {% if group.voting_plans_count > 0 %}
+    <a href="{% url 'vote' group.id %}" class="btn-primary-adv"
+      style="text-decoration: none; flex: 1; text-align: center; padding: 0.8rem;">Vote Now</a>
+    {% endif %}
+    <a href="{% url 'start_new_plan' %}?group_id={{ group.id }}" class="btn-secondary-adv"
+      style="text-decoration: none; padding: 0.8rem;">+ New Plan</a>
   </div>
 </article>
