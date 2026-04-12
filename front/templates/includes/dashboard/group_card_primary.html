@@ -8,7 +8,13 @@
       </div>
       <div class="gc-title">
         <h3>{{ group.name }}</h3>
-        <p>{{ group.description|default:"Coordinating the next big group decision together." }}</p>
+        <p>
+          {% if group.active_proposal %}
+            {{ group.active_proposal.title }} · {{ group.active_proposal.option_count }} opciones en votacion
+          {% else %}
+            {{ group.description|default:"Coordinating the next big group decision together." }}
+          {% endif %}
+        </p>
       </div>
     </div>
     <div class="gc-status">
@@ -36,7 +42,13 @@
     </div>
     <div class="gc-meta">
       <span class="material-symbols-outlined">history</span>
-      <span>{{ group.updated_at|timesince }} ago</span>
+      <span>
+        {% if group.active_proposal and group.active_proposal.leading_option %}
+          Lidera {{ group.active_proposal.leading_option.title }}
+        {% else %}
+          {{ group.updated_at|timesince }} ago
+        {% endif %}
+      </span>
     </div>
   </div>
 

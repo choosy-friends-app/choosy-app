@@ -29,18 +29,70 @@ def _seed_demo_groups():
     Group.objects.create(name="Adventure Seekers", description="Outdoor stuff")
 
 
+def _decorate_plan_option(plan):
+    votes = list(plan.votes.select_related("member", "user").order_by("-created_at"))
+    plan.upvote_count = sum(1 for vote in votes if vote.value > 0)
+    plan.downvote_count = sum(1 for vote in votes if vote.value < 0)
+    plan.vote_score = plan.upvote_count - plan.downvote_count
+    plan.vote_count = len(votes)
+    plan.recent_voters = [
+        vote.member.display_name if vote.member else (vote.user.username if vote.user else "Guest")
+        for vote in votes[:4]
+    ]
+    return plan
+
+
+def _decorate_proposal(proposal):
+    if proposal is None:
+        return None
+
+    options = [_decorate_plan_option(plan) for plan in proposal.plans.order_by("option_order", "created_at")]
+    proposal.options = options
+    proposal.option_count = len(options)
+    proposal.total_votes = sum(option.vote_count for option in options)
+    proposal.leading_option = max(
+        options,
+        key=lambda option: (option.vote_score, option.upvote_count, -option.option_order),
+        default=None,
+    )
+    proposal.recent_votes = list(
+        Vote.objects.filter(plan__proposal=proposal)
+        .select_related("plan", "member", "user")
+        .order_by("-created_at")[:5]
+    )
+    active_members = list(proposal.group.members.filter(status=GroupMember.Status.ACTIVE))
+    proposal.expected_voter_count = len(active_members)
+    completed_voters = []
+    partial_voters = []
+
+    for member in active_members:
+        member_vote_count = Vote.objects.filter(plan__proposal=proposal, member=member).count()
+        if member_vote_count >= proposal.option_count and proposal.option_count > 0:
+            completed_voters.append(member.display_name)
+        elif member_vote_count > 0:
+            partial_voters.append(member.display_name)
+
+    proposal.completed_voters = completed_voters
+    proposal.partial_voters = partial_voters
+    proposal.pending_voters = [
+        member.display_name
+        for member in active_members
+        if member.display_name not in completed_voters and member.display_name not in partial_voters
+    ]
+    proposal.completed_voter_count = len(completed_voters)
+    return proposal
+
+
 def _decorate_groups(groups):
     decorated = []
     for group in groups:
         members = list(group.members.filter(status=GroupMember.Status.ACTIVE)[:4])
-        active_proposal = (
-            group.proposals.filter(status=PlanProposal.Status.VOTING)
-            .order_by("-created_at")
-            .first()
+        active_proposal = _decorate_proposal(
+            group.proposals.filter(status=PlanProposal.Status.VOTING).order_by("-created_at").first()
         )
         group.member_count = group.members.filter(status=GroupMember.Status.ACTIVE).count()
         group.active_proposal = active_proposal
-        group.voting_plans_count = active_proposal.plans.count() if active_proposal else 0
+        group.voting_plans_count = active_proposal.option_count if active_proposal else 0
         group.preview_members = members
         group.extra_members_count = max(group.member_count - len(members), 0)
         decorated.append(group)
@@ -191,6 +243,44 @@ def logout_view(request):
 
 
 def active_plans(request):
+    user_groups = _user_groups_queryset(request)
+    proposals = []
+
+    if not request.user.is_authenticated and not user_groups.exists():
+        _seed_demo_groups()
+        user_groups = _user_groups_queryset(request)
+
+    for group in user_groups:
+        proposal = _decorate_proposal(_active_group_proposal(group))
+        if proposal is not None:
+            proposal.group = group
+            proposals.append(proposal)
+
+    proposals.sort(key=lambda proposal: proposal.updated_at, reverse=True)
+    selected_proposal = None
+    selected_id = request.GET.get("proposal")
+    if selected_id:
+        try:
+            selected_id = int(selected_id)
+        except (TypeError, ValueError):
+            selected_id = None
+        if selected_id is not None:
+            selected_proposal = next((proposal for proposal in proposals if proposal.id == selected_id), None)
+
+    hero_proposal = selected_proposal
+    top_options = sorted(
+        [option for proposal in proposals for option in proposal.options],
+        key=lambda option: (option.vote_score, option.upvote_count, -option.option_order),
+        reverse=True,
+    )[:3]
+    recent_votes = (
+        Vote.objects.filter(plan__proposal__in=[proposal.id for proposal in proposals])
+        .select_related("plan", "plan__proposal", "member", "user")
+        .order_by("-created_at")[:5]
+        if proposals
+        else []
+    )
+
     return render(
         request,
         "pages/active_plans.html",
@@ -198,6 +288,11 @@ def active_plans(request):
             "meta_title": "Active Plans",
             "active_page": "active_plans",
             "topbar_context": "Active Plans",
+            "proposals": proposals,
+            "hero_proposal": hero_proposal,
+            "selected_proposal": hero_proposal,
+            "top_options": top_options,
+            "recent_votes": recent_votes,
         },
     )
 
@@ -471,8 +566,8 @@ def start_new_plan(request):
 
 def vote(request, group_id):
     group = _resolve_group_for_request(request, group_id)
-    active_proposal = _active_group_proposal(group)
-    active_plans = active_proposal.plans.order_by("option_order", "created_at") if active_proposal else Plan.objects.none()
+    active_proposal = _decorate_proposal(_active_group_proposal(group))
+    active_plans = active_proposal.options if active_proposal else Plan.objects.none()
     if request.user.is_authenticated:
         current_voter = _resolve_member(group, request.user).display_name
     else:
@@ -488,6 +583,7 @@ def vote(request, group_id):
             "group": group,
             "proposal": active_proposal,
             "plans": active_plans,
+            "plan_total": len(active_plans),
             "current_voter": current_voter,
         },
     )

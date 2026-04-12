@@ -1172,6 +1172,121 @@ body.groups-modal-open {
   background: linear-gradient(90deg, var(--primary), var(--secondary));
 }
 
+.plans-selector-list,
+.plans-focus-voters,
+.plans-progress-list {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1.6rem;
+}
+
+.plans-selector-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.05rem;
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.plans-selector-item.is-active {
+  border-color: rgba(165, 165, 255, 0.35);
+  background: rgba(165, 165, 255, 0.08);
+}
+
+.plans-selector-item strong,
+.plans-focus-item strong,
+.plans-focus-voters__block strong {
+  display: block;
+  font-family: "Manrope", sans-serif;
+  letter-spacing: -0.03em;
+}
+
+.plans-selector-item span,
+.plans-focus-voters__block span {
+  color: #beb9c4;
+}
+
+.plans-progress-item,
+.plans-voters-card {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem 1.05rem;
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.plans-progress-item__head,
+.plans-voters-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.plans-progress-item__head strong,
+.plans-voters-card__head strong {
+  font-family: "Manrope", sans-serif;
+  letter-spacing: -0.03em;
+}
+
+.plans-progress-item__head span,
+.plans-voters-card__head span,
+.plans-voters-card__section p {
+  color: #beb9c4;
+}
+
+.plans-progress-bar {
+  height: 0.8rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.plans-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+}
+
+.plans-voters-card__section {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.plans-focus-voters__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.plans-voter-chip {
+  padding: 0.6rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff !important;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.plans-voter-chip--done {
+  background: rgba(74, 222, 128, 0.16);
+  border: 1px solid rgba(74, 222, 128, 0.24);
+}
+
+.plans-voter-chip--partial {
+  background: rgba(251, 191, 36, 0.16);
+  border: 1px solid rgba(251, 191, 36, 0.24);
+}
+
+.plans-voter-chip--pending {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
 .archive-page {
   display: grid;
   gap: 2.4rem;

@@ -12,7 +12,9 @@
         </div>
         <div class="vi-details">
           <strong>{{ group.name }}</strong>
-          <span>{{ group.voting_plans_count }} options pending</span>
+          <span>
+            {{ group.active_proposal.title }} · {{ group.voting_plans_count }} opciones
+          </span>
         </div>
         <a href="{% url 'vote' group.id %}" class="vi-jump">
           <span class="material-symbols-outlined">chevron_right</span>
@@ -31,11 +33,11 @@
       {% for vote in recent_votes %}
       <div class="vote-item-godmode">
         <div class="vi-icon">
-          <span class="material-symbols-outlined">{% if vote.value > 0 %}thumb_up{% else %}thumb_down{% endif %}</span>
+          <span class="material-symbols-outlined">how_to_vote</span>
         </div>
         <div class="vi-details">
           <strong>{% firstof vote.member.display_name vote.user.username "Guest session" %}</strong>
-          <span>{% if vote.value > 0 %}voto positivo{% else %}voto negativo{% endif %} en {{ vote.plan.title }}</span>
+          <span>ha votado {{ vote.plan.title }} en {{ vote.plan.proposal.title }}</span>
         </div>
         <a href="{% url 'vote' vote.plan.group.id %}" class="vi-jump">
           <span class="material-symbols-outlined">chevron_right</span>

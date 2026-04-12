@@ -23,7 +23,7 @@
                 <div class="tl-fill" id="master-progress"></div>
             </div>
             <div class="tl-label">
-                <span id="plan-counter">1</span> / {{ plans.count }}
+                <span id="plan-counter">1</span> / {{ plan_total }}
             </div>
         </div>
 
@@ -31,6 +31,13 @@
             <span class="material-symbols-outlined">person</span>
             <span>Voting as {{ current_voter }}</span>
         </div>
+
+        {% if proposal %}
+        <div class="vote-round-chip">
+            <span class="material-symbols-outlined">ballot</span>
+            <span>{{ proposal.title }} · {{ proposal.option_count }} opciones · {{ proposal.total_votes }} votos</span>
+        </div>
+        {% endif %}
 
         <!-- Empty State -->
         <div class="vote-empty-state" id="empty-state" style="display: none;">
@@ -63,6 +70,26 @@
                 <span class="material-symbols-outlined">done_all</span>
             </button>
         </div>
+
+        {% if proposal and proposal.options %}
+        <div class="vote-live-board">
+            <div class="vote-live-board__header">
+                <strong>Live round</strong>
+                <span>{{ group.name }}</span>
+            </div>
+            <div class="vote-live-board__list">
+                {% for option in proposal.options %}
+                <div class="vote-live-item">
+                    <div>
+                        <strong>{{ option.title }}</strong>
+                        <span>{% if option.recent_voters %}{{ option.recent_voters|join:", " }}{% else %}Aun sin votos{% endif %}</span>
+                    </div>
+                    <b>{{ option.upvote_count }}+</b>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -184,7 +211,27 @@
         letter-spacing: 0.02em;
     }
 
+    .vote-round-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+        align-self: flex-start;
+        margin-bottom: 1.4rem;
+        padding: 0.7rem 1rem;
+        border-radius: 999px;
+        background: rgba(165, 165, 255, 0.12);
+        border: 1px solid rgba(165, 165, 255, 0.18);
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 0.82rem;
+        font-weight: 700;
+    }
+
     .vote-identity-chip .material-symbols-outlined {
+        font-size: 1rem;
+        color: var(--primary);
+    }
+
+    .vote-round-chip .material-symbols-outlined {
         font-size: 1rem;
         color: var(--primary);
     }
@@ -540,6 +587,66 @@
         gap: 2rem;
     }
 
+    .vote-live-board {
+        display: grid;
+        gap: 0.9rem;
+        margin-top: 0.5rem;
+        padding: 1rem 1.1rem;
+        border-radius: 1.4rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(16px);
+    }
+
+    .vote-live-board__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+    }
+
+    .vote-live-board__header strong {
+        color: white;
+        font-size: 0.84rem;
+        letter-spacing: 0.08em;
+    }
+
+    .vote-live-board__list {
+        display: grid;
+        gap: 0.7rem;
+    }
+
+    .vote-live-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.85rem 0.95rem;
+        border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.04);
+    }
+
+    .vote-live-item strong {
+        display: block;
+        color: white;
+        font-size: 0.95rem;
+    }
+
+    .vote-live-item span {
+        color: rgba(255, 255, 255, 0.45);
+        font-size: 0.78rem;
+    }
+
+    .vote-live-item b {
+        color: var(--primary);
+        font-family: "Manrope", sans-serif;
+        font-size: 1rem;
+    }
+
     .empty-icon {
         font-size: 4rem;
         filter: drop-shadow(0 0 20px rgba(165, 165, 255, 0.5));
@@ -805,7 +912,7 @@
         }
 
         const updateProgress = () => {
-            const total = parseInt("{{ plans.count }}");
+            const total = parseInt("{{ plan_total }}");
             const voted = total - plans.length;
             if (counter) counter.textContent = voted + 1;
         };
