@@ -133,9 +133,6 @@ def _decorate_proposal(proposal):
     ]
     proposal.completed_voter_count = len(completed_voters)
     proposal.is_closed = proposal.status in {PlanProposal.Status.CHOSEN, PlanProposal.Status.CANCELLED}
-    proposal.can_accept_votes = proposal.status == PlanProposal.Status.VOTING and not (
-        proposal.voting_ends_at and proposal.voting_ends_at <= timezone.now()
-    )
     return proposal
 
 
