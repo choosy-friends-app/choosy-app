@@ -2,8 +2,9 @@
   <div class="gc-header">
     <div class="gc-identity">
       <div class="gc-icon-hex">
-        <span class="material-symbols-outlined">{% if group.voting_plans_count > 0 %}bolt{% else %}groups{% endif
-          %}</span>
+        <span class="material-symbols-outlined">
+          {% if group.voting_plans_count > 0 %}bolt{% else %}groups{% endif %}
+        </span>
       </div>
       <div class="gc-title">
         <h3>{{ group.name }}</h3>
