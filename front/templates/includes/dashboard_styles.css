@@ -320,6 +320,7 @@ button {
 .dashboard-side {
   display: grid;
   gap: 0.75rem;
+  align-content: start;
 }
 
 .pulse-card,
@@ -475,6 +476,7 @@ button {
 .side-panel {
   display: grid;
   gap: 1.2rem;
+  align-content: start;
 }
 
 .activity-space {
