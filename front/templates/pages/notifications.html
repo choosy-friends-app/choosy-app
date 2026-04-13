@@ -51,10 +51,10 @@
                             <div class="s-avatar count">+12</div>
                         </div>
                         <div class="invite-buttons">
-                            <button class="btn-decline"
-                                onclick="handleInvitation({{ notif.group.id }}, 'decline')">DECLINE</button>
-                            <button class="btn-accept"
-                                onclick="handleInvitation({{ notif.group.id }}, 'accept')">ACCEPT</button>
+                            <button class="btn-decline" data-group="{{ notif.group.id }}"
+                                onclick="handleInvitation(this.dataset.group, 'decline')">DECLINE</button>
+                            <button class="btn-accept" data-group="{{ notif.group.id }}"
+                                onclick="handleInvitation(this.dataset.group, 'accept')">ACCEPT</button>
                         </div>
                     </div>
                     {% elif notif.type == 'new_plan' %}
