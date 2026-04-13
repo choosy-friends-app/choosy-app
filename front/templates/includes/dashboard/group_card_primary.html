@@ -10,9 +10,9 @@
         <h3>{{ group.name }}</h3>
         <p>
           {% if group.active_proposal %}
-            {{ group.active_proposal.title }} · cierra {{ group.active_proposal.voting_ends_at|date:"d/m H:i" }}
+          {{ group.active_proposal.title }} · cierra {{ group.active_proposal.voting_ends_at|date:"d/m H:i" }}
           {% else %}
-            {{ group.description|default:"Coordinating the next big group decision together." }}
+          {{ group.description|default:"Coordinating the next big group decision together." }}
           {% endif %}
         </p>
       </div>
@@ -44,9 +44,9 @@
       <span class="material-symbols-outlined">history</span>
       <span>
         {% if group.active_proposal and group.active_proposal.leading_option %}
-          Lidera {{ group.active_proposal.leading_option.title }}
+        Lidera {{ group.active_proposal.leading_option.title }}
         {% else %}
-          {{ group.updated_at|timesince }} ago
+        {{ group.updated_at|timesince }} ago
         {% endif %}
       </span>
     </div>
@@ -63,6 +63,7 @@
     <a href="{% url 'start_new_plan' %}?group_id={{ group.id }}" class="btn-god-mode">
       <span class="material-symbols-outlined">add_circle</span>
       <span>New Proposal</span>
+      <div class="btn-shine"></div>
     </a>
     {% endif %}
   </div>

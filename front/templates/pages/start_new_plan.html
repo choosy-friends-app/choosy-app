@@ -72,13 +72,43 @@
       <article class="glass-card">
         <label class="s-label">VOTING DEADLINE</label>
         <div class="deadline-grid">
+          <!-- Premium Custom Date Picker -->
           <div class="field-item">
             <label class="s-label s-label--sub">DATE</label>
-            <input type="date" name="voting_end_date" class="s-input" value="{{ default_voting_end_date }}" required>
+            <div class="custom-picker-box" id="date-picker-box">
+              <input type="hidden" name="voting_end_date" id="final-date-input" value="{{ default_voting_end_date }}">
+              <div class="picker-display-box" id="date-display-trigger">
+                <span class="material-symbols-outlined">calendar_today</span>
+                <span id="date-display">{{ default_voting_end_date }}</span>
+              </div>
+              <div class="calendar-overlay" id="cal-overlay">
+                <div class="cal-header">
+                  <button type="button" class="cal-nav" id="prev-month">❮</button>
+                  <strong id="cal-month-year">April 2026</strong>
+                  <button type="button" class="cal-nav" id="next-month">❯</button>
+                </div>
+                <div class="cal-grid" id="cal-grid"></div>
+              </div>
+            </div>
           </div>
+
+          <!-- Premium Custom Time Picker -->
           <div class="field-item">
             <label class="s-label s-label--sub">TIME</label>
-            <input type="time" name="voting_end_time" class="s-input" value="{{ default_voting_end_time }}" required>
+            <div class="custom-picker-box" id="time-picker-box">
+              <input type="hidden" name="voting_end_time" id="final-time-input" value="{{ default_voting_end_time }}">
+              <div class="picker-display-box" id="time-display-trigger">
+                <span class="material-symbols-outlined">schedule</span>
+                <span id="time-display">{{ default_voting_end_time }}</span>
+              </div>
+              <div class="time-picker-overlay" id="time-overlay">
+                <div class="tp-scrollable">
+                  <div class="tp-column" id="tp-hrs"></div>
+                  <div class="tp-sep">:</div>
+                  <div class="tp-column" id="tp-mins"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </article>
@@ -825,6 +855,118 @@
     const addBtn = document.getElementById("add-option-trigger");
     const jsonInp = document.getElementById("options-json-input");
     const form = document.getElementById("plan-form");
+
+    // --- MAIN DEADLINE PICKERS LOGIC (SIDEBAR) ---
+    const mainDateBox = document.getElementById("date-picker-box");
+    const mainTimeBox = document.getElementById("time-picker-box");
+    const mainDateDisplay = document.getElementById("date-display");
+    const mainTimeDisplay = document.getElementById("time-display");
+    const mainDateInput = document.getElementById("final-date-input");
+    const mainTimeInput = document.getElementById("final-time-input");
+    const mainCalOverlay = document.getElementById("cal-overlay");
+    const mainTimeOverlay = document.getElementById("time-overlay");
+
+    // Reuse the same logic as the cards but for the sidebar pickers
+    const setupMainPickers = () => {
+      // Time Picker Init
+      const hCol = mainTimeOverlay.querySelector("#tp-hrs");
+      const mCol = mainTimeOverlay.querySelector("#tp-mins");
+      for (let i = 0; i < 24; i++) {
+        const item = document.createElement("div");
+        item.className = "tp-item";
+        item.textContent = i.toString().padStart(2, '0');
+        if (mainTimeInput.value.startsWith(item.textContent)) item.classList.add("is-selected");
+        item.onclick = (e) => {
+          e.stopPropagation();
+          hCol.querySelectorAll(".tp-item").forEach(x => x.classList.remove("is-selected"));
+          item.classList.add("is-selected");
+          const h = item.textContent;
+          const m = mCol.querySelector(".is-selected")?.textContent || "00";
+          mainTimeInput.value = `${h}:${m}`;
+          mainTimeDisplay.textContent = `${h}:${m}`;
+        };
+        hCol.appendChild(item);
+      }
+      [0, 15, 30, 45].forEach(i => {
+        const item = document.createElement("div");
+        item.className = "tp-item";
+        item.textContent = i.toString().padStart(2, '0');
+        if (mainTimeInput.value.endsWith(item.textContent)) item.classList.add("is-selected");
+        item.onclick = (e) => {
+          e.stopPropagation();
+          mCol.querySelectorAll(".tp-item").forEach(x => x.classList.remove("is-selected"));
+          item.classList.add("is-selected");
+          const m = item.textContent;
+          const h = hCol.querySelector(".is-selected")?.textContent || "20";
+          mainTimeInput.value = `${h}:${m}`;
+          mainTimeDisplay.textContent = `${h}:${m}`;
+        };
+        mCol.appendChild(item);
+      });
+
+      // Calendar Init
+      let currentViewDate = new Date();
+      const renderMainCal = () => {
+        const calGrid = document.getElementById("cal-grid");
+        const monthLabel = document.getElementById("cal-month-year");
+        calGrid.innerHTML = "";
+
+        const firstDay = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth(), 1).getDay();
+        const daysInMonth = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth() + 1, 0).getDate();
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        monthLabel.textContent = `${months[currentViewDate.getMonth()]} ${currentViewDate.getFullYear()}`;
+
+        for (let i = 0; i < firstDay; i++) {
+          const s = document.createElement("div"); s.className = "cal-day is-empty";
+          calGrid.appendChild(s);
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dayEl = document.createElement("div");
+          dayEl.className = "cal-day";
+          dayEl.textContent = d;
+          const ds = `${currentViewDate.getFullYear()}-${(currentViewDate.getMonth() + 1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+          if (mainDateInput.value === ds) dayEl.classList.add("is-selected");
+          dayEl.onclick = (e) => {
+            e.stopPropagation();
+            mainDateInput.value = ds;
+            const [y, m, day] = ds.split("-");
+            mainDateDisplay.textContent = `${day}/${m}/${y}`;
+            mainCalOverlay.classList.remove("is-active");
+            mainDateBox.classList.remove("is-open");
+          };
+          calGrid.appendChild(dayEl);
+        }
+      };
+
+      document.getElementById("prev-month").onclick = (e) => { e.stopPropagation(); currentViewDate.setMonth(currentViewDate.getMonth() - 1); renderMainCal(); };
+      document.getElementById("next-month").onclick = (e) => { e.stopPropagation(); currentViewDate.setMonth(currentViewDate.getMonth() + 1); renderMainCal(); };
+
+      mainDateBox.onclick = (e) => {
+        e.stopPropagation();
+        closeAllOverlays();
+        mainCalOverlay.classList.add("is-active");
+        mainDateBox.classList.add("is-open");
+        renderMainCal();
+      };
+      mainTimeBox.onclick = (e) => {
+        e.stopPropagation();
+        closeAllOverlays();
+        mainTimeOverlay.classList.add("is-active");
+        mainTimeBox.classList.add("is-open");
+      };
+    };
+
+    const closeAllOverlays = () => {
+      document.querySelectorAll(".calendar-overlay, .time-picker-overlay, .custom-picker-box").forEach(el => {
+        el.classList.remove("is-active");
+        el.classList.remove("is-open");
+      });
+    };
+
+    document.addEventListener("click", closeAllOverlays);
+
+    setupMainPickers();
 
     const addOption = (defaultTitle = "", defaultAddr = "") => {
       const card = document.createElement("div");
