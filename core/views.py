@@ -764,6 +764,29 @@ def notification_center(request):
     )
 
 
+def invitation_detail(request, group_id):
+    if not request.user.is_authenticated:
+        return redirect("login")
+        
+    group = get_object_or_404(Group, id=group_id)
+    # Ensure the user has an pending invitation
+    member = get_object_or_404(GroupMember, group=group, user=request.user, status=GroupMember.Status.INVITED)
+    
+    # Optional logic to get the latest plan or group context if necessary
+    active_plan = group.proposals.filter(status=PlanProposal.Status.VOTING).first()
+    
+    return render(
+        request,
+        "pages/invitation_detail.html",
+        {
+            "meta_title": f"Invitation: {group.name}",
+            "group": group,
+            "member": member,
+            "active_plan": active_plan,
+        }
+    )
+
+
 @csrf_exempt
 def api_invite_user(request, group_id):
     if request.method != "POST":

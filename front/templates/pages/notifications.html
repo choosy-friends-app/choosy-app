@@ -51,10 +51,8 @@
                             <div class="s-avatar count">+12</div>
                         </div>
                         <div class="invite-buttons">
-                            <button class="btn-decline" data-group="{{ notif.group.id }}"
-                                onclick="handleInvitation(this.dataset.group, 'decline')">DECLINE</button>
-                            <button class="btn-accept" data-group="{{ notif.group.id }}"
-                                onclick="handleInvitation(this.dataset.group, 'accept')">ACCEPT</button>
+                            <a href="{% url 'invitation_detail' notif.group.id %}" class="btn-accept"
+                                style="text-decoration:none; display:flex; justify-content:center;">VIEW INVITATION</a>
                         </div>
                     </div>
                     {% elif notif.type == 'new_plan' %}
@@ -93,12 +91,9 @@
                                 style="background: url('https://i.pravatar.cc/100?img=13') center/cover"></div>
                             <div class="s-avatar count">+12</div>
                             <div class="invite-buttons">
-                                <div class="invite-buttons">
-                                    <button class="btn-decline" data-group="{{ notif.group.id }}"
-                                        onclick="handleInvitation(this.dataset.group, 'decline')">DECLINE</button>
-                                    <button class="btn-accept" data-group="{{ notif.group.id }}"
-                                        onclick="handleInvitation(this.dataset.group, 'accept')">ACCEPT</button>
-                                </div>
+                                <a href="{% url 'invitation_detail' notif.group.id|default:1 %}" class="btn-accept"
+                                    style="text-decoration:none; display:flex; justify-content:center;">VIEW
+                                    INVITATION</a>
                             </div>
                         </div>
                     </div>

@@ -1,0 +1,185 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ meta_title|default:"Invitation" }} · Choosy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@0..1&display=swap"
+        rel="stylesheet" />
+    <style>
+        {
+            % include "includes/dashboard_styles.css" %
+        }
+    </style>
+</head>
+
+<body class="invitation-body">
+
+    <!-- Floating Nav Capsule -->
+    <div class="inv-nav-capsule">
+        <div class="inv-nav-brand">Choosy</div>
+        <div class="inv-nav-menu">
+            <a href="{% url 'dashboard' %}" class="inv-nav-icon"><span class="material-symbols-outlined">home</span></a>
+            <a href="{% url 'groups' %}" class="inv-nav-icon"><span class="material-symbols-outlined">groups</span></a>
+            <a href="{% url 'notifications' %}" class="inv-nav-icon is-active"><span
+                    class="material-symbols-outlined">mail</span></a>
+            <a href="#" class="inv-nav-icon"><span class="material-symbols-outlined">settings</span></a>
+        </div>
+        <div class="inv-nav-user">
+            <span class="material-symbols-outlined">notifications</span>
+            <span class="material-symbols-outlined">account_circle</span>
+        </div>
+    </div>
+
+    <div class="invitation-layout">
+
+        <!-- Left Column (Massive Hero & Sub-cards) -->
+        <div class="inv-left-col">
+            <!-- Massive Hero Card -->
+            <div class="inv-hero-card">
+                <div class="inv-hero-bg"></div>
+                <div class="inv-hero-content">
+                    <div class="inv-tag">NEW INVITATION</div>
+                    <h1 class="inv-title">{{ group.name }}</h1>
+                    <p class="inv-desc">{{ group.description|default:"A collective of culinary enthusiasts dedicated to
+                        discovering hidden food gems and mastering the art of the unknown plate." }}</p>
+                </div>
+            </div>
+
+            <!-- Sub Cards Row -->
+            <div class="inv-sub-cards">
+                <div class="inv-sub-card experience-card">
+                    <div class="sub-card-tag">EXPERIENCE</div>
+                    {% if active_plan %}
+                    <h3 class="sub-card-title">{{ active_plan.title|default:"Friday Omakase Night" }}</h3>
+                    <p class="sub-card-desc">Exclusive 12-course tasting at the secret downtown loft. Limited seating.
+                    </p>
+                    <div class="sub-card-meta">
+                        <span><span class="material-symbols-outlined">calendar_today</span> Oct 27</span>
+                        <span><span class="material-symbols-outlined">schedule</span> 8:00 PM</span>
+                    </div>
+                    {% else %}
+                    <h3 class="sub-card-title">Join and start proposing!</h3>
+                    <p class="sub-card-desc">No active plans yet. Once you join, you can propose the first epic
+                        adventure for the squad.</p>
+                    {% endif %}
+                </div>
+
+                <div class="inv-sub-card mission-card">
+                    <div class="sub-card-tag">MISSION</div>
+                    <h3 class="sub-card-quote">"Finding the flavor where the map ends."</h3>
+                    <div class="squad-avatars">
+                        <div class="s-avatar" style="background: url('https://i.pravatar.cc/100?img=11') center/cover">
+                        </div>
+                        <div class="s-avatar" style="background: url('https://i.pravatar.cc/100?img=12') center/cover">
+                        </div>
+                        <div class="s-avatar" style="background: url('https://i.pravatar.cc/100?img=13') center/cover">
+                        </div>
+                        <div class="s-avatar count">+12</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column (Action Glass Panel & Stats) -->
+        <div class="inv-right-col">
+            <div class="inv-action-panel">
+                <h2>Join the Squad</h2>
+                <p class="action-desc">Your friends are waiting for your confirmation to unlock the group's curated map.
+                </p>
+
+                <ul class="inv-feature-list">
+                    <li>
+                        <div class="f-icon"><span class="material-symbols-outlined">restaurant</span></div>
+                        <span class="f-text">Culinary Adventures</span>
+                        <span class="material-symbols-outlined check">check_circle</span>
+                    </li>
+                    <li>
+                        <div class="f-icon"><span class="material-symbols-outlined">explore</span></div>
+                        <span class="f-text">Hidden Food Gems</span>
+                        <span class="material-symbols-outlined check">check_circle</span>
+                    </li>
+                </ul>
+
+                <div class="inv-buttons">
+                    <button class="btn-giant-accept" data-group="{{ group.id }}"
+                        onclick="handleInvitation(this.dataset.group, 'accept')">ACCEPT</button>
+                    <button class="btn-ghost-decline" data-group="{{ group.id }}"
+                        onclick="handleInvitation(this.dataset.group, 'decline')">DECLINE</button>
+                </div>
+            </div>
+
+            <div class="inv-stats-card">
+                <div class="stats-header">
+                    <span class="material-symbols-outlined i-info">info</span>
+                    <strong>GROUP STATS</strong>
+                </div>
+                <div class="stats-data">
+                    <h1>84%</h1>
+                    <span>Taste Match with your profile</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function getCookie(name) {
+            let cv = null;
+            if (document.cookie && document.cookie !== '') {
+                const coo = document.cookie.split(';');
+                for (let i = 0; i < coo.length; i++) {
+                    const c = coo[i].trim();
+                    if (c.substring(0, name.length + 1) === (name + '=')) {
+                        cv = decodeURIComponent(c.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cv;
+        }
+
+        function handleInvitation(groupId, action) {
+            const acceptBtn = document.querySelector('.btn-giant-accept');
+            const declineBtn = document.querySelector('.btn-ghost-decline');
+
+            acceptBtn.disabled = true;
+            declineBtn.disabled = true;
+
+            if (action === 'accept') {
+                acceptBtn.innerHTML = '<span class="material-symbols-outlined" style="animation: spin 1s infinite linear;">refresh</span>';
+                acceptBtn.style.opacity = '0.8';
+            } else {
+                declineBtn.innerText = 'DECLINING...';
+            }
+
+            fetch(`/api/groups/${groupId}/invitation/${action}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json())
+                .then(data => {
+                    if (data.status === 'accepted' || data.status === 'declined') {
+                        window.location.href = '/notifications/';
+                    } else {
+                        console.error(data.error);
+                        acceptBtn.disabled = false;
+                        declineBtn.disabled = false;
+                        acceptBtn.innerText = 'ACCEPT';
+                        declineBtn.innerText = 'DECLINE';
+                    }
+                });
+        }
+    </script>
+</body>
+
+</html>
