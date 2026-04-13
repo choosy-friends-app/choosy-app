@@ -283,3 +283,53 @@ class Vote(TimestampedModel):
 
     def __str__(self) -> str:
         return f"Vote(plan={self.plan_id}, value={self.value})"
+
+
+class Notification(TimestampedModel):
+    class Type(models.TextChoices):
+        INVITATION = "invitation", "Invitation"
+        NEW_PLAN = "new_plan", "New Plan"
+        DECISION = "decision", "Decision"
+        REMINDER = "reminder", "Reminder"
+
+    recipient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notifications"
+    )
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="sent_notifications"
+    )
+    type = models.CharField(max_length=20, choices=Type.choices)
+    title = models.CharField(max_length=120)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    
+    # Context references
+    group = models.ForeignKey(
+        Group,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="notifications"
+    )
+    plan_proposal = models.ForeignKey(
+        PlanProposal,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="notifications"
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["recipient", "is_read", "-created_at"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.type}: {self.title} for {self.recipient.username}"
