@@ -10,7 +10,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import Group, GroupMember, Plan, PlanProposal, Vote
+from .models import Group, GroupMember, Plan, PlanProposal, Vote, Notification
 
 User = get_user_model()
 
@@ -699,25 +699,131 @@ def vote(request, group_id):
 
 @csrf_exempt
 def api_submit_vote(request, plan_id):
-    if request.method == "POST":
-        plan = get_object_or_404(Plan, id=plan_id)
-        try:
-            data = json.loads(request.body)
-            value = Vote.Value.UP if int(data.get("value", 1)) > 0 else Vote.Value.DOWN
-            if plan.proposal.status != PlanProposal.Status.VOTING:
-                return JsonResponse({"status": "error", "message": "This voting round is closed."}, status=400)
-            identity = _vote_identity_for_request(request, plan)
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
 
-            Vote.objects.update_or_create(
-                plan=plan,
-                user=identity["user"],
-                member=identity["member"],
-                session_key=identity["session_key"],
-                defaults={"value": value},
-            )
-            return JsonResponse({"status": "success"})
-        except PermissionDenied as exc:
-            return JsonResponse({"status": "error", "message": str(exc)}, status=403)
-        except Exception as exc:
-            return JsonResponse({"status": "error", "message": str(exc)}, status=400)
-    return JsonResponse({"status": "method_not_allowed"}, status=405)
+    try:
+        data = json.loads(request.body)
+        value = int(data.get("value", 0))
+        if value not in {-1, 1, 2}:
+            return JsonResponse({"error": "Invalid vote value"}, status=400)
+
+        plan = get_object_or_404(Plan, id=plan_id)
+        if not plan.proposal.can_accept_votes:
+            return JsonResponse({"error": "Voting is closed"}, status=400)
+
+        ident = _vote_identity_for_request(request, plan)
+        Vote.objects.update_or_create(
+            plan=plan,
+            member=ident["member"],
+            user=ident["user"],
+            session_key=ident["session_key"],
+            defaults={"value": value},
+        )
+        return JsonResponse({"status": "ok"})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
+
+
+def notification_center(request):
+    if not request.user.is_authenticated:
+        return redirect("login")
+        
+    notifications = Notification.objects.filter(recipient=request.user)
+    
+    return render(
+        request,
+        "pages/notifications.html",
+        {
+            "meta_title": "Notifications",
+            "active_page": "notifications",
+            "topbar_context": "Notifications",
+            "notifications": notifications,
+        }
+    )
+
+
+@csrf_exempt
+def api_invite_user(request, group_id):
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+        
+    group = get_object_or_404(Group, id=group_id)
+    _require_group_admin(group, request.user)
+    
+    try:
+        data = json.loads(request.body)
+        username = data.get("username", "").strip()
+        
+        target_user = User.objects.filter(username=username).first()
+        if not target_user:
+            return JsonResponse({"error": "User not found"}, status=404)
+            
+        member, created = GroupMember.objects.get_or_create(
+            group=group,
+            user=target_user,
+            defaults={
+                "display_name": target_user.get_full_name() or target_user.username,
+                "role": GroupMember.Role.MEMBER,
+                "status": GroupMember.Status.INVITED,
+                "invited_by": request.user,
+            }
+        )
+        
+        if not created and member.status != GroupMember.Status.LEFT:
+            return JsonResponse({"error": "User is already in the group or invited"}, status=400)
+            
+        member.status = GroupMember.Status.INVITED
+        member.save()
+        
+        Notification.objects.create(
+            recipient=target_user,
+            sender=request.user,
+            type=Notification.Type.INVITATION,
+            title=f"Invitation to {group.name}",
+            message=f"{request.user.username} invited you to '{group.name}'",
+            group=group
+        )
+        return JsonResponse({"status": "ok"})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
+
+
+@csrf_exempt
+def api_respond_invitation(request, group_id, action):
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+        
+    group = get_object_or_404(Group, id=group_id)
+    member = get_object_or_404(GroupMember, group=group, user=request.user, status=GroupMember.Status.INVITED)
+    
+    if action == "accept":
+        member.status = GroupMember.Status.ACTIVE
+        member.save()
+        
+        # Mark related invitation notifications as read
+        Notification.objects.filter(
+            recipient=request.user,
+            group=group,
+            type=Notification.Type.INVITATION
+        ).update(is_read=True)
+        
+        return JsonResponse({"status": "accepted", "group_name": group.name})
+        
+    elif action == "decline":
+        member.status = GroupMember.Status.LEFT
+        member.save()
+        
+        Notification.objects.filter(
+            recipient=request.user,
+            group=group,
+            type=Notification.Type.INVITATION
+        ).update(is_read=True)
+        
+        return JsonResponse({"status": "declined"})
+        
+    return JsonResponse({"error": "Invalid action"}, status=400)
