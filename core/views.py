@@ -799,6 +799,13 @@ def invitation_detail(request, group_id):
     )
 
 
+def dashboard_css(request):
+    from django.template.loader import render_to_string
+    from django.http import HttpResponse
+    css = render_to_string("includes/dashboard_styles.css")
+    return HttpResponse(css, content_type="text/css")
+
+
 @csrf_exempt
 def api_invite_user(request, group_id):
     if request.method != "POST":
