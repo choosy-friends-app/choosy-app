@@ -3158,8 +3158,8 @@ body.groups-modal-open {
   display: grid;
   grid-template-columns: 1fr 380px;
   gap: 3rem;
-  padding: 3rem 4rem 3rem 8rem;
-  /* offset for nav capsule */
+  padding: 3rem 4rem;
+  /* removing capsule offset */
   width: 100%;
   max-width: 1600px;
   margin: 0 auto;
