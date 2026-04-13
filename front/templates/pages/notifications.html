@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-shell notifications-shell">
+    {% include "includes/layout/sidebar.html" %}
+
+    <main class="dashboard-main notifications-main">
+        <!-- Top Search & Profile Bar -->
+        <header class="d-topbar">
+            <div class="d-search">
+                <span class="material-symbols-outlined">search</span>
+                <input type="text" placeholder="Search activities, squads, or plans...">
+            </div>
+            <div class="d-user-actions">
+                <button class="sys-btn"><span class="material-symbols-outlined">help</span></button>
+                <button class="sys-btn"><span class="material-symbols-outlined">dark_mode</span></button>
+            </div>
+        </header>
+
+        <!-- Main Feed & Stats Split -->
+        <div class="notifications-layout">
+            <!-- Left Feed Column -->
+            <div class="notif-feed">
+                <div class="notif-header">
+                    <div class="notif-title-group">
+                        <h1>Notifications</h1>
+                        <p>STAY UPDATED ON YOUR SQUADS</p>
+                    </div>
+                    <button class="mark-read-btn">MARK ALL AS READ</button>
+                </div>
+
+                <div class="notif-tabs">
+                    <button class="notif-tab active">All</button>
+                    <button class="notif-tab">Invitations</button>
+                    <button class="notif-tab">Decisions</button>
+                </div>
+
+                <div class="notif-list">
+                    <!-- Dynamic Rendering based on Django Context -->
+                    {% for notif in notifications %}
+                    <div class="notif-card type-{{ notif.type }}">
+                        <div class="notif-icon">
+                            {% if notif.type == 'invitation' %}
+                            <span class="material-symbols-outlined">group_add</span>
+                            {% elif notif.type == 'new_plan' %}
+                            <span class="material-symbols-outlined">restaurant</span>
+                            {% elif notif.type == 'decision' %}
+                            <span class="material-symbols-outlined">celebration</span>
+                            {% else %}
+                            <span class="material-symbols-outlined">notification_important</span>
+                            {% endif %}
+                        </div>
+                        <div class="notif-content">
+                            <div class="notif-meta">
+                                <h3>{{ notif.title }}</h3>
+                                <span class="notif-time">{{ notif.created_at|timesince }} ago</span>
+                            </div>
+                            <p>{{ notif.message }}</p>
+
+                            {% if notif.type == 'invitation' %}
+                            <div class="notif-actions invite-actions">
+                                <div class="squad-avatars">
+                                    <!-- Mock avatars -->
+                                    <div class="s-avatar"></div>
+                                    <div class="s-avatar"></div>
+                                    <div class="s-avatar"></div>
+                                    <div class="s-avatar count">+12</div>
+                                </div>
+                                <div class="invite-buttons">
+                                    <button class="btn-decline"
+                                        onclick="handleInvitation({{ notif.group.id }}, 'decline')">DECLINE</button>
+                                    <button class="btn-accept"
+                                        onclick="handleInvitation({{ notif.group.id }}, 'accept')">ACCEPT</button>
+                                </div>
+                            </div>
+                            {% elif notif.type == 'new_plan' %}
+                            <div class="notif-actions">
+                                <button class="btn-vote" onclick="window.location.href='/vote/{{ notif.group.id }}/'">
+                                    Vote Now <span class="material-symbols-outlined">front_hand</span>
+                                </button>
+                            </div>
+                            {% elif notif.type == 'decision' %}
+                            <div class="notif-actions">
+                                <a href="#" class="btn-view-plan">View Final Plan &rarr;</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <!-- HARDCODED MOCKS to emulate sketch exactly while testing -->
+                    <div class="notif-card type-invitation">
+                        <div class="notif-icon i-purple">
+                            <span class="material-symbols-outlined">group_add</span>
+                        </div>
+                        <div class="notif-content">
+                            <div class="notif-meta">
+                                <h3>Alex invited you to "Weekend Warriors"</h3>
+                                <span class="notif-time">2m ago</span>
+                            </div>
+                            <p>A competitive group for weekend sports and outdoor adventures.</p>
+
+                            <div class="notif-actions invite-actions">
+                                <div class="squad-avatars">
+                                    <div class="s-avatar"
+                                        style="background: url('https://i.pravatar.cc/100?img=11') center/cover"></div>
+                                    <div class="s-avatar"
+                                        style="background: url('https://i.pravatar.cc/100?img=12') center/cover"></div>
+                                    <div class="s-avatar"
+                                        style="background: url('https://i.pravatar.cc/100?img=13') center/cover"></div>
+                                    <div class="s-avatar count">+12</div>
+                                    <div class="invite-buttons">
+                                        <div class="invite-buttons">
+                                            <button class="btn-decline" data-group="{{ notif.group.id }}"
+                                                onclick="handleInvitation(this.dataset.group, 'decline')">DECLINE</button>
+                                            <button class="btn-accept" data-group="{{ notif.group.id }}"
+                                                onclick="handleInvitation(this.dataset.group, 'accept')">ACCEPT</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="notif-card type-new_plan">
+                        <div class="notif-icon i-cyan">
+                            <span class="material-symbols-outlined">restaurant</span>
+                        </div>
+                        <div class="notif-content">
+                            <div class="notif-meta">
+                                <h3>New Plan: "Friday Sushi Night" in "The Foodies"</h3>
+                                <span class="notif-time">1h ago</span>
+                            </div>
+                            <p>Let's try that new omakase place downtown. 4 slots available.</p>
+                            <div class="notif-actions">
+                                <button class="btn-vote">
+                                    Vote Now <span class="material-symbols-outlined"
+                                        style="font-size:14px; margin-left:6px;">how_to_vote</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="notif-card type-decision"
+                        style="border: 1px solid rgba(165,165,255,0.3); background: rgba(165,165,255,0.05);">
+                        <div class="notif-icon i-deep">
+                            <span class="material-symbols-outlined">celebration</span>
+                        </div>
+                        <div class="notif-content">
+                            <div class="notif-meta">
+                                <h3>Final Verdict! "Lake Tahoe" won with 85% consensus</h3>
+                                <span class="notif-time">4h ago</span>
+                            </div>
+                            <p>The trip is confirmed for July 12th. Get ready for some mountain air!</p>
+                            <div class="notif-actions">
+                                <a href="#" class="btn-view-plan"
+                                    style="color: #bfa8ff; font-weight:800; text-decoration:none; display:flex; align-items:center; gap:0.4rem; margin-top:0.5rem;">
+                                    View Final Plan <span class="material-symbols-outlined"
+                                        style="font-size:16px;">arrow_forward</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="notif-card type-reminder" style="border: 1px solid rgba(239,68,68,0.3);">
+                        <div class="notif-icon i-red">
+                            <span class="material-symbols-outlined">new_releases</span>
+                        </div>
+                        <div class="notif-content">
+                            <div class="notif-meta">
+                                <h3>Don't forget to propose a plan for "Company Retreat"</h3>
+                                <span class="notif-time">8h ago</span>
+                            </div>
+                            <p>Your deadline to submit options is in 2 hours.</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Right Stats Column -->
+            <aside class="notif-sidebar">
+                <div class="q-stats-block">
+                    <h2>Quick Stats</h2>
+                    <ul class="q-stat-list">
+                        <li>
+                            <div class="qst-left"><span class="material-symbols-outlined">bolt</span> Response Time
+                            </div>
+                            <div class="qst-right">12m</div>
+                        </li>
+                        <li>
+                            <div class="qst-left"><span class="material-symbols-outlined">check_circle</span> Decisions
+                                Made</div>
+                            <div class="qst-right">48</div>
+                        </li>
+                        <li>
+                            <div class="qst-left"><span class="material-symbols-outlined">groups</span> Active Squads
+                            </div>
+                            <div class="qst-right">6</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="tip-card">
+                    <strong>TIP</strong>
+                    <p>You're more likely to get consensus if you propose plans on Tuesday mornings!</p>
+                </div>
+
+                <div class="squad-highlights-block">
+                    <h2>Squad Highlights</h2>
+                    <div class="hl-item">
+                        <img src="https://i.pravatar.cc/100?img=59" alt="Squad">
+                        <div class="hl-text">
+                            <strong>Weekend Warriors</strong>
+                            <span>ACTIVE SINCE 2022</span>
+                        </div>
+                    </div>
+                    <div class="hl-item">
+                        <img src="https://i.pravatar.cc/100?img=60" alt="Squad">
+                        <div class="hl-text">
+                            <strong>The Foodies</strong>
+                            <span>3 NEW PROPOSALS</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="premium-gradient-banner"></div>
+            </aside>
+        </div>
+    </main>
+</div>
+
+<script>
+    function getCookie(name) {
+        let cv = null;
+        if (document.cookie && document.cookie !== '') {
+            const coo = document.cookie.split(';');
+            for (let i = 0; i < coo.length; i++) {
+                const c = coo[i].trim();
+                if (c.substring(0, name.length + 1) === (name + '=')) {
+                    cv = decodeURIComponent(c.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cv;
+    }
+
+    function handleInvitation(groupId, action) {
+        fetch(`/api/groups/${groupId}/invitation/${action}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json())
+            .then(data => {
+                if (data.status === 'accepted' || data.status === 'declined') {
+                    window.location.reload();
+                } else {
+                    console.error(data.error);
+                }
+            });
+    }
+
+    function handleMockInvite(btn) {
+        btn.closest('.notif-card').style.opacity = '0.5';
+        btn.closest('.notif-card').style.pointerEvents = 'none';
+        btn.innerText = 'PROCESSED';
+    }
+</script>
+{% endblock %}
