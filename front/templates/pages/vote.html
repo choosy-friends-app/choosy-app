@@ -865,6 +865,7 @@
         let dragStartX = 0, dragStartY = 0;
         let currentMouseX = window.innerWidth / 2;
         let currentMouseY = window.innerHeight / 2;
+        let mouseInEdge = false;
         const deadlineLabel = document.getElementById("vote-deadline-label");
         const deadlineValue = deadlineLabel ? deadlineLabel.dataset.deadline : "";
 
@@ -1108,6 +1109,19 @@
         window.onmousemove = (e) => {
             currentMouseX = e.clientX;
             currentMouseY = e.clientY;
+
+            // --- PASSIVE EDGE VOTING (With re-arm logic) ---
+            const edgeMargin = 40;
+            const isAtEdge = (e.clientX < edgeMargin || e.clientX > window.innerWidth - edgeMargin);
+
+            if (isAtEdge) {
+                if (!mouseInEdge && !isVoted && !isDragging && !votingLocked && plans.length > 0) {
+                    mouseInEdge = true; // Arm locked
+                    vote(e.clientX < edgeMargin ? -1 : 1);
+                }
+            } else {
+                mouseInEdge = false; // Re-arm when moving back to center
+            }
         };
 
         universe.onclick = (e) => {
