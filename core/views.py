@@ -430,14 +430,35 @@ def groups(request):
                     username = (request.POST.get("username") or "").strip()
                     if not username:
                         raise ValueError("Debes indicar un username para invitar.")
-                    user = get_object_or_404(User, username=username)
-                    member = group.add_member(
-                        user=user,
-                        display_name=request.POST.get("display_name", ""),
-                        role=GroupMember.Role.MEMBER,
-                        invited_by=request.user,
+                    target_user = get_object_or_404(User, username=username)
+                    
+                    # Create or update the member as invited
+                    member, created = GroupMember.objects.get_or_create(
+                        group=group,
+                        user=target_user,
+                        defaults={
+                            "display_name": request.POST.get("display_name", "") or target_user.get_full_name() or target_user.username,
+                            "role": GroupMember.Role.MEMBER,
+                            "status": GroupMember.Status.INVITED,
+                            "invited_by": request.user,
+                        }
                     )
-                    success_message = f"{member.display_name} ya forma parte de {group.name}."
+                    
+                    if not created and member.status != GroupMember.Status.LEFT:
+                        error_message = f"User is already in the group or invited."
+                    else:
+                        member.status = GroupMember.Status.INVITED
+                        member.save()
+                        
+                        Notification.objects.create(
+                            recipient=target_user,
+                            sender=request.user,
+                            type=Notification.Type.INVITATION,
+                            title=f"Invitation to {group.name}",
+                            message=f"{request.user.username} invited you to '{group.name}'",
+                            group=group
+                        )
+                        success_message = f"Invitación enviada a {member.display_name}."
                 else:
                     error_message = "Accion no soportada."
             except PermissionDenied as exc:
