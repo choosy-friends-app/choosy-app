@@ -2294,6 +2294,11 @@ body.groups-modal-open {
   box-shadow: 0 40px 90px rgba(0, 0, 0, 0.55);
 }
 
+.groups-modal__dialog--compact {
+  width: min(32rem, calc(100vw - 2rem));
+  margin: 16vh auto;
+}
+
 .groups-modal__close {
   position: absolute;
   top: 1.2rem;
@@ -2312,6 +2317,15 @@ body.groups-modal-open {
   gap: 0.8rem;
   max-width: 38rem;
   margin-bottom: 2rem;
+}
+
+.groups-modal__hero--compact {
+  max-width: none;
+  margin-bottom: 1.2rem;
+}
+
+.groups-modal__hero--compact h2 {
+  font-size: clamp(2rem, 4vw, 2.8rem);
 }
 
 .groups-modal__hero h2 {
