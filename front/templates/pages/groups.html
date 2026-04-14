@@ -334,11 +334,22 @@
         document.querySelectorAll("[data-group-card]").forEach((card) => {
           const panel = card.querySelector(".group-members-panel");
           const toggle = card.querySelector("[data-toggle-members]");
-          const interactiveSelector = "a, button, input, textarea, form";
 
           if (!panel || !toggle) return;
 
           const setOpen = (open) => {
+            if (open) {
+              document.querySelectorAll("[data-group-card].is-expanded").forEach((otherCard) => {
+                if (otherCard !== card) {
+                  otherCard.classList.remove("is-expanded");
+                  const otherPanel = otherCard.querySelector(".group-members-panel");
+                  const otherToggle = otherCard.querySelector("[data-toggle-members]");
+                  if (otherPanel) otherPanel.hidden = true;
+                  if (otherToggle) otherToggle.textContent = "Members";
+                }
+              });
+            }
+
             panel.hidden = !open;
             card.classList.toggle("is-expanded", open);
             toggle.textContent = open ? "Hide members" : "Members";
@@ -349,16 +360,6 @@
           toggle.addEventListener("click", (event) => {
             event.stopPropagation();
             setOpen(panel.hidden);
-          });
-
-          card.querySelector(".group-row__main").addEventListener("click", () => {
-            setOpen(panel.hidden);
-          });
-
-          card.querySelector(".group-row__side").addEventListener("click", (event) => {
-            if (!event.target.closest(interactiveSelector)) {
-              setOpen(panel.hidden);
-            }
           });
         });
       });
