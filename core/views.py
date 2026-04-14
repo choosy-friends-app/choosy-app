@@ -241,18 +241,59 @@ def _decorate_proposal_for_user(proposal, user):
 def _decorate_groups(groups, user=None):
     decorated = []
     for group in groups:
-        members = list(group.members.filter(status=GroupMember.Status.ACTIVE)[:4])
+        preview_members = list(group.members.filter(status=GroupMember.Status.ACTIVE).select_related("user")[:4])
+        roster_members = list(
+            group.members.filter(status__in=[GroupMember.Status.ACTIVE, GroupMember.Status.INVITED]).select_related("user")
+        )
+        roster_members.sort(
+            key=lambda member: (
+                0 if member.role == GroupMember.Role.OWNER else 1 if member.role == GroupMember.Role.ADMIN else 2,
+                0 if member.status == GroupMember.Status.ACTIVE else 1,
+                member.created_at,
+                member.id,
+            )
+        )
         active_proposal = _decorate_proposal_for_user(
             _sync_proposal_status(
                 group.proposals.filter(status=PlanProposal.Status.VOTING).order_by("-created_at").first()
             ),
             user,
         )
+        current_member = None
+        if user and user.is_authenticated:
+            current_member = group.members.filter(user=user, status=GroupMember.Status.ACTIVE).first()
         group.member_count = group.members.filter(status=GroupMember.Status.ACTIVE).count()
         group.active_proposal = active_proposal
         group.voting_plans_count = active_proposal.option_count if active_proposal else 0
-        group.preview_members = members
-        group.extra_members_count = max(group.member_count - len(members), 0)
+        group.preview_members = preview_members
+        group.extra_members_count = max(group.member_count - len(preview_members), 0)
+        group.pending_invites_count = group.members.filter(status=GroupMember.Status.INVITED).count()
+        group.current_user_is_owner = bool(user and user.is_authenticated and group.owner_id == user.id)
+        group.current_user_can_manage = bool(current_member and current_member.is_admin)
+
+        for member in roster_members:
+            member.avatar_label = (member.display_name or "M")[:1].upper()
+            member.is_owner = member.role == GroupMember.Role.OWNER
+            member.is_admin_role = member.role in {GroupMember.Role.OWNER, GroupMember.Role.ADMIN}
+            member.role_label = "Owner" if member.role == GroupMember.Role.OWNER else "Admin" if member.role == GroupMember.Role.ADMIN else "Member"
+            member.status_label = "Invited" if member.status == GroupMember.Status.INVITED else "Active"
+            member.can_remove = bool(
+                group.current_user_can_manage
+                and member.role != GroupMember.Role.OWNER
+                and (not user or member.user_id != user.id)
+                and not (member.role == GroupMember.Role.ADMIN and not group.current_user_is_owner)
+            )
+            member.can_promote = bool(
+                group.current_user_is_owner
+                and member.status == GroupMember.Status.ACTIVE
+                and member.role == GroupMember.Role.MEMBER
+            )
+            member.can_demote = bool(
+                group.current_user_is_owner
+                and member.status == GroupMember.Status.ACTIVE
+                and member.role == GroupMember.Role.ADMIN
+            )
+        group.membership_cards = roster_members
         decorated.append(group)
     return decorated
 
@@ -282,6 +323,13 @@ def _require_group_admin(group, user):
     member = _resolve_member(group, user)
     if not member.is_admin:
         raise PermissionDenied("You do not have permission to manage this group.")
+    return member
+
+
+def _require_group_owner(group, user):
+    member = _resolve_member(group, user)
+    if group.owner_id != user.id and member.role != GroupMember.Role.OWNER:
+        raise PermissionDenied("Only the group owner can change admin roles.")
     return member
 
 
@@ -319,6 +367,56 @@ def _leave_group(group, user):
     else:
         member.save(update_fields=["status"])
     return member
+
+
+def _set_group_member_role(group, actor, member_id, role):
+    _require_group_owner(group, actor)
+    target_member = get_object_or_404(
+        GroupMember,
+        group=group,
+        id=member_id,
+        status=GroupMember.Status.ACTIVE,
+    )
+    if target_member.role == GroupMember.Role.OWNER:
+        raise PermissionDenied("You cannot change the owner role from this action.")
+    if role not in {GroupMember.Role.ADMIN, GroupMember.Role.MEMBER}:
+        raise ValueError("Invalid member role.")
+    if target_member.role == role:
+        return target_member
+    target_member.role = role
+    target_member.save(update_fields=["role"])
+    return target_member
+
+
+def _remove_group_member(group, actor, member_id):
+    _require_group_admin(group, actor)
+    target_member = get_object_or_404(
+        GroupMember,
+        group=group,
+        id=member_id,
+        status__in=[GroupMember.Status.ACTIVE, GroupMember.Status.INVITED],
+    )
+    if target_member.user_id == actor.id:
+        raise PermissionDenied("Use leave group to remove yourself from the group.")
+    if target_member.role == GroupMember.Role.OWNER:
+        raise PermissionDenied("The group owner cannot be removed by another admin.")
+    if target_member.role == GroupMember.Role.ADMIN and group.owner_id != actor.id:
+        raise PermissionDenied("Only the group owner can remove another admin.")
+
+    target_member.status = GroupMember.Status.LEFT
+    if target_member.role == GroupMember.Role.ADMIN:
+        target_member.role = GroupMember.Role.MEMBER
+        target_member.save(update_fields=["status", "role"])
+    else:
+        target_member.save(update_fields=["status"])
+
+    Notification.objects.filter(
+        recipient=target_member.user,
+        group=group,
+        type=Notification.Type.INVITATION,
+        is_read=False,
+    ).update(is_read=True)
+    return target_member
 
 
 def _vote_identity_for_request(request, plan):
@@ -580,6 +678,28 @@ def groups(request):
                         success_message = f"Has salido de '{group.name}'. El grupo se ha quedado sin owner porque no quedaban miembros activos."
                     else:
                         success_message = f"Has salido de '{group.name}'."
+                elif action == "remove_member":
+                    group = _resolve_group_for_request(request, request.POST.get("group_id"))
+                    removed_member = _remove_group_member(group, request.user, request.POST.get("member_id"))
+                    success_message = f"{removed_member.display_name} ya no forma parte de '{group.name}'."
+                elif action == "promote_admin":
+                    group = _resolve_group_for_request(request, request.POST.get("group_id"))
+                    promoted_member = _set_group_member_role(
+                        group,
+                        request.user,
+                        request.POST.get("member_id"),
+                        GroupMember.Role.ADMIN,
+                    )
+                    success_message = f"{promoted_member.display_name} ahora es admin en '{group.name}'."
+                elif action == "demote_admin":
+                    group = _resolve_group_for_request(request, request.POST.get("group_id"))
+                    demoted_member = _set_group_member_role(
+                        group,
+                        request.user,
+                        request.POST.get("member_id"),
+                        GroupMember.Role.MEMBER,
+                    )
+                    success_message = f"{demoted_member.display_name} vuelve a ser member en '{group.name}'."
                 else:
                     error_message = "Accion no soportada."
             except PermissionDenied as exc:
