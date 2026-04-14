@@ -1,0 +1,378 @@
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const stack = document.getElementById("options-stack");
+    const addBtn = document.getElementById("add-option-trigger");
+    const jsonInp = document.getElementById("options-json-input");
+    const form = document.getElementById("plan-form");
+
+    // --- MAIN DEADLINE PICKERS LOGIC (SIDEBAR) ---
+    const mainDateBox = document.getElementById("date-picker-box");
+    const mainTimeBox = document.getElementById("time-picker-box");
+    const mainDateDisplay = document.getElementById("date-display");
+    const mainTimeDisplay = document.getElementById("time-display");
+    const mainDateInput = document.getElementById("final-date-input");
+    const mainTimeInput = document.getElementById("final-time-input");
+    const mainCalOverlay = document.getElementById("cal-overlay");
+    const mainTimeOverlay = document.getElementById("time-overlay");
+
+    // Reuse the same logic as the cards but for the sidebar pickers
+    const setupMainPickers = () => {
+      // Time Picker Init
+      const hCol = mainTimeOverlay.querySelector("#tp-hrs");
+      const mCol = mainTimeOverlay.querySelector("#tp-mins");
+      for (let i = 0; i < 24; i++) {
+        const item = document.createElement("div");
+        item.className = "tp-item";
+        item.textContent = i.toString().padStart(2, '0');
+        if (mainTimeInput.value.startsWith(item.textContent)) item.classList.add("is-selected");
+        item.onclick = (e) => {
+          e.stopPropagation();
+          hCol.querySelectorAll(".tp-item").forEach(x => x.classList.remove("is-selected"));
+          item.classList.add("is-selected");
+          const h = item.textContent;
+          const m = mCol.querySelector(".is-selected")?.textContent || "00";
+          mainTimeInput.value = `${h}:${m}`;
+          mainTimeDisplay.textContent = `${h}:${m}`;
+        };
+        hCol.appendChild(item);
+      }
+      [0, 15, 30, 45].forEach(i => {
+        const item = document.createElement("div");
+        item.className = "tp-item";
+        item.textContent = i.toString().padStart(2, '0');
+        if (mainTimeInput.value.endsWith(item.textContent)) item.classList.add("is-selected");
+        item.onclick = (e) => {
+          e.stopPropagation();
+          mCol.querySelectorAll(".tp-item").forEach(x => x.classList.remove("is-selected"));
+          item.classList.add("is-selected");
+          const m = item.textContent;
+          const h = hCol.querySelector(".is-selected")?.textContent || "20";
+          mainTimeInput.value = `${h}:${m}`;
+          mainTimeDisplay.textContent = `${h}:${m}`;
+        };
+        mCol.appendChild(item);
+      });
+
+      // Calendar Init
+      let currentViewDate = new Date();
+      const renderMainCal = () => {
+        const calGrid = document.getElementById("cal-grid");
+        const monthLabel = document.getElementById("cal-month-year");
+        calGrid.innerHTML = "";
+
+        const firstDay = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth(), 1).getDay();
+        const daysInMonth = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth() + 1, 0).getDate();
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        monthLabel.textContent = `${months[currentViewDate.getMonth()]} ${currentViewDate.getFullYear()}`;
+
+        for (let i = 0; i < firstDay; i++) {
+          const s = document.createElement("div"); s.className = "cal-day is-empty";
+          calGrid.appendChild(s);
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dayEl = document.createElement("div");
+          dayEl.className = "cal-day";
+          dayEl.textContent = d;
+          const ds = `${currentViewDate.getFullYear()}-${(currentViewDate.getMonth() + 1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+          if (mainDateInput.value === ds) dayEl.classList.add("is-selected");
+          dayEl.onclick = (e) => {
+            e.stopPropagation();
+            mainDateInput.value = ds;
+            const [y, m, day] = ds.split("-");
+            mainDateDisplay.textContent = `${day}/${m}/${y}`;
+            mainCalOverlay.classList.remove("is-active");
+            mainDateBox.classList.remove("is-open");
+          };
+          calGrid.appendChild(dayEl);
+        }
+      };
+
+      document.getElementById("prev-month").onclick = (e) => { e.stopPropagation(); currentViewDate.setMonth(currentViewDate.getMonth() - 1); renderMainCal(); };
+      document.getElementById("next-month").onclick = (e) => { e.stopPropagation(); currentViewDate.setMonth(currentViewDate.getMonth() + 1); renderMainCal(); };
+
+      mainDateBox.onclick = (e) => {
+        e.stopPropagation();
+        closeAllOverlays();
+        mainCalOverlay.classList.add("is-active");
+        mainDateBox.classList.add("is-open");
+        renderMainCal();
+      };
+      mainTimeBox.onclick = (e) => {
+        e.stopPropagation();
+        closeAllOverlays();
+        mainTimeOverlay.classList.add("is-active");
+        mainTimeBox.classList.add("is-open");
+      };
+    };
+
+    const closeAllOverlays = () => {
+      document.querySelectorAll(".calendar-overlay, .time-picker-overlay, .custom-picker-box").forEach(el => {
+        el.classList.remove("is-active");
+        el.classList.remove("is-open");
+      });
+    };
+
+    document.addEventListener("click", closeAllOverlays);
+
+    setupMainPickers();
+
+    const addOption = (defaultTitle = "", defaultAddr = "") => {
+      const card = document.createElement("div");
+      card.className = "opt-card";
+      card.innerHTML = `
+            <div class="opt-idx">01</div>
+            <div class="opt-fields">
+                <input type="text" class="s-input opt-t" placeholder="Option Name (e.g. Sunset Beach Dinner)" 
+                    value="${defaultTitle}" 
+                    style="margin-bottom:1.2rem; padding: 1.1rem; font-weight: 800; font-size: 1.1rem; letter-spacing: -0.02em;">
+                <div class="opt-grid-inner">
+                    <div class="mini-box">
+                        <strong>SCHEDULE (24H)</strong>
+                        <div class="schedule-inputs-custom">
+                           <div class="custom-picker-box date-box-trigger">
+                               <span class="material-symbols-outlined">calendar_today</span>
+                               <span class="picker-val date-display">21/07/2024</span>
+                               <input type="date" class="opt-date" value="2024-07-21" style="position:absolute; inset:0; opacity:0; pointer-events:none;">
+                               <div class="calendar-overlay">
+                                   <div class="cal-header">
+                                       <button type="button" class="cal-nav-btn prev-mon"><span class="material-symbols-outlined">chevron_left</span></button>
+                                       <h4 class="cal-month-year">July 2024</h4>
+                                       <button type="button" class="cal-nav-btn next-mon"><span class="material-symbols-outlined">chevron_right</span></button>
+                                   </div>
+                                   <div class="cal-grid">
+                                       <div class="cal-weekday">S</div><div class="cal-weekday">M</div><div class="cal-weekday">T</div><div class="cal-weekday">W</div><div class="cal-weekday">T</div><div class="cal-weekday">F</div><div class="cal-weekday">S</div>
+                                       <!-- days will be injected here -->
+                                   </div>
+                               </div>
+                           </div>
+                           <div class="custom-picker-box time-box-trigger">
+                               <span class="material-symbols-outlined">schedule</span>
+                               <span class="picker-val time-display">20:00</span>
+                               <input type="time" class="opt-time" value="20:00" style="position:absolute; inset:0; opacity:0; pointer-events:none;">
+                               <div class="time-picker-overlay">
+                                   <div class="tp-grid">
+                                       <div class="tp-col h-col"></div>
+                                       <div class="tp-col m-col"></div>
+                                   </div>
+                               </div>
+                           </div>
+                        </div>
+                    </div>
+                    <div class="mini-box">
+                        <strong>LOCATION</strong>
+                        <div class="loc-input-group">
+                            <span class="material-symbols-outlined" style="color:var(--accent);">location_on</span>
+                            <input type="text" class="opt-addr s-addr-input" placeholder="Search address..." value="${defaultAddr}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="opt-map-container">
+                <div class="map-wrapper gamer-map">
+                    <iframe 
+                        class="map-frame"
+                        width="100%" 
+                        height="100%" 
+                        frameborder="0" 
+                        style="border:0"
+                        src="https://maps.google.com/maps?q=${encodeURIComponent(defaultAddr || 'Lleida')}&t=&z=13&ie=UTF8&iwloc=&output=embed" 
+                        allowfullscreen>
+                    </iframe>
+                    <div class="map-overlay-glow"></div>
+                </div>
+            </div>
+            <div class="opt-x"><span class="material-symbols-outlined">delete</span></div>
+        `;
+      stack.appendChild(card);
+      updateIndices();
+
+      const addrInput = card.querySelector(".opt-addr");
+      const mapFrame = card.querySelector(".map-frame");
+      const dateInput = card.querySelector(".opt-date");
+      const timeInput = card.querySelector(".opt-time");
+      const dateDisplay = card.querySelector(".date-display");
+      const timeDisplay = card.querySelector(".time-display");
+      const dateBox = card.querySelector(".date-box-trigger");
+      const timeBox = card.querySelector(".time-box-trigger");
+
+      // Custom Time Picker Logic
+      const tpOverlay = timeBox.querySelector(".time-picker-overlay");
+      const hCol = tpOverlay.querySelector(".h-col");
+      const mCol = tpOverlay.querySelector(".m-col");
+
+      for (let i = 0; i < 24; i++) {
+        const item = document.createElement("div");
+        item.className = "tp-item";
+        item.textContent = i.toString().padStart(2, '0');
+        item.onclick = (e) => {
+          e.stopPropagation();
+          hCol.querySelectorAll(".tp-item").forEach(x => x.classList.remove("is-selected"));
+          item.classList.add("is-selected");
+          updateTimeVal();
+        };
+        hCol.appendChild(item);
+      }
+      [0, 15, 30, 45].forEach(i => {
+        const item = document.createElement("div");
+        item.className = "tp-item";
+        item.textContent = i.toString().padStart(2, '0');
+        item.onclick = (e) => {
+          e.stopPropagation();
+          mCol.querySelectorAll(".tp-item").forEach(x => x.classList.remove("is-selected"));
+          item.classList.add("is-selected");
+          updateTimeVal();
+        };
+        mCol.appendChild(item);
+      });
+
+      const updateTimeVal = () => {
+        const h = hCol.querySelector(".is-selected")?.textContent || "20";
+        const m = mCol.querySelector(".is-selected")?.textContent || "00";
+        timeInput.value = `${h}:${m}`;
+        timeDisplay.textContent = `${h}:${m}`;
+      };
+
+      // Custom Calendar Logic
+      const calOverlay = dateBox.querySelector(".calendar-overlay");
+      const calGrid = calOverlay.querySelector(".cal-grid");
+      const calMonthLabel = calOverlay.querySelector(".cal-month-year");
+      const prevMonBtn = calOverlay.querySelector(".prev-mon");
+      const nextMonBtn = calOverlay.querySelector(".next-mon");
+
+      let currentViewDate = new Date(2024, 6, 1); // July 2024
+
+      const renderCal = () => {
+        // Clear previous days (keep weekdays)
+        const dayElements = calGrid.querySelectorAll(".cal-day, .cal-weekday-spacer");
+        dayElements.forEach(el => el.remove());
+
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        calMonthLabel.textContent = `${months[currentViewDate.getMonth()]} ${currentViewDate.getFullYear()}`;
+
+        const firstDay = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth(), 1).getDay();
+        const daysInMonth = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth() + 1, 0).getDate();
+
+        // Spacers for first week
+        for (let i = 0; i < firstDay; i++) {
+          const spacer = document.createElement("div");
+          spacer.className = "cal-day is-empty";
+          calGrid.appendChild(spacer);
+        }
+
+        // Days
+        const today = new Date();
+        const todayStr = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
+
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dayEl = document.createElement("div");
+          dayEl.className = "cal-day";
+          dayEl.textContent = d;
+
+          const dateStr = `${currentViewDate.getFullYear()}-${(currentViewDate.getMonth() + 1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+          if (dateInput.value === dateStr) dayEl.classList.add("is-selected");
+          if (todayStr === dateStr) dayEl.classList.add("is-today");
+
+          dayEl.onclick = (e) => {
+            e.stopPropagation();
+            dateInput.value = dateStr;
+            const [y, m, day] = dateStr.split("-");
+            dateDisplay.textContent = `${day}/${m}/${y}`;
+            calOverlay.classList.remove("is-active");
+          };
+          calGrid.appendChild(dayEl);
+        }
+      };
+
+      prevMonBtn.onclick = (e) => { e.stopPropagation(); currentViewDate.setMonth(currentViewDate.getMonth() - 1); renderCal(); };
+      nextMonBtn.onclick = (e) => { e.stopPropagation(); currentViewDate.setMonth(currentViewDate.getMonth() + 1); renderCal(); };
+
+      // Trigger pickers on box click
+      dateBox.onclick = (e) => {
+        e.stopPropagation();
+        document.querySelectorAll(".calendar-overlay, .time-picker-overlay").forEach(o => {
+          if (o !== calOverlay) {
+            o.classList.remove("is-active");
+            o.closest(".custom-picker-box").classList.remove("is-open");
+          }
+        });
+        calOverlay.classList.toggle("is-active");
+        dateBox.classList.toggle("is-open");
+        renderCal();
+      };
+
+      timeBox.onclick = (e) => {
+        e.stopPropagation();
+        document.querySelectorAll(".calendar-overlay, .time-picker-overlay").forEach(o => {
+          if (o !== tpOverlay) {
+            o.classList.remove("is-active");
+            o.closest(".custom-picker-box").classList.remove("is-open");
+          }
+        });
+        tpOverlay.classList.toggle("is-active");
+        timeBox.classList.toggle("is-open");
+      };
+
+      document.addEventListener("click", () => {
+        calOverlay.classList.remove("is-active");
+        tpOverlay.classList.remove("is-active");
+        dateBox.classList.remove("is-open");
+        timeBox.classList.remove("is-open");
+      });
+      timeInput.addEventListener("change", () => {
+        timeDisplay.textContent = timeInput.value;
+      });
+
+      let timeout = null;
+      addrInput.addEventListener("input", () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+          const q = encodeURIComponent(addrInput.value || "Lleida");
+          mapFrame.src = `https://maps.google.com/maps?q=${q}&t=&z=13&ie=UTF8&iwloc=&output=embed`;
+        }, 600);
+      });
+
+      card.querySelector(".opt-x").onclick = () => {
+        card.remove();
+        updateIndices();
+      };
+    };
+
+    const updateIndices = () => {
+      document.querySelectorAll(".opt-idx").forEach((el, idx) => {
+        el.textContent = (idx + 1).toString().padStart(2, '0');
+      });
+    };
+
+    const sync = () => {
+      const cards = document.querySelectorAll(".opt-card");
+      const data = Array.from(cards).map((c, i) => {
+        const date = c.querySelector(".opt-date").value;
+        const time = c.querySelector(".opt-time").value;
+        return {
+          title: c.querySelector(".opt-t").value,
+          scheduled_for: `${date}T${time}:00Z`,
+          place_name: c.querySelector(".opt-addr").value,
+          address: c.querySelector(".opt-addr").value,
+          tag: i % 2 === 0 ? "OUTDOOR" : "TOP RATED"
+        };
+      });
+      jsonInp.value = JSON.stringify(data);
+    };
+
+    addBtn.onclick = () => addOption();
+
+    // Default first option with Lleida context
+    addOption("Sopar de benvinguda @ UdL", "Universitat de Lleida, Campus Cappont");
+
+    document.querySelectorAll(".group-radio-item").forEach(item => {
+      item.onclick = () => {
+        document.querySelectorAll(".group-radio-item").forEach(i => i.classList.remove("is-active"));
+        item.classList.add("is-active");
+        item.querySelector("input").checked = true;
+      };
+    });
+
+    form.onsubmit = sync;
+  });
+</script>

@@ -1,0 +1,155 @@
+<section class="plan-page">
+  <header class="plan-hero">
+    <div class="plan-hero__content">
+      <p class="kicker">DASHBOARD > NEW PLAN</p>
+      <h1>Create your next <span>adventure.</span></h1>
+      <p class="hero-desc">Set the foundation for your group decision. From dinner spots to weekend getaways, Choosy
+        helps everyone weigh in.</p>
+    </div>
+  </header>
+
+  {% if error %}
+  <div class="plan-error-banner">{{ error }}</div>
+  {% endif %}
+
+  <form method="POST" action="{% url 'start_new_plan' %}" id="plan-form" class="plan-grid">
+    {% csrf_token %}
+    <input type="hidden" name="options_json" id="options-json-input" value="[]">
+
+    <!-- Main Content Area -->
+    <div class="plan-main-area">
+      <article class="glass-card">
+        <div class="form-row">
+          <div class="field-item">
+            <label class="s-label">PLAN NAME</label>
+            <input type="text" name="title" class="s-input" placeholder="e.g. Summer Cabin Trip 2024" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field-item">
+            <label class="s-label">DESCRIPTION</label>
+            <textarea name="description" class="s-input s-textarea" rows="4"
+              placeholder="What are we deciding on? Give your group some context..."></textarea>
+          </div>
+        </div>
+      </article>
+
+      <div class="section-divider">
+        <h2>Dates & Locations</h2>
+        <p>Propose multiple options for the group to vote on.</p>
+        <button type="button" class="btn-ghost" id="add-option-trigger">
+          <span class="material-symbols-outlined">add_circle</span>
+          Add Option
+        </button>
+      </div>
+
+      <div id="options-stack" class="options-stack">
+        <!-- Dynamic Option Cards -->
+      </div>
+    </div>
+
+    <!-- Sidebar Area -->
+    <div class="plan-sidebar">
+      <article class="glass-card">
+        <label class="s-label">SELECT GROUP</label>
+        <div class="group-select-list">
+          {% for g in groups %}
+          <label class="group-radio-item {% if forloop.first %}is-active{% endif %}">
+            <input type="radio" name="group_id" value="{{ g.id }}" {% if forloop.first %}checked{% endif %}
+              style="display:none;">
+            <div class="group-radio-info">
+              <strong>{{ g.name }}</strong>
+              <small>{{ g.members.count }} members</small>
+            </div>
+          </label>
+          {% endfor %}
+        </div>
+      </article>
+
+      <article class="glass-card">
+        <label class="s-label">VOTING DEADLINE</label>
+        <div class="deadline-grid">
+          <!-- Premium Custom Date Picker -->
+          <div class="field-item">
+            <label class="s-label s-label--sub">DATE</label>
+            <div class="custom-picker-box" id="date-picker-box">
+              <input type="hidden" name="voting_end_date" id="final-date-input" value="{{ default_voting_end_date }}">
+              <div class="picker-display-box" id="date-display-trigger">
+                <span class="material-symbols-outlined">calendar_today</span>
+                <span id="date-display">{{ default_voting_end_date }}</span>
+              </div>
+              <div class="calendar-overlay" id="cal-overlay">
+                <div class="cal-header">
+                  <button type="button" class="cal-nav" id="prev-month">❮</button>
+                  <strong id="cal-month-year">April 2026</strong>
+                  <button type="button" class="cal-nav" id="next-month">❯</button>
+                </div>
+                <div class="cal-grid" id="cal-grid"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Premium Custom Time Picker -->
+          <div class="field-item">
+            <label class="s-label s-label--sub">TIME</label>
+            <div class="custom-picker-box" id="time-picker-box">
+              <input type="hidden" name="voting_end_time" id="final-time-input" value="{{ default_voting_end_time }}">
+              <div class="picker-display-box" id="time-display-trigger">
+                <span class="material-symbols-outlined">schedule</span>
+                <span id="time-display">{{ default_voting_end_time }}</span>
+              </div>
+              <div class="time-picker-overlay" id="time-overlay">
+                <div class="tp-scrollable">
+                  <div class="tp-column" id="tp-hrs"></div>
+                  <div class="tp-sep">:</div>
+                  <div class="tp-column" id="tp-mins"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="glass-card">
+        <label class="s-label">INVITE MEMBERS</label>
+        <div class="invite-container">
+          <div class="invite-tags" id="chips-container">
+            <span class="i-tag">Felix <span class="tag-x">×</span></span>
+            <span class="i-tag">Amara <span class="tag-x">×</span></span>
+          </div>
+          <input type="text" class="i-input" placeholder="Search friends...">
+        </div>
+        <div class="invite-footer">
+          <div class="avatars-group">
+            <span class="avat-tiny"></span><span class="avat-tiny"></span>
+          </div>
+          <button type="button" class="link-btn">+ Invite Group</button>
+        </div>
+      </article>
+
+      <div class="submission-box">
+        <button type="button" class="btn-outline-full">Save as Draft</button>
+        <button type="submit" class="btn-primary-full submit-plan-btn">
+          <span>Create Plan</span>
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <footer class="plan-highlights">
+    <div class="h-item">
+      <span class="material-symbols-outlined">schedule</span>
+      <div>
+        <h4>Decision Deadlines</h4>
+        <p>Ensure the group makes a final choice before the clock runs out.</p>
+      </div>
+    </div>
+    <div class="h-item">
+      <span class="material-symbols-outlined">analytics</span>
+      <div>
+        <h4>Smart Voting</h4>
+        <p>Choosy uses ranked-choice logic to find the outcome everyone likes best.</p>
+      </div>
+    </div>
+  </footer>
+</section>
