@@ -6,6 +6,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.http import JsonResponse
+from django.urls import reverse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -17,6 +18,77 @@ User = get_user_model()
 
 def _default_voting_end():
     return timezone.now() + timedelta(hours=24)
+
+
+def _create_notification(*, recipient, type, title, message, sender=None, group=None, plan_proposal=None):
+    return Notification.objects.create(
+        recipient=recipient,
+        sender=sender,
+        type=type,
+        title=title,
+        message=message,
+        group=group,
+        plan_proposal=plan_proposal,
+    )
+
+
+def _notify_group_members_about_new_plan(group, proposal, sender=None):
+    recipients = (
+        group.members.filter(status=GroupMember.Status.ACTIVE, user__isnull=False)
+        .exclude(user=sender)
+        .select_related("user")
+    )
+    actor_name = sender.username if sender else "Someone"
+
+    for member in recipients:
+        Notification.objects.get_or_create(
+            recipient=member.user,
+            type=Notification.Type.NEW_PLAN,
+            group=group,
+            plan_proposal=proposal,
+            defaults={
+                "sender": sender,
+                "title": f"New voting round in {group.name}",
+                "message": f"{actor_name} started '{proposal.title}' and your vote is now needed.",
+            },
+        )
+
+
+def _notify_group_members_about_decision(proposal):
+    chosen_plan = proposal.chosen_plan
+    if chosen_plan is None:
+        return
+
+    recipients = proposal.group.members.filter(status=GroupMember.Status.ACTIVE, user__isnull=False).select_related("user")
+    for member in recipients:
+        Notification.objects.get_or_create(
+            recipient=member.user,
+            type=Notification.Type.DECISION,
+            group=proposal.group,
+            plan_proposal=proposal,
+            defaults={
+                "title": f"Decision made in {proposal.group.name}",
+                "message": f"'{chosen_plan.title}' won the vote for '{proposal.title}'.",
+            },
+        )
+
+
+def _decorate_notification(notification):
+    notification.cta_url = ""
+    notification.cta_label = ""
+
+    if notification.type == Notification.Type.INVITATION and notification.group_id:
+        notification.cta_url = reverse("invitation_detail", args=[notification.group_id])
+        notification.cta_label = "View invitation"
+    elif notification.type == Notification.Type.NEW_PLAN and notification.group_id:
+        notification.cta_url = reverse("vote", args=[notification.group_id])
+        notification.cta_label = "Vote now"
+    elif notification.type == Notification.Type.DECISION and notification.group_id:
+        notification.cta_url = reverse("groups")
+        notification.cta_label = "View group"
+
+    notification.is_actionable = bool(notification.cta_url)
+    return notification
 
 
 def _parse_voting_end(request):
@@ -83,6 +155,7 @@ def _close_proposal(proposal):
         proposal.group.save(update_fields=["status"])
 
     proposal.save(update_fields=["status", "chosen_plan"])
+    _notify_group_members_about_decision(proposal)
     return _decorate_proposal(proposal)
 
 
@@ -450,13 +523,13 @@ def groups(request):
                         member.status = GroupMember.Status.INVITED
                         member.save()
                         
-                        Notification.objects.create(
+                        _create_notification(
                             recipient=target_user,
                             sender=request.user,
                             type=Notification.Type.INVITATION,
                             title=f"Invitation to {group.name}",
                             message=f"{request.user.username} invited you to '{group.name}'",
-                            group=group
+                            group=group,
                         )
                         success_message = f"Invitación enviada a {member.display_name}."
                 else:
@@ -677,6 +750,7 @@ def start_new_plan(request):
                     option_order=idx,
                 )
 
+        _notify_group_members_about_new_plan(group, proposal, sender=created_by)
         return redirect("dashboard")
 
     return render(
@@ -749,9 +823,17 @@ def api_submit_vote(request, plan_id):
 def notification_center(request):
     if not request.user.is_authenticated:
         return redirect("login")
-        
-    notifications = Notification.objects.filter(recipient=request.user)
-    
+
+    notifications = [
+        _decorate_notification(notification)
+        for notification in Notification.objects.filter(recipient=request.user)
+        .select_related("group", "plan_proposal", "sender")
+    ]
+    unread_count = sum(1 for notification in notifications if not notification.is_read)
+    invitation_count = sum(1 for notification in notifications if notification.type == Notification.Type.INVITATION)
+    decision_count = sum(1 for notification in notifications if notification.type == Notification.Type.DECISION)
+    related_group_ids = {notification.group_id for notification in notifications if notification.group_id}
+
     return render(
         request,
         "pages/notifications.html",
@@ -760,6 +842,10 @@ def notification_center(request):
             "active_page": "notifications",
             "topbar_context": "Notifications",
             "notifications": notifications,
+            "unread_count": unread_count,
+            "invitation_count": invitation_count,
+            "decision_count": decision_count,
+            "related_group_count": len(related_group_ids),
         }
     )
 
@@ -767,26 +853,19 @@ def notification_center(request):
 def invitation_detail(request, group_id):
     if not request.user.is_authenticated:
         return redirect("login")
-        
-    try:
-        group = Group.objects.get(id=group_id)
-        # Ensure the user has an pending invitation
-        member = GroupMember.objects.get(group=group, user=request.user, status=GroupMember.Status.INVITED)
-        active_plan = group.proposals.filter(status=PlanProposal.Status.VOTING).first()
-    except (Group.DoesNotExist, GroupMember.DoesNotExist):
-        # Fallback for mock preview when clicking the hardcoded UI elements
-        # We pass dummy data to render the UI properly instead of crashing with 404
-        class MockGroup:
-            id = group_id
-            name = "The Nomad Chefs"
-            description = "A collective of culinary enthusiasts dedicated to discovering hidden food gems and mastering the art of the unknown plate."
-        class MockPlan:
-            title = "Friday Omakase Night"
-            
-        group = MockGroup()
-        active_plan = MockPlan()
-        member = None
-    
+
+    group = get_object_or_404(Group, id=group_id)
+    member = get_object_or_404(
+        GroupMember,
+        group=group,
+        user=request.user,
+        status=GroupMember.Status.INVITED,
+    )
+    active_plan = _active_group_proposal(group)
+    active_members = list(group.members.filter(status=GroupMember.Status.ACTIVE).select_related("user")[:4])
+    active_member_count = group.members.filter(status=GroupMember.Status.ACTIVE).count()
+    pending_invites_count = group.members.filter(status=GroupMember.Status.INVITED).count()
+
     return render(
         request,
         "pages/invitation_detail.html",
@@ -795,6 +874,10 @@ def invitation_detail(request, group_id):
             "group": group,
             "member": member,
             "active_plan": active_plan,
+            "preview_members": active_members,
+            "active_member_count": active_member_count,
+            "extra_member_count": max(active_member_count - len(active_members), 0),
+            "pending_invites_count": pending_invites_count,
         }
     )
 
@@ -841,13 +924,13 @@ def api_invite_user(request, group_id):
         member.status = GroupMember.Status.INVITED
         member.save()
         
-        Notification.objects.create(
+        _create_notification(
             recipient=target_user,
             sender=request.user,
             type=Notification.Type.INVITATION,
             title=f"Invitation to {group.name}",
             message=f"{request.user.username} invited you to '{group.name}'",
-            group=group
+            group=group,
         )
         return JsonResponse({"status": "ok"})
     except Exception as e:
@@ -867,26 +950,50 @@ def api_respond_invitation(request, group_id, action):
     if action == "accept":
         member.status = GroupMember.Status.ACTIVE
         member.save()
-        
-        # Mark related invitation notifications as read
+
         Notification.objects.filter(
             recipient=request.user,
             group=group,
             type=Notification.Type.INVITATION
         ).update(is_read=True)
-        
+
+        active_proposal = _active_group_proposal(group)
+        if active_proposal is not None:
+            Notification.objects.get_or_create(
+                recipient=request.user,
+                type=Notification.Type.NEW_PLAN,
+                group=group,
+                plan_proposal=active_proposal,
+                defaults={
+                    "sender": active_proposal.created_by,
+                    "title": f"New voting round in {group.name}",
+                    "message": f"You joined {group.name} and can now vote on '{active_proposal.title}'.",
+                },
+            )
+
         return JsonResponse({"status": "accepted", "group_name": group.name})
-        
+
     elif action == "decline":
         member.status = GroupMember.Status.LEFT
         member.save()
-        
+
         Notification.objects.filter(
             recipient=request.user,
             group=group,
             type=Notification.Type.INVITATION
         ).update(is_read=True)
-        
+
         return JsonResponse({"status": "declined"})
-        
+
     return JsonResponse({"error": "Invalid action"}, status=400)
+
+
+@csrf_exempt
+def api_mark_notifications_read(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+
+    updated_count = Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+    return JsonResponse({"status": "ok", "updated_count": updated_count})
