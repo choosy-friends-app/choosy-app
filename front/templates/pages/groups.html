@@ -69,6 +69,9 @@
                 <span><span class="material-symbols-outlined">group</span>{{ group.member_count }} miembro{{ group.member_count|pluralize }}</span>
                 <span><span class="material-symbols-outlined">how_to_vote</span>{{ group.voting_plans_count }} opcion{{ group.voting_plans_count|pluralize:"es" }} en votacion</span>
                 <span><span class="material-symbols-outlined">history</span>Actualizado hace {{ group.updated_at|timesince }}</span>
+                {% if request.user.is_authenticated and group.owner_id == request.user.id %}
+                  <span><span class="material-symbols-outlined">workspace_premium</span>Owner</span>
+                {% endif %}
               </div>
             </div>
           </div>
@@ -90,6 +93,14 @@
                 <a class="group-row__link group-row__link--primary" href="{% url 'vote' group.id %}">Open voting</a>
               {% else %}
                 <a class="group-row__link" href="{% url 'start_new_plan' %}?group_id={{ group.id }}">Create plan</a>
+              {% endif %}
+              {% if request.user.is_authenticated %}
+                <form method="post">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="leave_group" />
+                  <input type="hidden" name="group_id" value="{{ group.id }}" />
+                  <button class="group-row__link group-row__link--ghost" type="submit">Leave group</button>
+                </form>
               {% endif %}
             </div>
 

@@ -285,6 +285,42 @@ def _require_group_admin(group, user):
     return member
 
 
+def _promote_oldest_active_member(group, departing_member):
+    successor = (
+        group.members.filter(status=GroupMember.Status.ACTIVE)
+        .exclude(id=departing_member.id)
+        .exclude(user__isnull=True)
+        .order_by("created_at", "id")
+        .first()
+    )
+    if successor is None:
+        group.owner = None
+        group.save(update_fields=["owner"])
+        return None
+
+    successor.role = GroupMember.Role.OWNER
+    successor.save(update_fields=["role"])
+    group.owner = successor.user
+    group.save(update_fields=["owner"])
+    return successor
+
+
+def _leave_group(group, user):
+    member = _resolve_member(group, user)
+    was_owner = group.owner_id == user.id or member.role == GroupMember.Role.OWNER
+
+    if was_owner:
+        _promote_oldest_active_member(group, member)
+
+    member.status = GroupMember.Status.LEFT
+    if member.role == GroupMember.Role.OWNER:
+        member.role = GroupMember.Role.MEMBER
+        member.save(update_fields=["status", "role"])
+    else:
+        member.save(update_fields=["status"])
+    return member
+
+
 def _vote_identity_for_request(request, plan):
     if request.user.is_authenticated:
         member = _resolve_member(plan.group, request.user)
@@ -532,6 +568,18 @@ def groups(request):
                             group=group,
                         )
                         success_message = f"Invitación enviada a {member.display_name}."
+                elif action == "leave_group":
+                    group = _resolve_group_for_request(request, request.POST.get("group_id"))
+                    previous_owner_id = group.owner_id
+                    _leave_group(group, request.user)
+                    if previous_owner_id == request.user.id and group.owner_id:
+                        promoted_member = group.members.filter(user_id=group.owner_id).first()
+                        promoted_name = promoted_member.display_name if promoted_member else "another member"
+                        success_message = f"Has salido de '{group.name}'. {promoted_name} ahora es el owner del grupo."
+                    elif previous_owner_id == request.user.id:
+                        success_message = f"Has salido de '{group.name}'. El grupo se ha quedado sin owner porque no quedaban miembros activos."
+                    else:
+                        success_message = f"Has salido de '{group.name}'."
                 else:
                     error_message = "Accion no soportada."
             except PermissionDenied as exc:
