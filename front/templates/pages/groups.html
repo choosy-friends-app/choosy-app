@@ -97,7 +97,7 @@
               {% endif %}
               <button class="group-row__link" type="button" data-toggle-members>Members</button>
               {% if request.user.is_authenticated %}
-                <form method="post">
+                <form method="post" data-confirm-form data-confirm-title="Leave group?" data-confirm-message="You will leave {{ group.name }}. If you are the owner, leadership will pass to the oldest active member.">
                   {% csrf_token %}
                   <input type="hidden" name="action" value="leave_group" />
                   <input type="hidden" name="group_id" value="{{ group.id }}" />
@@ -168,7 +168,7 @@
                         </form>
                       {% endif %}
                       {% if member.can_remove %}
-                        <form method="post">
+                        <form method="post" data-confirm-form data-confirm-title="Remove member?" data-confirm-message="This will remove {{ member.display_name }} from {{ group.name }}.">
                           {% csrf_token %}
                           <input type="hidden" name="action" value="remove_member" />
                           <input type="hidden" name="group_id" value="{{ group.id }}" />
@@ -237,13 +237,39 @@
       </div>
     </div>
 
+    <div class="groups-modal" id="confirm-group-action-modal" aria-hidden="true">
+      <div class="groups-modal__backdrop" data-close-confirm-group-action></div>
+      <div class="groups-modal__dialog groups-modal__dialog--compact" role="dialog" aria-modal="true" aria-labelledby="confirm-group-action-title">
+        <button class="groups-modal__close" type="button" data-close-confirm-group-action>
+          <span class="material-symbols-outlined">close</span>
+        </button>
+
+        <div class="groups-modal__hero groups-modal__hero--compact">
+          <p class="page-kicker">Confirm action</p>
+          <h2 id="confirm-group-action-title">Are you sure?</h2>
+          <p id="confirm-group-action-message">This action will update the group membership.</p>
+        </div>
+
+        <div class="groups-modal__actions">
+          <button class="group-row__link group-row__link--ghost" type="button" data-close-confirm-group-action>Cancel</button>
+          <button class="group-row__link group-row__link--primary" type="button" id="confirm-group-action-submit">Confirm</button>
+        </div>
+      </div>
+    </div>
+
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const modal = document.getElementById("create-group-modal");
-        if (!modal) return;
+        const confirmModal = document.getElementById("confirm-group-action-modal");
+        if (!modal || !confirmModal) return;
 
         const openButtons = document.querySelectorAll("[data-open-create-group]");
         const closeButtons = document.querySelectorAll("[data-close-create-group]");
+        const closeConfirmButtons = document.querySelectorAll("[data-close-confirm-group-action]");
+        const confirmTitle = document.getElementById("confirm-group-action-title");
+        const confirmMessage = document.getElementById("confirm-group-action-message");
+        const confirmSubmit = document.getElementById("confirm-group-action-submit");
+        let pendingConfirmForm = null;
 
         const openModal = () => {
           modal.classList.add("is-open");
@@ -257,8 +283,33 @@
           document.body.classList.remove("groups-modal-open");
         };
 
+        const openConfirmModal = (form) => {
+          pendingConfirmForm = form;
+          confirmTitle.textContent = form.dataset.confirmTitle || "Are you sure?";
+          confirmMessage.textContent = form.dataset.confirmMessage || "This action will update the group membership.";
+          confirmModal.classList.add("is-open");
+          confirmModal.setAttribute("aria-hidden", "false");
+          document.body.classList.add("groups-modal-open");
+        };
+
+        const closeConfirmModal = () => {
+          pendingConfirmForm = null;
+          confirmModal.classList.remove("is-open");
+          confirmModal.setAttribute("aria-hidden", "true");
+          if (!modal.classList.contains("is-open")) {
+            document.body.classList.remove("groups-modal-open");
+          }
+        };
+
         openButtons.forEach((button) => button.addEventListener("click", openModal));
         closeButtons.forEach((button) => button.addEventListener("click", closeModal));
+        closeConfirmButtons.forEach((button) => button.addEventListener("click", closeConfirmModal));
+
+        confirmSubmit.addEventListener("click", () => {
+          if (pendingConfirmForm) {
+            pendingConfirmForm.submit();
+          }
+        });
 
         if (modal.classList.contains("is-open")) {
           document.body.classList.add("groups-modal-open");
@@ -268,6 +319,16 @@
           if (event.key === "Escape" && modal.classList.contains("is-open")) {
             closeModal();
           }
+          if (event.key === "Escape" && confirmModal.classList.contains("is-open")) {
+            closeConfirmModal();
+          }
+        });
+
+        document.querySelectorAll("[data-confirm-form]").forEach((form) => {
+          form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            openConfirmModal(form);
+          });
         });
 
         document.querySelectorAll("[data-group-card]").forEach((card) => {
