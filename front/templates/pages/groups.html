@@ -52,7 +52,7 @@
 
     <section class="groups-list">
       {% for group in groups %}
-        <article class="group-row">
+        <article class="group-row" data-group-card>
           <div class="group-row__main">
             <div class="group-row__icon">
               <span class="material-symbols-outlined">
@@ -68,6 +68,7 @@
               <div class="group-row__meta">
                 <span><span class="material-symbols-outlined">group</span>{{ group.member_count }} miembro{{ group.member_count|pluralize }}</span>
                 <span><span class="material-symbols-outlined">how_to_vote</span>{{ group.voting_plans_count }} opcion{{ group.voting_plans_count|pluralize:"es" }} en votacion</span>
+                <span><span class="material-symbols-outlined">mail</span>{{ group.pending_invites_count }} invitacion{{ group.pending_invites_count|pluralize:"es" }} pendiente{{ group.pending_invites_count|pluralize:"s" }}</span>
                 <span><span class="material-symbols-outlined">history</span>Actualizado hace {{ group.updated_at|timesince }}</span>
                 {% if request.user.is_authenticated and group.owner_id == request.user.id %}
                   <span><span class="material-symbols-outlined">workspace_premium</span>Owner</span>
@@ -94,6 +95,7 @@
               {% else %}
                 <a class="group-row__link" href="{% url 'start_new_plan' %}?group_id={{ group.id }}">Create plan</a>
               {% endif %}
+              <button class="group-row__link" type="button" data-toggle-members>Members</button>
               {% if request.user.is_authenticated %}
                 <form method="post">
                   {% csrf_token %}
@@ -104,7 +106,7 @@
               {% endif %}
             </div>
 
-            {% if request.user.is_authenticated and group.owner_id == request.user.id %}
+            {% if request.user.is_authenticated and group.current_user_can_manage %}
               <form class="group-inline-form" method="post">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="add_member" />
@@ -114,6 +116,71 @@
                 <button class="group-inline-form__button" type="submit">Add member</button>
               </form>
             {% endif %}
+          </div>
+
+          <div class="group-members-panel" hidden>
+            <div class="group-members-panel__header">
+              <div>
+                <p class="page-kicker">Group roster</p>
+                <h4>{{ group.name }}</h4>
+              </div>
+              <p>{{ group.membership_cards|length }} people linked to this squad.</p>
+            </div>
+
+            <div class="member-card-grid">
+              {% for member in group.membership_cards %}
+                <article class="member-card {% if member.is_admin_role %}member-card--admin{% endif %} {% if member.is_owner %}member-card--owner{% endif %}">
+                  <div class="member-card__top">
+                    {% if member.avatar_url %}
+                      <img class="member-card__avatar" src="{{ member.avatar_url }}" alt="{{ member.display_name }}" />
+                    {% else %}
+                      <div class="member-card__avatar member-card__avatar--fallback">{{ member.avatar_label }}</div>
+                    {% endif %}
+                    <div class="member-card__identity">
+                      <strong>{{ member.display_name }}</strong>
+                      <span>{% firstof member.user.username member.status_label %}</span>
+                    </div>
+                  </div>
+
+                  <div class="member-card__badges">
+                    <span class="member-badge member-badge--role">{{ member.role_label }}</span>
+                    <span class="member-badge">{{ member.status_label }}</span>
+                  </div>
+
+                  {% if group.current_user_is_owner or group.current_user_can_manage %}
+                    <div class="member-card__actions">
+                      {% if member.can_promote %}
+                        <form method="post">
+                          {% csrf_token %}
+                          <input type="hidden" name="action" value="promote_admin" />
+                          <input type="hidden" name="group_id" value="{{ group.id }}" />
+                          <input type="hidden" name="member_id" value="{{ member.id }}" />
+                          <button class="member-action member-action--primary" type="submit">Make admin</button>
+                        </form>
+                      {% endif %}
+                      {% if member.can_demote %}
+                        <form method="post">
+                          {% csrf_token %}
+                          <input type="hidden" name="action" value="demote_admin" />
+                          <input type="hidden" name="group_id" value="{{ group.id }}" />
+                          <input type="hidden" name="member_id" value="{{ member.id }}" />
+                          <button class="member-action" type="submit">Remove admin</button>
+                        </form>
+                      {% endif %}
+                      {% if member.can_remove %}
+                        <form method="post">
+                          {% csrf_token %}
+                          <input type="hidden" name="action" value="remove_member" />
+                          <input type="hidden" name="group_id" value="{{ group.id }}" />
+                          <input type="hidden" name="member_id" value="{{ member.id }}" />
+                          <button class="member-action member-action--danger" type="submit">Remove</button>
+                        </form>
+                      {% endif %}
+                    </div>
+                  {% endif %}
+                </article>
+              {% endfor %}
+            </div>
           </div>
         </article>
       {% empty %}
@@ -201,6 +268,37 @@
           if (event.key === "Escape" && modal.classList.contains("is-open")) {
             closeModal();
           }
+        });
+
+        document.querySelectorAll("[data-group-card]").forEach((card) => {
+          const panel = card.querySelector(".group-members-panel");
+          const toggle = card.querySelector("[data-toggle-members]");
+          const interactiveSelector = "a, button, input, textarea, form";
+
+          if (!panel || !toggle) return;
+
+          const setOpen = (open) => {
+            panel.hidden = !open;
+            card.classList.toggle("is-expanded", open);
+            toggle.textContent = open ? "Hide members" : "Members";
+          };
+
+          setOpen(false);
+
+          toggle.addEventListener("click", (event) => {
+            event.stopPropagation();
+            setOpen(panel.hidden);
+          });
+
+          card.querySelector(".group-row__main").addEventListener("click", () => {
+            setOpen(panel.hidden);
+          });
+
+          card.querySelector(".group-row__side").addEventListener("click", (event) => {
+            if (!event.target.closest(interactiveSelector)) {
+              setOpen(panel.hidden);
+            }
+          });
         });
       });
     </script>
