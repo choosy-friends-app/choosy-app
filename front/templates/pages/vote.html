@@ -348,6 +348,8 @@
         height: 100%;
         transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.4s;
         cursor: grab;
+        border-radius: 3rem;
+        overflow: hidden;
     }
 
     .card-container:active {
@@ -528,10 +530,10 @@
         backdrop-filter: blur(40px);
         border-radius: 2.5rem 2.5rem 0 0;
         border: 1px solid rgba(255, 255, 255, 0.12);
-        z-index: 10001;
+        z-index: 30000;
         transition: transform 0.7s cubic-bezier(0.19, 1, 0.22, 1);
         padding: 0 1.5rem 2.5rem;
-        box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.8);
+        box-shadow: 0 -20px 80px rgba(0, 0, 0, 0.9);
     }
 
     .vote-drawer.is-open {
@@ -646,8 +648,9 @@
         justify-content: center;
         align-items: center;
         gap: 2rem;
-        z-index: 10;
+        z-index: 20000;
         margin-bottom: 2rem;
+        position: relative;
     }
 
     .fa-btn {
@@ -862,6 +865,7 @@
         let dragStartX = 0, dragStartY = 0;
         let currentMouseX = window.innerWidth / 2;
         let currentMouseY = window.innerHeight / 2;
+        let mouseInEdge = false;
         const deadlineLabel = document.getElementById("vote-deadline-label");
         const deadlineValue = deadlineLabel ? deadlineLabel.dataset.deadline : "";
 
@@ -1072,36 +1076,52 @@
 
             topCard.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${currentRotate}deg)`;
 
-            // --- EXTREME FEEDBACK ---
-            const intensity = Math.min(1, Math.abs(currentX) / 60);
+            // --- PREMIUM REFINED FEEDBACK ---
+            const intensity = Math.min(1, Math.abs(currentX) / 80);
 
             if (currentX > 5) {
-                // LIME GREEN
+                // MINT GREEN (Premium Emerald)
                 fbLike.style.opacity = intensity;
                 fbLike.style.transform = `rotate(-15deg) scale(${0.8 + intensity * 0.4})`;
                 fbNope.style.opacity = 0;
-                voteTint.style.backgroundColor = `rgba(0, 255, 0, ${intensity * 0.4})`;
+                voteTint.style.backgroundColor = `rgba(46, 204, 113, ${intensity * 0.25})`;
                 voteTint.style.opacity = 1;
-                topCard.style.boxShadow = `0 0 150px rgba(0, 255, 0, ${intensity})`;
+                topCard.style.boxShadow = `0 0 100px rgba(46, 204, 113, ${intensity * 0.8})`;
+                topCard.style.borderColor = `rgba(46, 204, 113, ${intensity})`;
             } else if (currentX < -5) {
-                // PURE RED
+                // SOFT CRIMSON
                 fbNope.style.opacity = intensity;
                 fbNope.style.transform = `rotate(15deg) scale(${0.8 + intensity * 0.4})`;
                 fbLike.style.opacity = 0;
-                voteTint.style.backgroundColor = `rgba(255, 0, 0, ${intensity * 0.4})`;
+                voteTint.style.backgroundColor = `rgba(231, 76, 60, ${intensity * 0.25})`;
                 voteTint.style.opacity = 1;
-                topCard.style.boxShadow = `0 0 150px rgba(255, 0, 0, ${intensity})`;
+                topCard.style.boxShadow = `0 0 100px rgba(231, 76, 60, ${intensity * 0.8})`;
+                topCard.style.borderColor = `rgba(231, 76, 60, ${intensity})`;
             } else {
                 fbLike.style.opacity = 0;
                 fbNope.style.opacity = 0;
                 voteTint.style.opacity = 0;
                 topCard.style.boxShadow = '';
+                topCard.style.borderColor = 'rgba(255, 255, 255, 0.08)';
             }
         };
 
         window.onmousemove = (e) => {
             currentMouseX = e.clientX;
             currentMouseY = e.clientY;
+
+            // --- PASSIVE EDGE VOTING (With re-arm logic) ---
+            const edgeMargin = 40;
+            const isAtEdge = (e.clientX < edgeMargin || e.clientX > window.innerWidth - edgeMargin);
+
+            if (isAtEdge) {
+                if (!mouseInEdge && !isVoted && !isDragging && !votingLocked && plans.length > 0) {
+                    mouseInEdge = true; // Arm locked
+                    vote(e.clientX < edgeMargin ? -1 : 1);
+                }
+            } else {
+                mouseInEdge = false; // Re-arm when moving back to center
+            }
         };
 
         universe.onclick = (e) => {
@@ -1182,9 +1202,9 @@
             ambientBg.style.opacity = "0.2";
         }
 
-        document.getElementById("btn-skip").onclick = () => vote(-1);
-        document.getElementById("btn-love").onclick = () => vote(1);
-        document.getElementById("btn-star").onclick = () => vote(2);
+        document.getElementById("btn-skip").onclick = (e) => { e.stopPropagation(); vote(-1); };
+        document.getElementById("btn-love").onclick = (e) => { e.stopPropagation(); vote(1); };
+        document.getElementById("btn-star").onclick = (e) => { e.stopPropagation(); vote(2); };
 
         function getCookie(name) {
             let cv = null;
