@@ -43,37 +43,28 @@
                     <div class="inv-sub-card experience-card">
                         <div class="sub-card-tag">EXPERIENCE</div>
                         {% if active_plan %}
-                        <h3 class="sub-card-title">{{ active_plan.title|default:"Friday Omakase Night" }}</h3>
-                        <!-- prettier-ignore -->
-                        <p class="sub-card-desc">Exclusive 12-course tasting at the secret downtown loft. Limited
-                            seating.
-                        </p>
+                        <h3 class="sub-card-title">{{ active_plan.title }}</h3>
+                        <p class="sub-card-desc">{{ active_plan.description|default:"There is already a live group vote waiting for your answer once you join." }}</p>
                         <div class="sub-card-meta">
-                            <span><span class="material-symbols-outlined">calendar_today</span> Oct 27</span>
-                            <span><span class="material-symbols-outlined">schedule</span> 8:00 PM</span>
+                            <span><span class="material-symbols-outlined">calendar_today</span> {{ active_plan.voting_ends_at|date:"d/m/Y" }}</span>
+                            <span><span class="material-symbols-outlined">schedule</span> {{ active_plan.voting_ends_at|date:"H:i" }}</span>
                         </div>
                         {% else %}
                         <h3 class="sub-card-title">Join and start proposing!</h3>
-                        <!-- prettier-ignore -->
-                        <p class="sub-card-desc">No active plans yet. Once you join, you can propose the first epic
-                            adventure for the squad.</p>
+                        <p class="sub-card-desc">No active plans yet. Once you join, you can propose the first epic adventure for the squad.</p>
                         {% endif %}
                     </div>
 
                     <div class="inv-sub-card mission-card">
                         <div class="sub-card-tag">MISSION</div>
-                        <h3 class="sub-card-quote">"Finding the flavor where the map ends."</h3>
+                        <h3 class="sub-card-quote">"{{ group.name }} is building its next real plan."</h3>
                         <div class="squad-avatars">
-                            <div class="s-avatar"
-                                style="background: url('https://i.pravatar.cc/100?img=11') center/cover">
-                            </div>
-                            <div class="s-avatar"
-                                style="background: url('https://i.pravatar.cc/100?img=12') center/cover">
-                            </div>
-                            <div class="s-avatar"
-                                style="background: url('https://i.pravatar.cc/100?img=13') center/cover">
-                            </div>
-                            <div class="s-avatar count">+12</div>
+                            {% for preview_member in preview_members %}
+                            <div class="s-avatar">{{ preview_member.display_name|slice:":1"|upper }}</div>
+                            {% endfor %}
+                            {% if extra_member_count > 0 %}
+                            <div class="s-avatar count">+{{ extra_member_count }}</div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -117,8 +108,8 @@
                         <strong>GROUP STATS</strong>
                     </div>
                     <div class="stats-data">
-                        <h1>84%</h1>
-                        <span>Taste Match with your profile</span>
+                        <h1>{{ active_member_count }}</h1>
+                        <span>{{ pending_invites_count }} pending invite{{ pending_invites_count|pluralize }}</span>
                     </div>
                 </div>
             </div>
