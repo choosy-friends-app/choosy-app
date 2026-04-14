@@ -1,0 +1,16 @@
+<script id="plans-data" type="application/json">
+[
+  {% for plan in plans %}
+  {
+    "id": {{ plan.id }},
+    "title": "{{ plan.title|escapejs }}",
+    "description": "{{ plan.description|escapejs }}",
+    "price": "{{ plan.price|escapejs }}",
+    "tag": "{{ plan.tag|escapejs }}",
+    "place": "{{ plan.place_name|escapejs }}",
+    "currentVote": {% if plan.current_user_vote %}{{ plan.current_user_vote }}{% else %}0{% endif %},
+    "image": "{% if plan.image_url %}{{ plan.image_url }}{% else %}https://images.unsplash.com/photo-1517457373958-b7bdd4587205?q=80&w=800&auto=format&fit=crop{% endif %}"
+  }{% if not forloop.last %},{% endif %}
+  {% endfor %}
+]
+</script>
