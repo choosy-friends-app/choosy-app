@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
 
-from core.models import Group, Plan, PlanProposal, Vote
+from core.models import Group, Notification, Plan, PlanProposal, Vote
 from core.web.shared import (
     _active_group_proposal,
     _decorate_proposal_for_user,
@@ -14,6 +14,7 @@ from core.web.shared import (
     _resolve_group_for_request,
     _resolve_member,
     _seed_demo_groups,
+    _user_completed_proposal_vote,
     _user_groups_queryset,
     _vote_identity_for_request,
 )
@@ -193,6 +194,13 @@ def api_submit_vote(request, plan_id):
             session_key=ident["session_key"],
             defaults={"value": value},
         )
+        if request.user.is_authenticated and _user_completed_proposal_vote(plan.proposal, request.user):
+            Notification.objects.filter(
+                recipient=request.user,
+                type=Notification.Type.NEW_PLAN,
+                group=plan.group,
+                plan_proposal=plan.proposal,
+            ).update(is_read=True)
         return JsonResponse({"status": "ok"})
     except Exception as exc:
         return JsonResponse({"error": str(exc)}, status=400)

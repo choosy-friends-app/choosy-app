@@ -23,6 +23,10 @@
                 <div class="notif-icon {% if notif.is_joined_invitation %}i-cyan{% endif %}">
                     {% if notif.is_joined_invitation %}
                     <span class="material-symbols-outlined">verified_user</span>
+                    {% elif notif.is_declined_invitation %}
+                    <span class="material-symbols-outlined">block</span>
+                    {% elif notif.is_resolved_plan_notification %}
+                    <span class="material-symbols-outlined">task_alt</span>
                     {% elif notif.type == 'invitation' %}
                     <span class="material-symbols-outlined">group_add</span>
                     {% elif notif.type == 'new_plan' %}
@@ -45,13 +49,13 @@
 
                     {% if notif.is_actionable %}
                     <div class="notif-actions {% if notif.type == 'invitation' %}invite-actions{% endif %}">
-                        {% if notif.type == 'new_plan' %}
+                        {% if notif.is_joined_invitation or notif.is_declined_invitation or notif.is_resolved_plan_notification %}
+                        <a href="{{ notif.cta_url }}" class="btn-view-plan">{{ notif.cta_label }} &rarr;</a>
+                        {% elif notif.type == 'new_plan' %}
                         <button class="btn-vote" type="button" onclick="window.location.href='{{ notif.cta_url }}'">
                             Vote Now <span class="material-symbols-outlined">front_hand</span>
                         </button>
                         {% elif notif.type == 'decision' %}
-                        <a href="{{ notif.cta_url }}" class="btn-view-plan">{{ notif.cta_label }} &rarr;</a>
-                        {% elif notif.is_joined_invitation %}
                         <a href="{{ notif.cta_url }}" class="btn-view-plan">{{ notif.cta_label }} &rarr;</a>
                         {% else %}
                         <div class="invite-buttons">
@@ -86,7 +90,7 @@
             <ul class="q-stat-list">
                 <li>
                     <div class="qst-left"><span class="material-symbols-outlined">mark_email_unread</span> Unread</div>
-                    <div class="qst-right">{{ unread_count }}</div>
+                    <div class="qst-right" data-unread-stat>{{ unread_count }}</div>
                 </li>
                 <li>
                     <div class="qst-left"><span class="material-symbols-outlined">group_add</span> Invitations</div>
@@ -114,7 +118,7 @@
             </div>
             <div class="hl-item">
                 <div class="hl-text">
-                    <strong>{{ unread_count }} pending to review</strong>
+                    <strong><span data-unread-summary>{{ unread_count }}</span> pending to review</strong>
                     <span>MARK THEM READ AFTER YOU ACT</span>
                 </div>
             </div>
@@ -163,7 +167,19 @@
         }).then(response => response.json())
             .then(data => {
                 if (data.status === 'ok') {
-                    window.location.reload();
+                    document.querySelectorAll('.notif-card').forEach((card) => {
+                        card.classList.add('is-read');
+                    });
+                    document.querySelectorAll('[data-notification-count]').forEach((badge) => {
+                        badge.textContent = '0';
+                        badge.classList.add('is-empty');
+                    });
+                    document.querySelectorAll('[data-unread-stat], [data-unread-summary]').forEach((stat) => {
+                        stat.textContent = '0';
+                    });
+                    if (markReadBtn) {
+                        markReadBtn.disabled = true;
+                    }
                 } else {
                     console.error(data.error);
                 }

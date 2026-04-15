@@ -172,28 +172,136 @@ def _decorate_notification(notification):
     notification.cta_url = ""
     notification.cta_label = ""
     notification.is_joined_invitation = False
+    notification.is_declined_invitation = False
+    notification.is_resolved_plan_notification = False
 
     if notification.type == Notification.Type.INVITATION and notification.group_id:
+        invited_member = notification.group.members.filter(
+            user=notification.recipient,
+            status=GroupMember.Status.INVITED,
+        ).exists()
         active_member = notification.group.members.filter(
             user=notification.recipient,
             status=GroupMember.Status.ACTIVE,
         ).exists()
+        left_member = notification.group.members.filter(
+            user=notification.recipient,
+            status=GroupMember.Status.LEFT,
+        ).exists()
         notification.is_joined_invitation = active_member
+        notification.is_declined_invitation = left_member
         if active_member:
             notification.cta_url = reverse("groups")
             notification.cta_label = "View group"
-        else:
+        elif invited_member:
             notification.cta_url = reverse("invitation_detail", args=[notification.group_id])
             notification.cta_label = "View invitation"
+        elif left_member:
+            notification.cta_url = reverse("notifications")
+            notification.cta_label = "Reviewed"
+        else:
+            notification.cta_url = reverse("groups")
+            notification.cta_label = "View groups"
     elif notification.type == Notification.Type.NEW_PLAN and notification.group_id:
-        notification.cta_url = reverse("vote", args=[notification.group_id])
-        notification.cta_label = "Vote now"
+        notification.is_resolved_plan_notification = not _new_plan_notification_needs_attention(notification)
+        if notification.is_resolved_plan_notification:
+            notification.cta_url = reverse("groups")
+            notification.cta_label = "Reviewed"
+        else:
+            notification.cta_url = reverse("vote", args=[notification.group_id])
+            notification.cta_label = "Vote now"
     elif notification.type == Notification.Type.DECISION and notification.group_id:
         notification.cta_url = reverse("groups")
         notification.cta_label = "View group"
 
     notification.is_actionable = bool(notification.cta_url)
     return notification
+
+
+def _proposal_vote_progress_for_user(proposal, user):
+    if proposal is None or user is None or not user.is_authenticated:
+        return 0, 0
+
+    option_count = proposal.plans.count()
+    if option_count == 0:
+        return 0, 0
+
+    member = proposal.group.members.filter(user=user, status=GroupMember.Status.ACTIVE).first()
+    if member is None:
+        return 0, option_count
+
+    voted_count = (
+        Vote.objects.filter(plan__proposal=proposal, member=member)
+        .values("plan_id")
+        .distinct()
+        .count()
+    )
+    return voted_count, option_count
+
+
+def _user_completed_proposal_vote(proposal, user):
+    voted_count, option_count = _proposal_vote_progress_for_user(proposal, user)
+    return option_count > 0 and voted_count >= option_count
+
+
+def _new_plan_notification_needs_attention(notification):
+    proposal = notification.plan_proposal
+    if proposal is None or not proposal.can_accept_votes:
+        return False
+    return not _user_completed_proposal_vote(proposal, notification.recipient)
+
+
+def _notification_needs_attention(notification):
+    if notification.is_read:
+        return False
+
+    if notification.type == Notification.Type.INVITATION and notification.group_id:
+        return notification.group.members.filter(
+            user=notification.recipient,
+            status=GroupMember.Status.INVITED,
+        ).exists()
+
+    if notification.type == Notification.Type.NEW_PLAN:
+        return _new_plan_notification_needs_attention(notification)
+
+    return True
+
+
+def _sync_user_notification_states(user):
+    if user is None or not user.is_authenticated:
+        return 0
+
+    notifications = list(
+        Notification.objects.filter(recipient=user, is_read=False).select_related(
+            "group",
+            "plan_proposal",
+        )
+    )
+    resolved_ids = [
+        notification.id
+        for notification in notifications
+        if not _notification_needs_attention(notification)
+    ]
+    if resolved_ids:
+        Notification.objects.filter(id__in=resolved_ids).update(is_read=True)
+    return len(resolved_ids)
+
+
+def _attention_notifications_for_user(user):
+    if user is None or not user.is_authenticated:
+        return []
+
+    _sync_user_notification_states(user)
+    notifications = list(
+        Notification.objects.filter(recipient=user, is_read=False)
+        .select_related("group", "plan_proposal", "sender")
+        .order_by("-created_at")
+    )
+    return [
+        notification
+        for notification in notifications
+        if _notification_needs_attention(notification)
+    ]
 
 
 def _parse_voting_end(request):

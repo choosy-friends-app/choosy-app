@@ -11,7 +11,9 @@ from core.web.shared import (
     _create_notification,
     _decorate_group_interests,
     _decorate_notification,
+    _attention_notifications_for_user,
     _require_group_admin,
+    _sync_user_notification_states,
 )
 
 
@@ -19,13 +21,14 @@ def notification_center(request):
     if not request.user.is_authenticated:
         return redirect("login")
 
+    _sync_user_notification_states(request.user)
     notifications = [
         _decorate_notification(notification)
         for notification in Notification.objects.filter(recipient=request.user).select_related(
             "group", "plan_proposal", "sender"
         )
     ]
-    unread_count = sum(1 for notification in notifications if not notification.is_read)
+    unread_count = len(_attention_notifications_for_user(request.user))
     invitation_count = sum(1 for notification in notifications if notification.type == Notification.Type.INVITATION)
     decision_count = sum(1 for notification in notifications if notification.type == Notification.Type.DECISION)
     related_group_ids = {notification.group_id for notification in notifications if notification.group_id}
@@ -205,7 +208,11 @@ def api_respond_invitation(request, group_id, action):
             recipient=request.user,
             group=group,
             type=Notification.Type.INVITATION,
-        ).update(is_read=True)
+        ).update(
+            is_read=True,
+            title=f"Declined {group.name}",
+            message=f"You declined the invitation to '{group.name}'.",
+        )
 
         return JsonResponse({"status": "declined"})
 
@@ -227,12 +234,8 @@ def api_notification_status(request):
     if not request.user.is_authenticated:
         return JsonResponse({"status": "ok", "unread_count": 0, "latest": None})
 
-    latest_notification = (
-        Notification.objects.filter(recipient=request.user, is_read=False)
-        .select_related("group")
-        .order_by("-created_at")
-        .first()
-    )
+    attention_notifications = _attention_notifications_for_user(request.user)
+    latest_notification = attention_notifications[0] if attention_notifications else None
 
     latest_payload = None
     if latest_notification is not None:
@@ -246,7 +249,7 @@ def api_notification_status(request):
     return JsonResponse(
         {
             "status": "ok",
-            "unread_count": Notification.objects.filter(recipient=request.user, is_read=False).count(),
+            "unread_count": len(attention_notifications),
             "latest": latest_payload,
         }
     )

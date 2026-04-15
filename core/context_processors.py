@@ -1,4 +1,4 @@
-from core.models import Notification
+from core.web.shared import _attention_notifications_for_user
 
 
 def notification_status(request):
@@ -8,13 +8,10 @@ def notification_status(request):
             "topbar_latest_notification": None,
         }
 
-    unread_notifications = Notification.objects.filter(
-        recipient=request.user,
-        is_read=False,
-    ).select_related("group")
-    latest_notification = unread_notifications.order_by("-created_at").first()
+    attention_notifications = _attention_notifications_for_user(request.user)
+    latest_notification = attention_notifications[0] if attention_notifications else None
 
     return {
-        "topbar_unread_count": unread_notifications.count(),
+        "topbar_unread_count": len(attention_notifications),
         "topbar_latest_notification": latest_notification,
     }
