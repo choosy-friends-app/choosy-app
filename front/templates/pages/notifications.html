@@ -8,7 +8,13 @@
                 <h1>Notifications</h1>
                 <p>STAY UPDATED ON YOUR SQUADS</p>
             </div>
-            <button class="mark-read-btn" type="button" {% if not unread_count %}disabled{% endif %}>MARK ALL AS READ</button>
+            <div class="notif-header-actions">
+                <button class="mark-read-btn" type="button" {% if not unread_count %}disabled{% endif %}>MARK ALL AS READ</button>
+                <button class="clear-feed-btn" type="button" {% if not notifications %}disabled{% endif %}>
+                    <span class="material-symbols-outlined">auto_delete</span>
+                    CLEAR ALL
+                </button>
+            </div>
         </div>
 
         <div class="notif-tabs">
@@ -17,11 +23,17 @@
             <button class="notif-tab">Decisions</button>
         </div>
 
-        <div class="notif-list">
+        <div class="notif-list" data-notification-list>
             {% for notif in notifications %}
             <div class="notif-card type-{{ notif.type }} {% if notif.is_read %}is-read{% endif %}">
-                <div class="notif-icon">
-                    {% if notif.type == 'invitation' %}
+                <div class="notif-icon {% if notif.is_joined_invitation %}i-cyan{% endif %}">
+                    {% if notif.is_joined_invitation %}
+                    <span class="material-symbols-outlined">verified_user</span>
+                    {% elif notif.is_declined_invitation %}
+                    <span class="material-symbols-outlined">block</span>
+                    {% elif notif.is_resolved_plan_notification %}
+                    <span class="material-symbols-outlined">task_alt</span>
+                    {% elif notif.type == 'invitation' %}
                     <span class="material-symbols-outlined">group_add</span>
                     {% elif notif.type == 'new_plan' %}
                     <span class="material-symbols-outlined">restaurant</span>
@@ -43,7 +55,9 @@
 
                     {% if notif.is_actionable %}
                     <div class="notif-actions {% if notif.type == 'invitation' %}invite-actions{% endif %}">
-                        {% if notif.type == 'new_plan' %}
+                        {% if notif.is_joined_invitation or notif.is_declined_invitation or notif.is_resolved_plan_notification %}
+                        <a href="{{ notif.cta_url }}" class="btn-view-plan">{{ notif.cta_label }} &rarr;</a>
+                        {% elif notif.type == 'new_plan' %}
                         <button class="btn-vote" type="button" onclick="window.location.href='{{ notif.cta_url }}'">
                             Vote Now <span class="material-symbols-outlined">front_hand</span>
                         </button>
@@ -60,7 +74,7 @@
                 </div>
             </div>
             {% empty %}
-            <div class="notif-card type-reminder">
+            <div class="notif-card type-reminder" data-empty-notifications>
                 <div class="notif-icon i-red">
                     <span class="material-symbols-outlined">notifications_off</span>
                 </div>
@@ -82,7 +96,7 @@
             <ul class="q-stat-list">
                 <li>
                     <div class="qst-left"><span class="material-symbols-outlined">mark_email_unread</span> Unread</div>
-                    <div class="qst-right">{{ unread_count }}</div>
+                    <div class="qst-right" data-unread-stat>{{ unread_count }}</div>
                 </li>
                 <li>
                     <div class="qst-left"><span class="material-symbols-outlined">group_add</span> Invitations</div>
@@ -104,13 +118,13 @@
             <h2>Feed Summary</h2>
             <div class="hl-item">
                 <div class="hl-text">
-                    <strong>{{ notifications|length }} total notifications</strong>
+                    <strong><span data-total-notifications>{{ notifications|length }}</span> total notifications</strong>
                     <span>REAL DATA FROM GROUPS AND VOTING</span>
                 </div>
             </div>
             <div class="hl-item">
                 <div class="hl-text">
-                    <strong>{{ unread_count }} pending to review</strong>
+                    <strong><span data-unread-summary>{{ unread_count }}</span> pending to review</strong>
                     <span>MARK THEM READ AFTER YOU ACT</span>
                 </div>
             </div>
@@ -159,16 +173,98 @@
         }).then(response => response.json())
             .then(data => {
                 if (data.status === 'ok') {
-                    window.location.reload();
+                    document.querySelectorAll('.notif-card').forEach((card) => {
+                        card.classList.add('is-read');
+                    });
+                    document.querySelectorAll('[data-notification-count]').forEach((badge) => {
+                        badge.textContent = '0';
+                        badge.classList.add('is-empty');
+                    });
+                    document.querySelectorAll('[data-unread-stat], [data-unread-summary]').forEach((stat) => {
+                        stat.textContent = '0';
+                    });
+                    if (markReadBtn) {
+                        markReadBtn.disabled = true;
+                    }
                 } else {
                     console.error(data.error);
                 }
             });
     }
 
+    function showEmptyNotificationState(list) {
+        list.innerHTML = `
+            <div class="notif-card type-reminder notification-empty-state" data-empty-notifications>
+                <div class="notif-icon i-cyan">
+                    <span class="material-symbols-outlined">done_all</span>
+                </div>
+                <div class="notif-content">
+                    <div class="notif-meta">
+                        <h3>Inbox cleared</h3>
+                        <span class="notif-time">Just now</span>
+                    </div>
+                    <p>Your notification tray is clean. New invites, votes, and decisions will land here.</p>
+                </div>
+            </div>
+        `;
+    }
+
+    function clearAllNotifications() {
+        const list = document.querySelector('[data-notification-list]');
+        const cards = list ? Array.from(list.querySelectorAll('.notif-card:not([data-empty-notifications])')) : [];
+        const clearBtn = document.querySelector('.clear-feed-btn');
+        if (!list || !cards.length || (clearBtn && clearBtn.disabled)) return;
+
+        if (clearBtn) {
+            clearBtn.disabled = true;
+            clearBtn.classList.add('is-clearing');
+        }
+        cards.forEach((card, index) => {
+            card.style.setProperty('--clear-delay', `${index * 55}ms`);
+            card.classList.add('is-clearing-away');
+        });
+
+        window.setTimeout(() => {
+            fetch('/api/notifications/clear/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        showEmptyNotificationState(list);
+                        document.querySelectorAll('[data-notification-count]').forEach((badge) => {
+                            badge.textContent = '0';
+                            badge.classList.add('is-empty');
+                        });
+                        document.querySelectorAll('[data-unread-stat], [data-unread-summary], [data-total-notifications]').forEach((stat) => {
+                            stat.textContent = '0';
+                        });
+                        if (markReadBtn) {
+                            markReadBtn.disabled = true;
+                        }
+                    } else {
+                        console.error(data.error);
+                        cards.forEach((card) => card.classList.remove('is-clearing-away'));
+                        if (clearBtn) {
+                            clearBtn.disabled = false;
+                            clearBtn.classList.remove('is-clearing');
+                        }
+                    }
+                });
+        }, Math.max(cards.length * 55 + 360, 520));
+    }
+
     const markReadBtn = document.querySelector('.mark-read-btn');
     if (markReadBtn) {
         markReadBtn.addEventListener('click', markAllAsRead);
+    }
+
+    const clearFeedBtn = document.querySelector('.clear-feed-btn');
+    if (clearFeedBtn) {
+        clearFeedBtn.addEventListener('click', clearAllNotifications);
     }
 </script>
 {% endblock %}

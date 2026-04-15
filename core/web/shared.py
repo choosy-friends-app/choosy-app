@@ -12,6 +12,102 @@ from core.models import Group, GroupMember, Notification, Plan, PlanProposal, Vo
 User = get_user_model()
 
 
+INTEREST_ICON_KEYWORDS = (
+    (("food", "culinary", "taste", "restaurant", "dinner", "lunch", "brunch", "pizza"), "restaurant"),
+    (("night", "club", "party", "drink", "bar", "cocktail"), "nightlife"),
+    (("adventure", "explorer", "nature", "hike", "outdoor", "mountain"), "explore"),
+    (("sport", "active", "football", "soccer", "run", "gym", "padel"), "sports_soccer"),
+    (("art", "culture", "museum", "gallery", "cinema", "music"), "palette"),
+)
+
+GROUP_ACTIVITY_OPTIONS = (
+    {
+        "label": "Food",
+        "icon": "restaurant",
+        "image_url": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=900&auto=format&fit=crop",
+        "selected": True,
+    },
+    {
+        "label": "Nightlife",
+        "icon": "nightlife",
+        "image_url": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=900&auto=format&fit=crop",
+        "selected": True,
+    },
+    {
+        "label": "Adventure",
+        "icon": "explore",
+        "image_url": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=900&auto=format&fit=crop",
+        "selected": True,
+    },
+    {
+        "label": "Sport",
+        "icon": "sports_soccer",
+        "image_url": "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?q=80&w=900&auto=format&fit=crop",
+        "selected": True,
+    },
+    {
+        "label": "Culture",
+        "icon": "palette",
+        "image_url": "https://images.unsplash.com/photo-1564399580075-5dfe19c205f3?q=80&w=900&auto=format&fit=crop",
+        "selected": False,
+    },
+    {
+        "label": "Travel",
+        "icon": "flight_takeoff",
+        "image_url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=900&auto=format&fit=crop",
+        "selected": False,
+    },
+)
+
+DEFAULT_GROUP_INTERESTS = (
+    {"label": "Shared Plans", "icon": "auto_awesome"},
+    {"label": "Curated Picks", "icon": "verified"},
+)
+
+
+def _interest_icon(interest):
+    normalized_interest = str(interest or "").lower()
+    if normalized_interest == "travel":
+        return "flight_takeoff"
+    for keywords, icon in INTEREST_ICON_KEYWORDS:
+        if any(keyword in normalized_interest for keyword in keywords):
+            return icon
+    return "choosy"
+
+
+def _parse_group_interests(raw_interests):
+    if isinstance(raw_interests, str):
+        items = raw_interests.split(",")
+    elif raw_interests:
+        items = raw_interests
+    else:
+        items = []
+
+    interests = []
+    seen = set()
+    for item in items:
+        label = str(item or "").strip()
+        key = label.lower()
+        if not label or key in seen:
+            continue
+        interests.append(label[:48])
+        seen.add(key)
+    return interests[:8]
+
+
+def _decorate_group_interests(interests, *, include_defaults=False):
+    decorated = [
+        {
+            "label": label,
+            "icon": _interest_icon(label),
+        }
+        for label in _parse_group_interests(interests)
+    ]
+    if decorated or not include_defaults:
+        return decorated
+    return list(DEFAULT_GROUP_INTERESTS)
+
+
 def _default_voting_end():
     return timezone.now() + timedelta(hours=24)
 
@@ -75,19 +171,137 @@ def _notify_group_members_about_decision(proposal):
 def _decorate_notification(notification):
     notification.cta_url = ""
     notification.cta_label = ""
+    notification.is_joined_invitation = False
+    notification.is_declined_invitation = False
+    notification.is_resolved_plan_notification = False
 
     if notification.type == Notification.Type.INVITATION and notification.group_id:
-        notification.cta_url = reverse("invitation_detail", args=[notification.group_id])
-        notification.cta_label = "View invitation"
+        invited_member = notification.group.members.filter(
+            user=notification.recipient,
+            status=GroupMember.Status.INVITED,
+        ).exists()
+        active_member = notification.group.members.filter(
+            user=notification.recipient,
+            status=GroupMember.Status.ACTIVE,
+        ).exists()
+        left_member = notification.group.members.filter(
+            user=notification.recipient,
+            status=GroupMember.Status.LEFT,
+        ).exists()
+        notification.is_joined_invitation = active_member
+        notification.is_declined_invitation = left_member
+        if active_member:
+            notification.cta_url = reverse("groups")
+            notification.cta_label = "View group"
+        elif invited_member:
+            notification.cta_url = reverse("invitation_detail", args=[notification.group_id])
+            notification.cta_label = "View invitation"
+        elif left_member:
+            notification.cta_url = reverse("notifications")
+            notification.cta_label = "Reviewed"
+        else:
+            notification.cta_url = reverse("groups")
+            notification.cta_label = "View groups"
     elif notification.type == Notification.Type.NEW_PLAN and notification.group_id:
-        notification.cta_url = reverse("vote", args=[notification.group_id])
-        notification.cta_label = "Vote now"
+        notification.is_resolved_plan_notification = not _new_plan_notification_needs_attention(notification)
+        if notification.is_resolved_plan_notification:
+            notification.cta_url = reverse("groups")
+            notification.cta_label = "Reviewed"
+        else:
+            notification.cta_url = reverse("vote", args=[notification.group_id])
+            notification.cta_label = "Vote now"
     elif notification.type == Notification.Type.DECISION and notification.group_id:
         notification.cta_url = reverse("groups")
         notification.cta_label = "View group"
 
     notification.is_actionable = bool(notification.cta_url)
     return notification
+
+
+def _proposal_vote_progress_for_user(proposal, user):
+    if proposal is None or user is None or not user.is_authenticated:
+        return 0, 0
+
+    option_count = proposal.plans.count()
+    if option_count == 0:
+        return 0, 0
+
+    member = proposal.group.members.filter(user=user, status=GroupMember.Status.ACTIVE).first()
+    if member is None:
+        return 0, option_count
+
+    voted_count = (
+        Vote.objects.filter(plan__proposal=proposal, member=member)
+        .values("plan_id")
+        .distinct()
+        .count()
+    )
+    return voted_count, option_count
+
+
+def _user_completed_proposal_vote(proposal, user):
+    voted_count, option_count = _proposal_vote_progress_for_user(proposal, user)
+    return option_count > 0 and voted_count >= option_count
+
+
+def _new_plan_notification_needs_attention(notification):
+    proposal = notification.plan_proposal
+    if proposal is None or not proposal.can_accept_votes:
+        return False
+    return not _user_completed_proposal_vote(proposal, notification.recipient)
+
+
+def _notification_needs_attention(notification):
+    if notification.is_read:
+        return False
+
+    if notification.type == Notification.Type.INVITATION and notification.group_id:
+        return notification.group.members.filter(
+            user=notification.recipient,
+            status=GroupMember.Status.INVITED,
+        ).exists()
+
+    if notification.type == Notification.Type.NEW_PLAN:
+        return _new_plan_notification_needs_attention(notification)
+
+    return True
+
+
+def _sync_user_notification_states(user):
+    if user is None or not user.is_authenticated:
+        return 0
+
+    notifications = list(
+        Notification.objects.filter(recipient=user, is_read=False).select_related(
+            "group",
+            "plan_proposal",
+        )
+    )
+    resolved_ids = [
+        notification.id
+        for notification in notifications
+        if not _notification_needs_attention(notification)
+    ]
+    if resolved_ids:
+        Notification.objects.filter(id__in=resolved_ids).update(is_read=True)
+    return len(resolved_ids)
+
+
+def _attention_notifications_for_user(user):
+    if user is None or not user.is_authenticated:
+        return []
+
+    _sync_user_notification_states(user)
+    notifications = list(
+        Notification.objects.filter(recipient=user, is_read=False)
+        .select_related("group", "plan_proposal", "sender")
+        .order_by("-created_at")
+    )
+    return [
+        notification
+        for notification in notifications
+        if _notification_needs_attention(notification)
+    ]
 
 
 def _parse_voting_end(request):
@@ -118,8 +332,16 @@ def _user_groups_queryset(request):
 def _seed_demo_groups():
     if Group.objects.exists():
         return
-    Group.objects.create(name="The Foodies Collective", description="Culinary adventures")
-    Group.objects.create(name="Adventure Seekers", description="Outdoor stuff")
+    Group.objects.create(
+        name="The Foodies Collective",
+        description="Culinary adventures",
+        interests=["Culinary", "Brunch", "Hidden restaurants"],
+    )
+    Group.objects.create(
+        name="Adventure Seekers",
+        description="Outdoor stuff",
+        interests=["Adventure", "Nature", "Active weekends"],
+    )
 
 
 def _decorate_plan_option(plan):
@@ -268,6 +490,9 @@ def _decorate_groups(groups, user=None):
         group.member_count = group.members.filter(status=GroupMember.Status.ACTIVE).count()
         group.active_proposal = active_proposal
         group.voting_plans_count = active_proposal.option_count if active_proposal else 0
+        group.activity_chips = _decorate_group_interests(group.interests)
+        group.activity_preview = group.activity_chips[:4]
+        group.activity_overflow_count = max(len(group.activity_chips) - len(group.activity_preview), 0)
         group.preview_members = preview_members
         group.extra_members_count = max(group.member_count - len(preview_members), 0)
         group.pending_invites_count = group.members.filter(status=GroupMember.Status.INVITED).count()

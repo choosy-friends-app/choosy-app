@@ -18,6 +18,109 @@
 
 <body class="invitation-body">
 
+    <style>
+        :root {
+            --inv-hero-url: url('{{ group.hero_image_url|default:"https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=2000&auto=format&fit=crop" }}');
+        }
+
+        .inv-hero-bg {
+            background-image: var(--inv-hero-url);
+        }
+
+        /* Success Overlay Styles */
+        .success-joining-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .success-joining-overlay.is-active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .success-card {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 3rem;
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(138, 43, 226, 0.2);
+            transform: translateY(20px);
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .success-joining-overlay.is-active .success-card {
+            transform: translateY(0);
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(0, 255, 127, 0.1);
+            border: 1px solid rgba(0, 255, 127, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            color: #00ff7f;
+        }
+
+        .success-icon .material-symbols-outlined {
+            font-size: 40px;
+        }
+
+        .success-kicker {
+            color: #8a2be2;
+            font-weight: 800;
+            letter-spacing: 0.2em;
+            font-size: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .success-title {
+            color: white;
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .success-message {
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .success-progress {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #8a2be2, #00ff7f);
+            width: 0%;
+            transition: width 3s linear;
+        }
+
+        .success-joining-overlay.is-active .progress-bar {
+            width: 100%;
+        }
+    </style>
+
     <div class="app-shell">
         {% include "includes/layout/sidebar.html" %}
 
@@ -31,10 +134,7 @@
                     <div class="inv-hero-content">
                         <div class="inv-tag">NEW INVITATION</div>
                         <h1 class="inv-title">{{ group.name }}</h1>
-                        <!-- prettier-ignore -->
-                        <p class="inv-desc">{{ group.description|default:"A collective of culinary enthusiasts dedicated
-                            to
-                            discovering hidden food gems and mastering the art of the unknown plate." }}</p>
+                        <p class="inv-desc">{{ invitation_description }}</p>
                     </div>
                 </div>
 
@@ -44,14 +144,15 @@
                         <div class="sub-card-tag">EXPERIENCE</div>
                         {% if active_plan %}
                         <h3 class="sub-card-title">{{ active_plan.title }}</h3>
-                        <p class="sub-card-desc">{{ active_plan.description|default:"There is already a live group vote waiting for your answer once you join." }}</p>
+                        <p class="sub-card-desc">{{ active_plan_description }}</p>
                         <div class="sub-card-meta">
                             <span><span class="material-symbols-outlined">calendar_today</span> {{ active_plan.voting_ends_at|date:"d/m/Y" }}</span>
                             <span><span class="material-symbols-outlined">schedule</span> {{ active_plan.voting_ends_at|date:"H:i" }}</span>
                         </div>
                         {% else %}
                         <h3 class="sub-card-title">Join and start proposing!</h3>
-                        <p class="sub-card-desc">No active plans yet. Once you join, you can propose the first epic adventure for the squad.</p>
+                        <p class="sub-card-desc">No active plans yet. Once you join, you can propose the first epic
+                            adventure for the squad.</p>
                         {% endif %}
                     </div>
 
@@ -80,16 +181,30 @@
                     </p>
 
                     <ul class="inv-feature-list">
+                        {% for interest in invitation_interests %}
                         <li>
-                            <div class="f-icon"><span class="material-symbols-outlined">restaurant</span></div>
-                            <span class="f-text">Culinary Adventures</span>
+                            <div class="f-icon">
+                                {% if interest.icon == "choosy" %}
+                                <span class="choosy-activity-icon">C</span>
+                                {% else %}
+                                <span class="material-symbols-outlined">{{ interest.icon }}</span>
+                                {% endif %}
+                            </div>
+                            <span class="f-text">{{ interest.label }}</span>
+                            <span class="material-symbols-outlined check">check_circle</span>
+                        </li>
+                        {% empty %}
+                        <li>
+                            <div class="f-icon"><span class="material-symbols-outlined">auto_awesome</span></div>
+                            <span class="f-text">Bespoke Squad Experiences</span>
                             <span class="material-symbols-outlined check">check_circle</span>
                         </li>
                         <li>
-                            <div class="f-icon"><span class="material-symbols-outlined">explore</span></div>
-                            <span class="f-text">Hidden Food Gems</span>
+                            <div class="f-icon"><span class="material-symbols-outlined">verified</span></div>
+                            <span class="f-text">Curated Community Map</span>
                             <span class="material-symbols-outlined check">check_circle</span>
                         </li>
+                        {% endfor %}
                     </ul>
 
                     <div class="inv-buttons">
@@ -132,6 +247,36 @@
                 return cv;
             }
 
+            function showSuccessOverlay(groupName) {
+                const overlay = document.createElement('div');
+                overlay.className = 'success-joining-overlay';
+                overlay.innerHTML = `
+                    <div class="success-card">
+                        <div class="success-icon">
+                            <span class="material-symbols-outlined">verified_user</span>
+                        </div>
+                        <div class="success-content">
+                            <p class="success-kicker">SUCCESSFULLY JOINED</p>
+                            <h2 class="success-title">${groupName}</h2>
+                            <p class="success-message">Welcome to the squad. Redirecting you to the dashboard...</p>
+                        </div>
+                        <div class="success-progress">
+                            <div class="progress-bar"></div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+
+                // Start progress bar animation
+                setTimeout(() => {
+                    overlay.classList.add('is-active');
+                }, 10);
+
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 3000);
+            }
+
             function handleInvitation(groupId, action) {
                 const acceptBtn = document.querySelector('.btn-giant-accept');
                 const declineBtn = document.querySelector('.btn-ghost-decline');
@@ -154,7 +299,9 @@
                     }
                 }).then(response => response.json())
                     .then(data => {
-                        if (data.status === 'accepted' || data.status === 'declined') {
+                        if (data.status === 'accepted') {
+                            showSuccessOverlay(data.group_name || 'the squad');
+                        } else if (data.status === 'declined') {
                             window.location.href = '/notifications/';
                         } else {
                             console.error(data.error);
