@@ -7,10 +7,12 @@ from django.views.decorators.csrf import csrf_exempt
 
 from core.models import Group, GroupMember, Notification
 from core.web.shared import (
+    GROUP_ACTIVITY_OPTIONS,
     User,
     _create_notification,
     _decorate_groups,
     _leave_group,
+    _parse_group_interests,
     _remove_group_member,
     _require_group_admin,
     _resolve_group_for_request,
@@ -18,6 +20,14 @@ from core.web.shared import (
     _set_group_member_role,
     _user_groups_queryset,
 )
+
+
+def _group_interests_from_post(post_data):
+    selected_interests = post_data.getlist("interests")
+    custom_interest = (post_data.get("custom_interest") or "").strip()
+    if custom_interest:
+        selected_interests.append(custom_interest)
+    return _parse_group_interests(selected_interests)
 
 
 def groups(request):
@@ -42,8 +52,7 @@ def groups(request):
                     description = (request.POST.get("description") or "").strip()
                     mission_statement = (request.POST.get("mission_statement") or "").strip()
                     hero_image_url = (request.POST.get("hero_image_url") or "").strip()
-                    interests_raw = (request.POST.get("interests") or "").strip()
-                    interests = [i.strip() for i in interests_raw.split(",") if i.strip()]
+                    interests = _group_interests_from_post(request.POST)
                     
                     if not name:
                         raise ValueError("El nombre del grupo es obligatorio.")
@@ -143,6 +152,7 @@ def groups(request):
     user_groups = _decorate_groups(user_groups, request.user)
     total_members = sum(group.member_count for group in user_groups)
     total_pending_votes = sum(group.voting_plans_count for group in user_groups)
+    total_activities = sum(len(group.activity_chips) for group in user_groups)
 
     return render(
         request,
@@ -155,6 +165,8 @@ def groups(request):
             "total_groups": len(user_groups),
             "total_members": total_members,
             "total_pending_votes": total_pending_votes,
+            "total_activities": total_activities,
+            "activity_options": GROUP_ACTIVITY_OPTIONS,
             "success_message": success_message,
             "error_message": error_message,
             "open_create_modal": open_create_modal,
@@ -175,7 +187,7 @@ def api_create_group(request):
         description = (data.get("description") or "").strip()
         mission_statement = (data.get("mission_statement") or "").strip()
         hero_image_url = (data.get("hero_image_url") or "").strip()
-        interests = data.get("interests") or []
+        interests = _parse_group_interests(data.get("interests") or [])
         
         if not name:
             return JsonResponse({"status": "error", "message": "Group name is required."}, status=400)

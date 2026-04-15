@@ -9,6 +9,7 @@ from core.web.shared import (
     User,
     _active_group_proposal,
     _create_notification,
+    _decorate_group_interests,
     _decorate_notification,
     _require_group_admin,
 )
@@ -76,6 +77,7 @@ def invitation_detail(request, group_id):
     active_members = list(group.members.filter(status=GroupMember.Status.ACTIVE).select_related("user")[:4])
     active_member_count = group.members.filter(status=GroupMember.Status.ACTIVE).count()
     pending_invites_count = group.members.filter(status=GroupMember.Status.INVITED).count()
+    invitation_interests = _decorate_group_interests(group.interests, include_defaults=True)
 
     return render(
         request,
@@ -89,6 +91,7 @@ def invitation_detail(request, group_id):
             "active_member_count": active_member_count,
             "extra_member_count": max(active_member_count - len(active_members), 0),
             "pending_invites_count": pending_invites_count,
+            "invitation_interests": invitation_interests,
         },
     )
 
@@ -162,7 +165,7 @@ def api_respond_invitation(request, group_id, action):
         ).update(
             is_read=True, 
             title=f"Joined {group.name}", 
-            message=f"You are now a member of '{group.name}'"
+            message=f"You are now a member of '{group.name}'."
         )
 
         active_proposal = _active_group_proposal(group)

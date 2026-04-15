@@ -186,21 +186,16 @@
                     </p>
 
                     <ul class="inv-feature-list">
-                        {% for interest in group.interests %}
+                        {% for interest in invitation_interests %}
                         <li>
                             <div class="f-icon">
-                                <span class="material-symbols-outlined">
-                                    {% if "Food" in interest or "Culinary" in interest or "Taste" in interest
-                                    %}restaurant
-                                    {% elif "Night" in interest or "Club" in interest or "Party" in interest %}nightlife
-                                    {% elif "Adventure" in interest or "Explorer" in interest or "Nature" in interest
-                                    %}explore
-                                    {% elif "Sport" in interest or "Active" in interest %}sports_soccer
-                                    {% elif "Art" in interest or "Culture" in interest %}palette
-                                    {% else %}star{% endif %}
-                                </span>
+                                {% if interest.icon == "choosy" %}
+                                <span class="choosy-activity-icon">C</span>
+                                {% else %}
+                                <span class="material-symbols-outlined">{{ interest.icon }}</span>
+                                {% endif %}
                             </div>
-                            <span class="f-text">{{ interest }}</span>
+                            <span class="f-text">{{ interest.label }}</span>
                             <span class="material-symbols-outlined check">check_circle</span>
                         </li>
                         {% empty %}

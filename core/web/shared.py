@@ -12,6 +12,102 @@ from core.models import Group, GroupMember, Notification, Plan, PlanProposal, Vo
 User = get_user_model()
 
 
+INTEREST_ICON_KEYWORDS = (
+    (("food", "culinary", "taste", "restaurant", "dinner", "lunch", "brunch", "pizza"), "restaurant"),
+    (("night", "club", "party", "drink", "bar", "cocktail"), "nightlife"),
+    (("adventure", "explorer", "nature", "hike", "outdoor", "mountain"), "explore"),
+    (("sport", "active", "football", "soccer", "run", "gym", "padel"), "sports_soccer"),
+    (("art", "culture", "museum", "gallery", "cinema", "music"), "palette"),
+)
+
+GROUP_ACTIVITY_OPTIONS = (
+    {
+        "label": "Food",
+        "icon": "restaurant",
+        "image_url": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=900&auto=format&fit=crop",
+        "selected": True,
+    },
+    {
+        "label": "Nightlife",
+        "icon": "nightlife",
+        "image_url": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=900&auto=format&fit=crop",
+        "selected": True,
+    },
+    {
+        "label": "Adventure",
+        "icon": "explore",
+        "image_url": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=900&auto=format&fit=crop",
+        "selected": True,
+    },
+    {
+        "label": "Sport",
+        "icon": "sports_soccer",
+        "image_url": "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?q=80&w=900&auto=format&fit=crop",
+        "selected": True,
+    },
+    {
+        "label": "Culture",
+        "icon": "palette",
+        "image_url": "https://images.unsplash.com/photo-1564399580075-5dfe19c205f3?q=80&w=900&auto=format&fit=crop",
+        "selected": False,
+    },
+    {
+        "label": "Travel",
+        "icon": "flight_takeoff",
+        "image_url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=900&auto=format&fit=crop",
+        "selected": False,
+    },
+)
+
+DEFAULT_GROUP_INTERESTS = (
+    {"label": "Shared Plans", "icon": "auto_awesome"},
+    {"label": "Curated Picks", "icon": "verified"},
+)
+
+
+def _interest_icon(interest):
+    normalized_interest = str(interest or "").lower()
+    if normalized_interest == "travel":
+        return "flight_takeoff"
+    for keywords, icon in INTEREST_ICON_KEYWORDS:
+        if any(keyword in normalized_interest for keyword in keywords):
+            return icon
+    return "choosy"
+
+
+def _parse_group_interests(raw_interests):
+    if isinstance(raw_interests, str):
+        items = raw_interests.split(",")
+    elif raw_interests:
+        items = raw_interests
+    else:
+        items = []
+
+    interests = []
+    seen = set()
+    for item in items:
+        label = str(item or "").strip()
+        key = label.lower()
+        if not label or key in seen:
+            continue
+        interests.append(label[:48])
+        seen.add(key)
+    return interests[:8]
+
+
+def _decorate_group_interests(interests, *, include_defaults=False):
+    decorated = [
+        {
+            "label": label,
+            "icon": _interest_icon(label),
+        }
+        for label in _parse_group_interests(interests)
+    ]
+    if decorated or not include_defaults:
+        return decorated
+    return list(DEFAULT_GROUP_INTERESTS)
+
+
 def _default_voting_end():
     return timezone.now() + timedelta(hours=24)
 
@@ -75,10 +171,20 @@ def _notify_group_members_about_decision(proposal):
 def _decorate_notification(notification):
     notification.cta_url = ""
     notification.cta_label = ""
+    notification.is_joined_invitation = False
 
     if notification.type == Notification.Type.INVITATION and notification.group_id:
-        notification.cta_url = reverse("invitation_detail", args=[notification.group_id])
-        notification.cta_label = "View invitation"
+        active_member = notification.group.members.filter(
+            user=notification.recipient,
+            status=GroupMember.Status.ACTIVE,
+        ).exists()
+        notification.is_joined_invitation = active_member
+        if active_member:
+            notification.cta_url = reverse("groups")
+            notification.cta_label = "View group"
+        else:
+            notification.cta_url = reverse("invitation_detail", args=[notification.group_id])
+            notification.cta_label = "View invitation"
     elif notification.type == Notification.Type.NEW_PLAN and notification.group_id:
         notification.cta_url = reverse("vote", args=[notification.group_id])
         notification.cta_label = "Vote now"
@@ -118,8 +224,16 @@ def _user_groups_queryset(request):
 def _seed_demo_groups():
     if Group.objects.exists():
         return
-    Group.objects.create(name="The Foodies Collective", description="Culinary adventures")
-    Group.objects.create(name="Adventure Seekers", description="Outdoor stuff")
+    Group.objects.create(
+        name="The Foodies Collective",
+        description="Culinary adventures",
+        interests=["Culinary", "Brunch", "Hidden restaurants"],
+    )
+    Group.objects.create(
+        name="Adventure Seekers",
+        description="Outdoor stuff",
+        interests=["Adventure", "Nature", "Active weekends"],
+    )
 
 
 def _decorate_plan_option(plan):
@@ -268,6 +382,9 @@ def _decorate_groups(groups, user=None):
         group.member_count = group.members.filter(status=GroupMember.Status.ACTIVE).count()
         group.active_proposal = active_proposal
         group.voting_plans_count = active_proposal.option_count if active_proposal else 0
+        group.activity_chips = _decorate_group_interests(group.interests)
+        group.activity_preview = group.activity_chips[:4]
+        group.activity_overflow_count = max(len(group.activity_chips) - len(group.activity_preview), 0)
         group.preview_members = preview_members
         group.extra_members_count = max(group.member_count - len(preview_members), 0)
         group.pending_invites_count = group.members.filter(status=GroupMember.Status.INVITED).count()

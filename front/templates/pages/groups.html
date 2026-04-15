@@ -6,8 +6,7 @@
     <div class="groups-hero__copy">
       <p class="page-kicker">Your Real Groups</p>
       <h1>Groups</h1>
-      <p>Aqui se muestran solo los grupos que pertenecen al usuario actual. Ya no se ve el formulario de creacion hasta
-        que pulses el boton.</p>
+      <p>Manage the squads you actually belong to, with their members, live votes, and the activities that define each group.</p>
     </div>
 
     {% if request.user.is_authenticated %}
@@ -33,8 +32,7 @@
   <article class="groups-overview">
     <div class="groups-overview__copy">
       <h2>Vista de pertenencia</h2>
-      <p>Esta pestaña cruza usuario, membresía activa y estado de votación para que veas tus grupos de verdad y no
-        contenido ficticio.</p>
+      <p>Every card is tied to membership, pending invitations, current votes, and the activities used on invitation pages.</p>
     </div>
     <div class="groups-overview__stats">
       <div class="groups-stat">
@@ -48,6 +46,10 @@
       <div class="groups-stat">
         <strong>{{ total_pending_votes }}</strong>
         <span>Votes Pending</span>
+      </div>
+      <div class="groups-stat">
+        <strong>{{ total_activities }}</strong>
+        <span>Activities</span>
       </div>
     </div>
   </article>
@@ -67,16 +69,31 @@
             <span class="group-row__status">{{ group.get_status_display }}</span>
           </div>
           <p>{{ group.description|default:"Grupo listo para organizar el siguiente plan." }}</p>
+          <div class="group-activity-strip" aria-label="Group activities">
+            {% for activity in group.activity_preview %}
+            <span class="group-activity-chip">
+              {% if activity.icon == "choosy" %}
+              <span class="choosy-activity-icon">C</span>
+              {% else %}
+              <span class="material-symbols-outlined">{{ activity.icon }}</span>
+              {% endif %}
+              {{ activity.label }}
+            </span>
+            {% empty %}
+            <span class="group-activity-chip group-activity-chip--empty">
+              <span class="material-symbols-outlined">auto_awesome</span>
+              Activities pending
+            </span>
+            {% endfor %}
+            {% if group.activity_overflow_count > 0 %}
+            <span class="group-activity-chip group-activity-chip--more">+{{ group.activity_overflow_count }} more</span>
+            {% endif %}
+          </div>
           <div class="group-row__meta">
-            <span><span class="material-symbols-outlined">group</span>{{ group.member_count }} miembro{{
-              group.member_count|pluralize }}</span>
-            <span><span class="material-symbols-outlined">how_to_vote</span>{{ group.voting_plans_count }} opcion{{
-              group.voting_plans_count|pluralize:"es" }} en votacion</span>
-            <span><span class="material-symbols-outlined">mail</span>{{ group.pending_invites_count }} invitacion{{
-              group.pending_invites_count|pluralize:"es" }} pendiente{{ group.pending_invites_count|pluralize:"s"
-              }}</span>
-            <span><span class="material-symbols-outlined">history</span>Actualizado hace {{ group.updated_at|timesince
-              }}</span>
+            <span><span class="material-symbols-outlined">group</span>{{ group.member_count }} member{{ group.member_count|pluralize }}</span>
+            <span><span class="material-symbols-outlined">how_to_vote</span>{{ group.voting_plans_count }} option{{ group.voting_plans_count|pluralize }} in voting</span>
+            <span><span class="material-symbols-outlined">mail</span>{{ group.pending_invites_count }} pending invite{{ group.pending_invites_count|pluralize }}</span>
+            <span><span class="material-symbols-outlined">history</span>Updated {{ group.updated_at|timesince }} ago</span>
             {% if request.user.is_authenticated and group.owner_id == request.user.id %}
             <span><span class="material-symbols-outlined">workspace_premium</span>Owner</span>
             {% endif %}
@@ -224,39 +241,69 @@
 
     <div class="groups-modal__hero">
       <p class="page-kicker">Create A New Squad</p>
-      <h2 id="create-group-title">Define your next group</h2>
-      <p>Primero creas el grupo. Después ya podrás invitar gente desde la propia tarjeta del grupo.</p>
+      <h2 id="create-group-title">Build the squad profile</h2>
+      <p>These details power the group card, invitation page, and automatic activity icons.</p>
     </div>
 
     <form class="groups-modal__form" method="post">
       {% csrf_token %}
       <input type="hidden" name="action" value="create_group" />
+      <div class="groups-form-grid">
+        <label class="groups-field">
+          <span>Group title</span>
+          <input class="groups-input groups-input--modal" type="text" name="name" placeholder="Choosy Friends"
+            required />
+        </label>
+        <label class="groups-field">
+          <span>Mission statement</span>
+          <input class="groups-input groups-input--modal" type="text" name="mission_statement"
+            placeholder="Finding the next table, route, or night out." />
+        </label>
+      </div>
+      <fieldset class="groups-field groups-activity-picker">
+        <legend>Activities</legend>
+        <small class="groups-field__hint">Pick the activities this squad will organize. The selected cards appear on the group and invitation screens.</small>
+        <div class="activity-option-grid">
+          {% for option in activity_options %}
+          <label class="activity-option-card">
+            <input type="checkbox" name="interests" value="{{ option.label }}" {% if option.selected %}checked{% endif %} />
+            <span class="activity-option-card__image" style="background-image: url('{{ option.image_url }}');"></span>
+            <span class="activity-option-card__shade"></span>
+            <span class="activity-option-card__check">
+              <span class="material-symbols-outlined">check</span>
+            </span>
+            <span class="activity-option-card__content">
+              <span class="activity-option-card__icon">
+                <span class="material-symbols-outlined">{{ option.icon }}</span>
+              </span>
+              <strong>{{ option.label }}</strong>
+            </span>
+          </label>
+          {% endfor %}
+          <label class="activity-option-card activity-option-card--custom">
+            <input type="checkbox" name="interests" value="" data-custom-activity-toggle />
+            <span class="activity-option-card__image activity-option-card__image--custom"></span>
+            <span class="activity-option-card__shade"></span>
+            <span class="activity-option-card__check">
+              <span class="material-symbols-outlined">check</span>
+            </span>
+            <span class="activity-option-card__content">
+              <span class="activity-option-card__icon choosy-activity-icon">C</span>
+              <strong>Other</strong>
+              <input class="activity-option-card__input" type="text" name="custom_interest" placeholder="Type an activity" data-custom-activity-input />
+            </span>
+          </label>
+        </div>
+      </fieldset>
       <label class="groups-field">
-        <span>Group title</span>
-        <input class="groups-input groups-input--modal" type="text" name="name" placeholder="Ej. Choosy Friends"
-          required />
-      </label>
-      <label class="groups-field">
-        <span>Mission Statement</span>
-        <input class="groups-input groups-input--modal" type="text" name="mission_statement"
-          placeholder="Ej. Discovering the world's best pizzas." />
-      </label>
-      <label class="groups-field">
-        <span>Hero Image URL</span>
+        <span>Hero image URL</span>
         <input class="groups-input groups-input--modal" type="url" name="hero_image_url"
           placeholder="https://images.unsplash.com/..." />
       </label>
       <label class="groups-field">
-        <span>Interests / Activities</span>
-        <input class="groups-input groups-input--modal" type="text" name="interests"
-          placeholder="Ej. Culinary, Nightlife, Adventures" />
-        <small style="color: rgba(255,255,255,0.4); font-size: 0.7rem; margin-top: 0.2rem; display: block;">Divide
-          choices with commas.</small>
-      </label>
-      <label class="groups-field">
         <span>Description</span>
         <textarea class="groups-textarea" name="description" rows="2"
-          placeholder="Que tipo de grupo es, que planes organiza o cualquier contexto util."></textarea>
+          placeholder="What this group organizes and what kind of plans members should expect."></textarea>
       </label>
       <div class="groups-modal__actions">
         <button class="group-row__link group-row__link--ghost" type="button" data-close-create-group>Cancel</button>
@@ -365,6 +412,17 @@
         openConfirmModal(form);
       });
     });
+
+    const customActivityInput = document.querySelector("[data-custom-activity-input]");
+    const customActivityToggle = document.querySelector("[data-custom-activity-toggle]");
+    if (customActivityInput && customActivityToggle) {
+      customActivityInput.addEventListener("input", () => {
+        customActivityToggle.checked = customActivityInput.value.trim().length > 0;
+      });
+      customActivityInput.addEventListener("focus", () => {
+        customActivityToggle.checked = true;
+      });
+    }
 
     document.querySelectorAll("[data-group-card]").forEach((card) => {
       const panel = card.querySelector(".group-members-panel");
