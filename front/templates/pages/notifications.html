@@ -20,8 +20,10 @@
         <div class="notif-list">
             {% for notif in notifications %}
             <div class="notif-card type-{{ notif.type }} {% if notif.is_read %}is-read{% endif %}">
-                <div class="notif-icon">
-                    {% if notif.type == 'invitation' %}
+                <div class="notif-icon {% if notif.is_joined_invitation %}i-cyan{% endif %}">
+                    {% if notif.is_joined_invitation %}
+                    <span class="material-symbols-outlined">verified_user</span>
+                    {% elif notif.type == 'invitation' %}
                     <span class="material-symbols-outlined">group_add</span>
                     {% elif notif.type == 'new_plan' %}
                     <span class="material-symbols-outlined">restaurant</span>
@@ -48,6 +50,8 @@
                             Vote Now <span class="material-symbols-outlined">front_hand</span>
                         </button>
                         {% elif notif.type == 'decision' %}
+                        <a href="{{ notif.cta_url }}" class="btn-view-plan">{{ notif.cta_label }} &rarr;</a>
+                        {% elif notif.is_joined_invitation %}
                         <a href="{{ notif.cta_url }}" class="btn-view-plan">{{ notif.cta_label }} &rarr;</a>
                         {% else %}
                         <div class="invite-buttons">
