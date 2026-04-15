@@ -26,6 +26,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
   margin-bottom: 2rem;
 }
 
@@ -46,7 +47,16 @@
   text-transform: uppercase;
 }
 
-.mark-read-btn {
+.notif-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.mark-read-btn,
+.clear-feed-btn {
   background: transparent;
   color: #bfa8ff;
   border: 1px solid rgba(165, 165, 255, 0.2);
@@ -59,9 +69,36 @@
   transition: all 0.3s ease;
 }
 
-.mark-read-btn:hover {
+.mark-read-btn:hover,
+.clear-feed-btn:hover {
   background: rgba(165, 165, 255, 0.1);
   border-color: rgba(165, 165, 255, 0.4);
+}
+
+.mark-read-btn:disabled,
+.clear-feed-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.clear-feed-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #f8c7ff;
+  border-color: rgba(210, 119, 255, 0.26);
+  background:
+    linear-gradient(135deg, rgba(210, 119, 255, 0.08), rgba(165, 165, 255, 0.04));
+}
+
+.clear-feed-btn .material-symbols-outlined {
+  font-size: 1rem;
+}
+
+.clear-feed-btn.is-clearing {
+  color: #fff;
+  border-color: rgba(210, 119, 255, 0.55);
+  box-shadow: 0 0 24px rgba(210, 119, 255, 0.16);
 }
 
 .notif-tabs {
@@ -120,10 +157,54 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
+.notif-card.is-clearing-away {
+  animation: notification-banish 0.46s cubic-bezier(0.7, -0.1, 0.2, 1) var(--clear-delay, 0ms) forwards;
+  pointer-events: none;
+}
+
+.notification-empty-state {
+  animation: notification-empty-arrive 0.42s ease both;
+}
+
 .notif-card:hover {
   transform: translateY(-4px);
   background: rgba(255, 255, 255, 0.04);
   border-color: rgba(255, 255, 255, 0.1);
+}
+
+@keyframes notification-banish {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    filter: blur(0);
+    max-height: 16rem;
+  }
+  52% {
+    opacity: 0.72;
+    transform: translateX(1.4rem) scale(0.985);
+    filter: blur(0.5px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(7rem) scale(0.94);
+    filter: blur(4px);
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin: 0;
+    border-width: 0;
+  }
+}
+
+@keyframes notification-empty-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(1rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .notif-icon {
@@ -503,4 +584,3 @@
     opacity: 0;
   }
 }
-

@@ -230,6 +230,17 @@ def api_mark_notifications_read(request):
     return JsonResponse({"status": "ok", "updated_count": updated_count})
 
 
+@csrf_exempt
+def api_clear_notifications(request):
+    if request.method not in {"POST", "DELETE"}:
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+
+    deleted_count, _ = Notification.objects.filter(recipient=request.user).delete()
+    return JsonResponse({"status": "ok", "deleted_count": deleted_count})
+
+
 def api_notification_status(request):
     if not request.user.is_authenticated:
         return JsonResponse({"status": "ok", "unread_count": 0, "latest": None})
