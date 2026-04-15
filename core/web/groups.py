@@ -40,11 +40,16 @@ def groups(request):
                     open_create_modal = True
                     name = (request.POST.get("name") or "").strip()
                     description = (request.POST.get("description") or "").strip()
+                    mission_statement = (request.POST.get("mission_statement") or "").strip()
+                    hero_image_url = (request.POST.get("hero_image_url") or "").strip()
+                    
                     if not name:
                         raise ValueError("El nombre del grupo es obligatorio.")
                     group = Group.objects.create(
                         name=name,
                         description=description,
+                        mission_statement=mission_statement,
+                        hero_image_url=hero_image_url,
                         owner=request.user,
                     )
                     group.add_member(user=request.user, role=GroupMember.Role.OWNER)
@@ -165,12 +170,17 @@ def api_create_group(request):
         data = json.loads(request.body or "{}")
         name = (data.get("name") or "").strip()
         description = (data.get("description") or "").strip()
+        mission_statement = (data.get("mission_statement") or "").strip()
+        hero_image_url = (data.get("hero_image_url") or "").strip()
+        
         if not name:
             return JsonResponse({"status": "error", "message": "Group name is required."}, status=400)
 
         group = Group.objects.create(
             name=name,
             description=description,
+            mission_statement=mission_statement,
+            hero_image_url=hero_image_url,
             owner=request.user,
         )
         owner_member = group.add_member(user=request.user, role=GroupMember.Role.OWNER)
