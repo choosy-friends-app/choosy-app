@@ -1,16 +1,14 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!-- Main Feed & Stats Split -->
 <div class="notifications-layout">
-    <!-- Left Feed Column -->
     <div class="notif-feed">
         <div class="notif-header">
             <div class="notif-title-group">
                 <h1>Notifications</h1>
                 <p>STAY UPDATED ON YOUR SQUADS</p>
             </div>
-            <button class="mark-read-btn">MARK ALL AS READ</button>
+            <button class="mark-read-btn" type="button" {% if not unread_count %}disabled{% endif %}>MARK ALL AS READ</button>
         </div>
 
         <div class="notif-tabs">
@@ -20,9 +18,8 @@
         </div>
 
         <div class="notif-list">
-            <!-- Dynamic Rendering based on Django Context -->
             {% for notif in notifications %}
-            <div class="notif-card type-{{ notif.type }}">
+            <div class="notif-card type-{{ notif.type }} {% if notif.is_read %}is-read{% endif %}">
                 <div class="notif-icon">
                     {% if notif.type == 'invitation' %}
                     <span class="material-symbols-outlined">group_add</span>
@@ -40,164 +37,81 @@
                         <span class="notif-time">{{ notif.created_at|timesince }} ago</span>
                     </div>
                     <p>{{ notif.message }}</p>
+                    {% if notif.group %}
+                    <p class="notif-group-context">{{ notif.group.name }}</p>
+                    {% endif %}
 
-                    {% if notif.type == 'invitation' %}
-                    <div class="notif-actions invite-actions">
-                        <div class="squad-avatars">
-                            <!-- Mock avatars -->
-                            <div class="s-avatar"></div>
-                            <div class="s-avatar"></div>
-                            <div class="s-avatar"></div>
-                            <div class="s-avatar count">+12</div>
-                        </div>
-                        <div class="invite-buttons">
-                            <a href="{% url 'invitation_detail' notif.group.id %}" class="btn-accept"
-                                style="text-decoration:none; display:flex; justify-content:center;">VIEW INVITATION</a>
-                        </div>
-                    </div>
-                    {% elif notif.type == 'new_plan' %}
-                    <div class="notif-actions">
-                        <button class="btn-vote" onclick="window.location.href='/vote/{{ notif.group.id }}/'">
+                    {% if notif.is_actionable %}
+                    <div class="notif-actions {% if notif.type == 'invitation' %}invite-actions{% endif %}">
+                        {% if notif.type == 'new_plan' %}
+                        <button class="btn-vote" type="button" onclick="window.location.href='{{ notif.cta_url }}'">
                             Vote Now <span class="material-symbols-outlined">front_hand</span>
                         </button>
-                    </div>
-                    {% elif notif.type == 'decision' %}
-                    <div class="notif-actions">
-                        <a href="#" class="btn-view-plan">View Final Plan &rarr;</a>
+                        {% elif notif.type == 'decision' %}
+                        <a href="{{ notif.cta_url }}" class="btn-view-plan">{{ notif.cta_label }} &rarr;</a>
+                        {% else %}
+                        <div class="invite-buttons">
+                            <a href="{{ notif.cta_url }}" class="btn-accept"
+                                style="text-decoration:none; display:flex; justify-content:center;">{{ notif.cta_label|upper }}</a>
+                        </div>
+                        {% endif %}
                     </div>
                     {% endif %}
                 </div>
             </div>
             {% empty %}
-            <!-- HARDCODED MOCKS to emulate sketch exactly while testing -->
-            <div class="notif-card type-invitation">
-                <div class="notif-icon i-purple">
-                    <span class="material-symbols-outlined">group_add</span>
-                </div>
-                <div class="notif-content">
-                    <div class="notif-meta">
-                        <h3>Alex invited you to "Weekend Warriors"</h3>
-                        <span class="notif-time">2m ago</span>
-                    </div>
-                    <p>A competitive group for weekend sports and outdoor adventures.</p>
-
-                    <div class="notif-actions invite-actions">
-                        <div class="squad-avatars">
-                            <div class="s-avatar"
-                                style="background: url('https://i.pravatar.cc/100?img=11') center/cover"></div>
-                            <div class="s-avatar"
-                                style="background: url('https://i.pravatar.cc/100?img=12') center/cover"></div>
-                            <div class="s-avatar"
-                                style="background: url('https://i.pravatar.cc/100?img=13') center/cover"></div>
-                            <div class="s-avatar count">+12</div>
-                            <div class="invite-buttons">
-                                <a href="{% url 'invitation_detail' notif.group.id|default:1 %}" class="btn-accept"
-                                    style="text-decoration:none; display:flex; justify-content:center;">VIEW
-                                    INVITATION</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="notif-card type-new_plan">
-                <div class="notif-icon i-cyan">
-                    <span class="material-symbols-outlined">restaurant</span>
-                </div>
-                <div class="notif-content">
-                    <div class="notif-meta">
-                        <h3>New Plan: "Friday Sushi Night" in "The Foodies"</h3>
-                        <span class="notif-time">1h ago</span>
-                    </div>
-                    <p>Let's try that new omakase place downtown. 4 slots available.</p>
-                    <div class="notif-actions">
-                        <button class="btn-vote">
-                            Vote Now <span class="material-symbols-outlined"
-                                style="font-size:14px; margin-left:6px;">how_to_vote</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="notif-card type-decision"
-                style="border: 1px solid rgba(165,165,255,0.3); background: rgba(165,165,255,0.05);">
-                <div class="notif-icon i-deep">
-                    <span class="material-symbols-outlined">celebration</span>
-                </div>
-                <div class="notif-content">
-                    <div class="notif-meta">
-                        <h3>Final Verdict! "Lake Tahoe" won with 85% consensus</h3>
-                        <span class="notif-time">4h ago</span>
-                    </div>
-                    <p>The trip is confirmed for July 12th. Get ready for some mountain air!</p>
-                    <div class="notif-actions">
-                        <a href="#" class="btn-view-plan"
-                            style="color: #bfa8ff; font-weight:800; text-decoration:none; display:flex; align-items:center; gap:0.4rem; margin-top:0.5rem;">
-                            View Final Plan <span class="material-symbols-outlined"
-                                style="font-size:16px;">arrow_forward</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="notif-card type-reminder" style="border: 1px solid rgba(239,68,68,0.3);">
+            <div class="notif-card type-reminder">
                 <div class="notif-icon i-red">
-                    <span class="material-symbols-outlined">new_releases</span>
+                    <span class="material-symbols-outlined">notifications_off</span>
                 </div>
                 <div class="notif-content">
                     <div class="notif-meta">
-                        <h3>Don't forget to propose a plan for "Company Retreat"</h3>
-                        <span class="notif-time">8h ago</span>
+                        <h3>No notifications yet</h3>
+                        <span class="notif-time">Live feed</span>
                     </div>
-                    <p>Your deadline to submit options is in 2 hours.</p>
+                    <p>When someone invites you, opens a new vote, or your group reaches a decision, it will appear here.</p>
                 </div>
             </div>
             {% endfor %}
         </div>
     </div>
 
-    <!-- Right Stats Column -->
     <aside class="notif-sidebar">
         <div class="q-stats-block">
             <h2>Quick Stats</h2>
             <ul class="q-stat-list">
                 <li>
-                    <div class="qst-left"><span class="material-symbols-outlined">bolt</span> Response Time
-                    </div>
-                    <div class="qst-right">12m</div>
+                    <div class="qst-left"><span class="material-symbols-outlined">mark_email_unread</span> Unread</div>
+                    <div class="qst-right">{{ unread_count }}</div>
                 </li>
                 <li>
-                    <div class="qst-left"><span class="material-symbols-outlined">check_circle</span> Decisions
-                        Made</div>
-                    <div class="qst-right">48</div>
+                    <div class="qst-left"><span class="material-symbols-outlined">group_add</span> Invitations</div>
+                    <div class="qst-right">{{ invitation_count }}</div>
                 </li>
                 <li>
-                    <div class="qst-left"><span class="material-symbols-outlined">groups</span> Active Squads
-                    </div>
-                    <div class="qst-right">6</div>
+                    <div class="qst-left"><span class="material-symbols-outlined">celebration</span> Decisions</div>
+                    <div class="qst-right">{{ decision_count }}</div>
                 </li>
             </ul>
         </div>
 
         <div class="tip-card">
-            <strong>TIP</strong>
-            <p>You're more likely to get consensus if you propose plans on Tuesday mornings!</p>
+            <strong>LIVE STATUS</strong>
+            <p>{{ related_group_count }} groups have generated activity in your notification feed.</p>
         </div>
 
         <div class="squad-highlights-block">
-            <h2>Squad Highlights</h2>
+            <h2>Feed Summary</h2>
             <div class="hl-item">
-                <img src="https://i.pravatar.cc/100?img=59" alt="Squad">
                 <div class="hl-text">
-                    <strong>Weekend Warriors</strong>
-                    <span>ACTIVE SINCE 2022</span>
+                    <strong>{{ notifications|length }} total notifications</strong>
+                    <span>REAL DATA FROM GROUPS AND VOTING</span>
                 </div>
             </div>
             <div class="hl-item">
-                <img src="https://i.pravatar.cc/100?img=60" alt="Squad">
                 <div class="hl-text">
-                    <strong>The Foodies</strong>
-                    <span>3 NEW PROPOSALS</span>
+                    <strong>{{ unread_count }} pending to review</strong>
+                    <span>MARK THEM READ AFTER YOU ACT</span>
                 </div>
             </div>
         </div>
@@ -209,14 +123,10 @@
                     AWARDS & HONORS
                 </div>
                 <div class="ticker-wrapper">
-                    <div class="ticker-text"><strong>Best UI Architecture 2025</strong> · "La millor web de ma puta
-                        casa" Institute</div>
-                    <div class="ticker-text"><strong>Global eSports Supremacy</strong> · Bru 1st Place Wild Rift Cup '24
-                    </div>
-                    <div class="ticker-text"><strong>Urban Sanitation Grand Prix</strong> · Juneda 💩 Special
-                        Achievement Award</div>
-                    <div class="ticker-text"><strong>Excellence in Restraint</strong> · "Amaru deja en paz a las
-                        mujeres" Foundation</div>
+                    <div class="ticker-text"><strong>Best UI Architecture 2025</strong> · "La millor web de ma puta casa" Institute</div>
+                    <div class="ticker-text"><strong>Global eSports Supremacy</strong> · Bru 1st Place Wild Rift Cup '24</div>
+                    <div class="ticker-text"><strong>Urban Sanitation Grand Prix</strong> · Juneda 💩 Special Achievement Award</div>
+                    <div class="ticker-text"><strong>Excellence in Restraint</strong> · "Amaru deja en paz a las mujeres" Foundation</div>
                 </div>
             </div>
         </div>
@@ -239,8 +149,8 @@
         return cv;
     }
 
-    function handleInvitation(groupId, action) {
-        fetch(`/api/groups/${groupId}/invitation/${action}/`, {
+    function markAllAsRead() {
+        fetch('/api/notifications/read-all/', {
             method: 'POST',
             headers: {
                 'X-CSRFToken': getCookie('csrftoken'),
@@ -248,7 +158,7 @@
             }
         }).then(response => response.json())
             .then(data => {
-                if (data.status === 'accepted' || data.status === 'declined') {
+                if (data.status === 'ok') {
                     window.location.reload();
                 } else {
                     console.error(data.error);
@@ -256,10 +166,9 @@
             });
     }
 
-    function handleMockInvite(btn) {
-        btn.closest('.notif-card').style.opacity = '0.5';
-        btn.closest('.notif-card').style.pointerEvents = 'none';
-        btn.innerText = 'PROCESSED';
+    const markReadBtn = document.querySelector('.mark-read-btn');
+    if (markReadBtn) {
+        markReadBtn.addEventListener('click', markAllAsRead);
     }
 </script>
 {% endblock %}

@@ -52,7 +52,7 @@
 
     <section class="groups-list">
       {% for group in groups %}
-        <article class="group-row">
+        <article class="group-row" data-group-card>
           <div class="group-row__main">
             <div class="group-row__icon">
               <span class="material-symbols-outlined">
@@ -68,7 +68,11 @@
               <div class="group-row__meta">
                 <span><span class="material-symbols-outlined">group</span>{{ group.member_count }} miembro{{ group.member_count|pluralize }}</span>
                 <span><span class="material-symbols-outlined">how_to_vote</span>{{ group.voting_plans_count }} opcion{{ group.voting_plans_count|pluralize:"es" }} en votacion</span>
+                <span><span class="material-symbols-outlined">mail</span>{{ group.pending_invites_count }} invitacion{{ group.pending_invites_count|pluralize:"es" }} pendiente{{ group.pending_invites_count|pluralize:"s" }}</span>
                 <span><span class="material-symbols-outlined">history</span>Actualizado hace {{ group.updated_at|timesince }}</span>
+                {% if request.user.is_authenticated and group.owner_id == request.user.id %}
+                  <span><span class="material-symbols-outlined">workspace_premium</span>Owner</span>
+                {% endif %}
               </div>
             </div>
           </div>
@@ -91,9 +95,18 @@
               {% else %}
                 <a class="group-row__link" href="{% url 'start_new_plan' %}?group_id={{ group.id }}">Create plan</a>
               {% endif %}
+              <button class="group-row__link" type="button" data-toggle-members>Members</button>
+              {% if request.user.is_authenticated %}
+                <form method="post" data-confirm-form data-confirm-title="Leave group?" data-confirm-message="You will leave {{ group.name }}. If you are the owner, leadership will pass to the oldest active member.">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="leave_group" />
+                  <input type="hidden" name="group_id" value="{{ group.id }}" />
+                  <button class="group-row__link group-row__link--ghost" type="submit">Leave group</button>
+                </form>
+              {% endif %}
             </div>
 
-            {% if request.user.is_authenticated and group.owner_id == request.user.id %}
+            {% if request.user.is_authenticated and group.current_user_can_manage %}
               <form class="group-inline-form" method="post">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="add_member" />
@@ -103,6 +116,71 @@
                 <button class="group-inline-form__button" type="submit">Add member</button>
               </form>
             {% endif %}
+          </div>
+
+          <div class="group-members-panel" hidden>
+            <div class="group-members-panel__header">
+              <div>
+                <p class="page-kicker">Group roster</p>
+                <h4>{{ group.name }}</h4>
+              </div>
+              <p>{{ group.membership_cards|length }} people linked to this squad.</p>
+            </div>
+
+            <div class="member-card-grid">
+              {% for member in group.membership_cards %}
+                <article class="member-card {% if member.is_admin_role %}member-card--admin{% endif %} {% if member.is_owner %}member-card--owner{% endif %}">
+                  <div class="member-card__top">
+                    {% if member.avatar_url %}
+                      <img class="member-card__avatar" src="{{ member.avatar_url }}" alt="{{ member.display_name }}" />
+                    {% else %}
+                      <div class="member-card__avatar member-card__avatar--fallback">{{ member.avatar_label }}</div>
+                    {% endif %}
+                    <div class="member-card__identity">
+                      <strong>{{ member.display_name }}</strong>
+                      <span>{% firstof member.user.username member.status_label %}</span>
+                    </div>
+                  </div>
+
+                  <div class="member-card__badges">
+                    <span class="member-badge member-badge--role">{{ member.role_label }}</span>
+                    <span class="member-badge">{{ member.status_label }}</span>
+                  </div>
+
+                  {% if group.current_user_is_owner or group.current_user_can_manage %}
+                    <div class="member-card__actions">
+                      {% if member.can_promote %}
+                        <form method="post">
+                          {% csrf_token %}
+                          <input type="hidden" name="action" value="promote_admin" />
+                          <input type="hidden" name="group_id" value="{{ group.id }}" />
+                          <input type="hidden" name="member_id" value="{{ member.id }}" />
+                          <button class="member-action member-action--primary" type="submit">Make admin</button>
+                        </form>
+                      {% endif %}
+                      {% if member.can_demote %}
+                        <form method="post">
+                          {% csrf_token %}
+                          <input type="hidden" name="action" value="demote_admin" />
+                          <input type="hidden" name="group_id" value="{{ group.id }}" />
+                          <input type="hidden" name="member_id" value="{{ member.id }}" />
+                          <button class="member-action" type="submit">Remove admin</button>
+                        </form>
+                      {% endif %}
+                      {% if member.can_remove %}
+                        <form method="post" data-confirm-form data-confirm-title="Remove member?" data-confirm-message="This will remove {{ member.display_name }} from {{ group.name }}.">
+                          {% csrf_token %}
+                          <input type="hidden" name="action" value="remove_member" />
+                          <input type="hidden" name="group_id" value="{{ group.id }}" />
+                          <input type="hidden" name="member_id" value="{{ member.id }}" />
+                          <button class="member-action member-action--danger" type="submit">Remove</button>
+                        </form>
+                      {% endif %}
+                    </div>
+                  {% endif %}
+                </article>
+              {% endfor %}
+            </div>
           </div>
         </article>
       {% empty %}
@@ -159,13 +237,39 @@
       </div>
     </div>
 
+    <div class="groups-modal" id="confirm-group-action-modal" aria-hidden="true">
+      <div class="groups-modal__backdrop" data-close-confirm-group-action></div>
+      <div class="groups-modal__dialog groups-modal__dialog--compact" role="dialog" aria-modal="true" aria-labelledby="confirm-group-action-title">
+        <button class="groups-modal__close" type="button" data-close-confirm-group-action>
+          <span class="material-symbols-outlined">close</span>
+        </button>
+
+        <div class="groups-modal__hero groups-modal__hero--compact">
+          <p class="page-kicker">Confirm action</p>
+          <h2 id="confirm-group-action-title">Are you sure?</h2>
+          <p id="confirm-group-action-message">This action will update the group membership.</p>
+        </div>
+
+        <div class="groups-modal__actions">
+          <button class="group-row__link group-row__link--ghost" type="button" data-close-confirm-group-action>Cancel</button>
+          <button class="group-row__link group-row__link--primary" type="button" id="confirm-group-action-submit">Confirm</button>
+        </div>
+      </div>
+    </div>
+
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const modal = document.getElementById("create-group-modal");
-        if (!modal) return;
+        const confirmModal = document.getElementById("confirm-group-action-modal");
+        if (!modal || !confirmModal) return;
 
         const openButtons = document.querySelectorAll("[data-open-create-group]");
         const closeButtons = document.querySelectorAll("[data-close-create-group]");
+        const closeConfirmButtons = document.querySelectorAll("[data-close-confirm-group-action]");
+        const confirmTitle = document.getElementById("confirm-group-action-title");
+        const confirmMessage = document.getElementById("confirm-group-action-message");
+        const confirmSubmit = document.getElementById("confirm-group-action-submit");
+        let pendingConfirmForm = null;
 
         const openModal = () => {
           modal.classList.add("is-open");
@@ -179,8 +283,33 @@
           document.body.classList.remove("groups-modal-open");
         };
 
+        const openConfirmModal = (form) => {
+          pendingConfirmForm = form;
+          confirmTitle.textContent = form.dataset.confirmTitle || "Are you sure?";
+          confirmMessage.textContent = form.dataset.confirmMessage || "This action will update the group membership.";
+          confirmModal.classList.add("is-open");
+          confirmModal.setAttribute("aria-hidden", "false");
+          document.body.classList.add("groups-modal-open");
+        };
+
+        const closeConfirmModal = () => {
+          pendingConfirmForm = null;
+          confirmModal.classList.remove("is-open");
+          confirmModal.setAttribute("aria-hidden", "true");
+          if (!modal.classList.contains("is-open")) {
+            document.body.classList.remove("groups-modal-open");
+          }
+        };
+
         openButtons.forEach((button) => button.addEventListener("click", openModal));
         closeButtons.forEach((button) => button.addEventListener("click", closeModal));
+        closeConfirmButtons.forEach((button) => button.addEventListener("click", closeConfirmModal));
+
+        confirmSubmit.addEventListener("click", () => {
+          if (pendingConfirmForm) {
+            pendingConfirmForm.submit();
+          }
+        });
 
         if (modal.classList.contains("is-open")) {
           document.body.classList.add("groups-modal-open");
@@ -190,6 +319,48 @@
           if (event.key === "Escape" && modal.classList.contains("is-open")) {
             closeModal();
           }
+          if (event.key === "Escape" && confirmModal.classList.contains("is-open")) {
+            closeConfirmModal();
+          }
+        });
+
+        document.querySelectorAll("[data-confirm-form]").forEach((form) => {
+          form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            openConfirmModal(form);
+          });
+        });
+
+        document.querySelectorAll("[data-group-card]").forEach((card) => {
+          const panel = card.querySelector(".group-members-panel");
+          const toggle = card.querySelector("[data-toggle-members]");
+
+          if (!panel || !toggle) return;
+
+          const setOpen = (open) => {
+            if (open) {
+              document.querySelectorAll("[data-group-card].is-expanded").forEach((otherCard) => {
+                if (otherCard !== card) {
+                  otherCard.classList.remove("is-expanded");
+                  const otherPanel = otherCard.querySelector(".group-members-panel");
+                  const otherToggle = otherCard.querySelector("[data-toggle-members]");
+                  if (otherPanel) otherPanel.hidden = true;
+                  if (otherToggle) otherToggle.textContent = "Members";
+                }
+              });
+            }
+
+            panel.hidden = !open;
+            card.classList.toggle("is-expanded", open);
+            toggle.textContent = open ? "Hide members" : "Members";
+          };
+
+          setOpen(false);
+
+          toggle.addEventListener("click", (event) => {
+            event.stopPropagation();
+            setOpen(panel.hidden);
+          });
         });
       });
     </script>
