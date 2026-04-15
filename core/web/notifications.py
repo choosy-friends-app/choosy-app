@@ -50,12 +50,28 @@ def invitation_detail(request, group_id):
         return redirect("login")
 
     group = get_object_or_404(Group, id=group_id)
-    member = get_object_or_404(
-        GroupMember,
+    
+    # Check if for some reason the user is already an active member
+    existing_member = GroupMember.objects.filter(group=group, user=request.user).first()
+    
+    if existing_member and existing_member.status == GroupMember.Status.ACTIVE:
+        # Already in, no need to invite
+        return redirect("dashboard") # Or to a specific group page if it exists
+    
+    # If they are invited, get that record
+    member = GroupMember.objects.filter(
         group=group,
         user=request.user,
         status=GroupMember.Status.INVITED,
-    )
+    ).first()
+
+    # Fallback for God-Mode preview or if they just stumbled upon the link
+    if not member:
+        # If no invite exists, we might want to allow them to "Request to join" 
+        # but for now, let's just make it not 404 if group exists.
+        # We can pass a 'mock' member for preview if needed, or a 'guest' state.
+        pass
+
     active_plan = _active_group_proposal(group)
     active_members = list(group.members.filter(status=GroupMember.Status.ACTIVE).select_related("user")[:4])
     active_member_count = group.members.filter(status=GroupMember.Status.ACTIVE).count()
