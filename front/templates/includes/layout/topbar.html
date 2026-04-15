@@ -5,10 +5,10 @@
   </div>
 
   <div class="topbar-side">
-    <span class="topbar-bell">
+    <a class="topbar-bell" href="{% url 'notifications' %}" aria-label="Open notifications" data-notification-bell>
       <span class="material-symbols-outlined">notifications</span>
-      <span class="topbar-bell__dot"></span>
-    </span>
+      <span class="topbar-bell__badge {% if not topbar_unread_count %}is-empty{% endif %}" data-notification-count>{% if topbar_unread_count > 99 %}99+{% else %}{{ topbar_unread_count }}{% endif %}</span>
+    </a>
 
     <div class="session-chip">
       <div>

@@ -22,4 +22,5 @@ urlpatterns = [
     path("api/groups/<int:group_id>/invite/", views.api_invite_user, name="api_invite_user"),
     path("api/groups/<int:group_id>/invitation/<str:action>/", views.api_respond_invitation, name="api_respond_invitation"),
     path("api/notifications/read-all/", views.api_mark_notifications_read, name="api_mark_notifications_read"),
+    path("api/notifications/status/", views.api_notification_status, name="api_notification_status"),
 ]

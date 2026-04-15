@@ -78,6 +78,17 @@ def invitation_detail(request, group_id):
     active_member_count = group.members.filter(status=GroupMember.Status.ACTIVE).count()
     pending_invites_count = group.members.filter(status=GroupMember.Status.INVITED).count()
     invitation_interests = _decorate_group_interests(group.interests, include_defaults=True)
+    invitation_description = (
+        group.mission_statement
+        or group.description
+        or "A collective of friends ready to choose the next plan together."
+    )
+    active_plan_description = ""
+    if active_plan is not None:
+        active_plan_description = (
+            active_plan.description
+            or "There is already a live group vote waiting for your answer once you join."
+        )
 
     return render(
         request,
@@ -92,6 +103,8 @@ def invitation_detail(request, group_id):
             "extra_member_count": max(active_member_count - len(active_members), 0),
             "pending_invites_count": pending_invites_count,
             "invitation_interests": invitation_interests,
+            "invitation_description": invitation_description,
+            "active_plan_description": active_plan_description,
         },
     )
 
@@ -208,3 +221,32 @@ def api_mark_notifications_read(request):
 
     updated_count = Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
     return JsonResponse({"status": "ok", "updated_count": updated_count})
+
+
+def api_notification_status(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"status": "ok", "unread_count": 0, "latest": None})
+
+    latest_notification = (
+        Notification.objects.filter(recipient=request.user, is_read=False)
+        .select_related("group")
+        .order_by("-created_at")
+        .first()
+    )
+
+    latest_payload = None
+    if latest_notification is not None:
+        latest_payload = {
+            "id": latest_notification.id,
+            "title": latest_notification.title,
+            "message": latest_notification.message,
+            "group_name": latest_notification.group.name if latest_notification.group else "",
+        }
+
+    return JsonResponse(
+        {
+            "status": "ok",
+            "unread_count": Notification.objects.filter(recipient=request.user, is_read=False).count(),
+            "latest": latest_payload,
+        }
+    )

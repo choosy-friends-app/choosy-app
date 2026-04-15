@@ -4,6 +4,7 @@ from core.web.groups import api_add_group_member, api_create_group, groups
 from core.web.notifications import (
     api_invite_user,
     api_mark_notifications_read,
+    api_notification_status,
     api_respond_invitation,
     invitation_detail,
     notification_center,
@@ -16,6 +17,7 @@ __all__ = [
     "api_create_group",
     "api_invite_user",
     "api_mark_notifications_read",
+    "api_notification_status",
     "api_respond_invitation",
     "api_submit_vote",
     "archive",
