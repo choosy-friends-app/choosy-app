@@ -42,6 +42,8 @@ def groups(request):
                     description = (request.POST.get("description") or "").strip()
                     mission_statement = (request.POST.get("mission_statement") or "").strip()
                     hero_image_url = (request.POST.get("hero_image_url") or "").strip()
+                    interests_raw = (request.POST.get("interests") or "").strip()
+                    interests = [i.strip() for i in interests_raw.split(",") if i.strip()]
                     
                     if not name:
                         raise ValueError("El nombre del grupo es obligatorio.")
@@ -50,6 +52,7 @@ def groups(request):
                         description=description,
                         mission_statement=mission_statement,
                         hero_image_url=hero_image_url,
+                        interests=interests,
                         owner=request.user,
                     )
                     group.add_member(user=request.user, role=GroupMember.Role.OWNER)
@@ -172,6 +175,7 @@ def api_create_group(request):
         description = (data.get("description") or "").strip()
         mission_statement = (data.get("mission_statement") or "").strip()
         hero_image_url = (data.get("hero_image_url") or "").strip()
+        interests = data.get("interests") or []
         
         if not name:
             return JsonResponse({"status": "error", "message": "Group name is required."}, status=400)
@@ -181,6 +185,7 @@ def api_create_group(request):
             description=description,
             mission_statement=mission_statement,
             hero_image_url=hero_image_url,
+            interests=interests,
             owner=request.user,
         )
         owner_member = group.add_member(user=request.user, role=GroupMember.Role.OWNER)

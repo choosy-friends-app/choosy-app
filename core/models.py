@@ -24,6 +24,7 @@ class Group(TimestampedModel):
     description = models.TextField(blank=True)
     mission_statement = models.TextField(blank=True, help_text="Cinematic mission or slogan for invitations")
     hero_image_url = models.URLField(blank=True, help_text="Background image for the cinematic invitation page")
+    interests = models.JSONField(default=list, blank=True, help_text="List of group interests/activities")
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PLANNING)
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,

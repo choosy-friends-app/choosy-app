@@ -186,16 +186,35 @@
                     </p>
 
                     <ul class="inv-feature-list">
+                        {% for interest in group.interests %}
                         <li>
-                            <div class="f-icon"><span class="material-symbols-outlined">restaurant</span></div>
-                            <span class="f-text">Culinary Adventures</span>
+                            <div class="f-icon">
+                                <span class="material-symbols-outlined">
+                                    {% if "Food" in interest or "Culinary" in interest or "Taste" in interest
+                                    %}restaurant
+                                    {% elif "Night" in interest or "Club" in interest or "Party" in interest %}nightlife
+                                    {% elif "Adventure" in interest or "Explorer" in interest or "Nature" in interest
+                                    %}explore
+                                    {% elif "Sport" in interest or "Active" in interest %}sports_soccer
+                                    {% elif "Art" in interest or "Culture" in interest %}palette
+                                    {% else %}star{% endif %}
+                                </span>
+                            </div>
+                            <span class="f-text">{{ interest }}</span>
+                            <span class="material-symbols-outlined check">check_circle</span>
+                        </li>
+                        {% empty %}
+                        <li>
+                            <div class="f-icon"><span class="material-symbols-outlined">auto_awesome</span></div>
+                            <span class="f-text">Bespoke Squad Experiences</span>
                             <span class="material-symbols-outlined check">check_circle</span>
                         </li>
                         <li>
-                            <div class="f-icon"><span class="material-symbols-outlined">explore</span></div>
-                            <span class="f-text">Hidden Food Gems</span>
+                            <div class="f-icon"><span class="material-symbols-outlined">verified</span></div>
+                            <span class="f-text">Curated Community Map</span>
                             <span class="material-symbols-outlined check">check_circle</span>
                         </li>
+                        {% endfor %}
                     </ul>
 
                     <div class="inv-buttons">

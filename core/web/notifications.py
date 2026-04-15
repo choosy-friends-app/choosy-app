@@ -159,7 +159,11 @@ def api_respond_invitation(request, group_id, action):
             recipient=request.user,
             group=group,
             type=Notification.Type.INVITATION,
-        ).update(is_read=True)
+        ).update(
+            is_read=True, 
+            title=f"Joined {group.name}", 
+            message=f"You are now a member of '{group.name}'"
+        )
 
         active_proposal = _active_group_proposal(group)
         if active_proposal is not None:
