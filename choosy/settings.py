@@ -47,12 +47,25 @@ TEMPLATES = [
 WSGI_APPLICATION = "choosy.wsgi.application"
 ASGI_APPLICATION = "choosy.asgi.application"
 
+import os
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+# If DB_NAME is set, use PostgreSQL (Docker environment)
+if os.environ.get("DB_NAME"):
+    DATABASES["default"] = {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("DB_NAME"),
+        "USER": os.environ.get("DB_USER"),
+        "PASSWORD": os.environ.get("DB_PASSWORD"),
+        "HOST": os.environ.get("DB_HOST", "db"),
+        "PORT": os.environ.get("DB_PORT", "5432"),
+    }
 
 AUTH_PASSWORD_VALIDATORS = []
 
@@ -68,5 +81,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Auth settings
 LOGIN_URL = "login"
-LOGIN_REDIRECT_URL = "home"
-LOGOUT_REDIRECT_URL = "home"
+LOGIN_REDIRECT_URL = "dashboard"
+LOGOUT_REDIRECT_URL = "login"

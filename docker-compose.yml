@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/:z
+    environment:
+      - POSTGRES_DB=choosy
+      - POSTGRES_USER=choosy_user
+      - POSTGRES_PASSWORD=choosy_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U choosy_user -d choosy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    command: >
+      sh -c "uv run python manage.py migrate &&
+             uv run python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app:z
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=1
+      - DB_NAME=choosy
+      - DB_USER=choosy_user
+      - DB_PASSWORD=choosy_password
+      - DB_HOST=db
+      - DB_PORT=5432
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
