@@ -1,10 +1,22 @@
+import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "django-insecure-change-me"
-DEBUG = True
-ALLOWED_HOSTS: list[str] = ["*"] if DEBUG else []
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-fallback-key")
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = os.getenv("DEBUG", "True").lower() == "true"
+
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -54,6 +66,17 @@ DATABASES = {
     }
 }
 
+# If DB_NAME is set, use PostgreSQL (Docker environment)
+if os.environ.get("DB_NAME"):
+    DATABASES["default"] = {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("DB_NAME"),
+        "USER": os.environ.get("DB_USER"),
+        "PASSWORD": os.environ.get("DB_PASSWORD"),
+        "HOST": os.environ.get("DB_HOST", "db"),
+        "PORT": os.environ.get("DB_PORT", "5432"),
+    }
+
 AUTH_PASSWORD_VALIDATORS = []
 
 LANGUAGE_CODE = "es-es"
@@ -65,3 +88,8 @@ STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "front" / "static"]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Auth settings
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "dashboard"
+LOGOUT_REDIRECT_URL = "login"
