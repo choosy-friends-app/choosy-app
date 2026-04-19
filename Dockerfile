@@ -24,5 +24,4 @@ COPY . .
 # Expose port
 EXPOSE 8000
 
-# Run migrations and start server using uv
-CMD ["uv", "run", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["uv", "run", "gunicorn", "choosy.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2"]
