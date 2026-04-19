@@ -3,10 +3,11 @@ services:
     image: postgres:16-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/:z
+    env_file: .env
     environment:
-      - POSTGRES_DB=choosy
-      - POSTGRES_USER=choosy_user
-      - POSTGRES_PASSWORD=choosy_password
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U choosy_user -d choosy"]
       interval: 10s
@@ -22,13 +23,7 @@ services:
       - .:/app:z
     ports:
       - "8000:8000"
-    environment:
-      - DEBUG=1
-      - DB_NAME=choosy
-      - DB_USER=choosy_user
-      - DB_PASSWORD=choosy_password
-      - DB_HOST=db
-      - DB_PORT=5432
+    env_file: .env
     depends_on:
       db:
         condition: service_healthy
