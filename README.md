@@ -1,72 +1,72 @@
 # Choosy App
 
-Aplicación web colaborativa para tomar decisiones en grupo. Permite a grupos de usuarios proponer planes, votar entre opciones y recibir notificaciones en tiempo real. Desarrollada con Django como proyecto de la asignatura **Projecte Web** (Grau en Enginyeria Informàtica, UdL 2025/26).
+A collaborative web application for group decision-making. It allows groups of users to propose plans, vote on options, and receive real-time notifications. Developed with Django as a project for the **Web Project** course (Bachelor's Degree in Computer Engineering, UdL 2025/26).
 
-## Funcionalidades
+## Features
 
-- Autenticación y registro de usuarios
-- Gestión de grupos con roles (Owner, Admin, Member)
-- Sistema de invitaciones con aceptación/rechazo
-- Propuestas de planes con votación por opción (upvote/downvote)
-- Centro de notificaciones con contador en tiempo real
-- Historial y archivo de planes anteriores
-- Panel de administración Django
+- User authentication and registration
+- Group management with roles (Owner, Admin, Member)
+- Invitation system with accept/reject functionality
+- Plan proposals with option-based voting (upvote/downvote)
+- Notification center with real-time counter
+- History and archive of past plans
+- Django admin panel
 
-## Stack tecnológico
+## Tech Stack
 
 - **Backend**: Django 5.1+ (Python 3.12)
-- **Base de datos**: PostgreSQL 16 (Docker) / SQLite3 (desarrollo local)
-- **Servidor**: Gunicorn (producción)
-- **Gestor de dependencias**: uv
-- **Contenedores**: Docker + docker-compose
+- **Database**: PostgreSQL 16 (Docker) / SQLite3 (local development)
+- **Server**: Gunicorn (production)
+- **Dependency Manager**: uv
+- **Containers**: Docker + docker-compose
 
-## Modelo de datos
+## Data Model
 
-El modelo incluye 6 entidades con relaciones complejas:
+The model includes 6 entities with complex relationships:
 
-- `Group` — Grupo de usuarios con estado y metadatos
-- `GroupMember` — Relación usuario-grupo con rol y estado de invitación
-- `PlanProposal` — Ronda de votación con ventana temporal
-- `Plan` — Opción individual dentro de una propuesta
-- `Vote` — Voto de un miembro a un plan
-- `Notification` — Notificaciones de invitaciones, nuevos planes y decisiones
+- `Group` — User group with state and metadata
+- `GroupMember` — User-group relationship with role and invitation status
+- `PlanProposal` — Voting round with a timeframe
+- `Plan` — Individual option within a proposal
+- `Vote` — A member's vote for a plan
+- `Notification` — Notifications for invitations, new plans, and decisions
 
-## Ejecutar con Docker (Recomendado)
+## Run with Docker (Recommended)
 
-### 1. Clonar el repositorio
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/choosy-friends-app/choosy-app.git
 cd choosy-app
 ```
 
-### 2. Configurar variables de entorno
+### 2. Configure environment variables
 
 ```bash
 cp .env.example .env
 ```
 
-Edita `.env` y establece un `SECRET_KEY` seguro para producción. Para desarrollo local puedes usar los valores por defecto.
+Edit `.env` and set a secure `SECRET_KEY` for production. For local development, you can use the default values.
 
-### 3. Levantar la aplicación
+### 3. Start the application
 
 ```bash
 docker-compose up --build
 ```
 
-La aplicación estará disponible en `http://localhost:8000`.
+The application will be available at `http://localhost:8000`.
 
-El comando ejecuta automáticamente las migraciones al arrancar.
+The command automatically runs migrations on startup.
 
-### 4. (Opcional) Crear datos de demo
+### 4. (Optional) Create demo data
 
 ```bash
 docker-compose exec web uv run python manage.py seed_demo_users
 ```
 
-Crea los usuarios: `aleix`, `bru`, `eldejuneda`, `chileno` (contraseña: `demo1234` para todos).
+Creates users: `aleix`, `bru`, `eldejuneda`, `chileno` (password: `demo1234` for everyone).
 
-## Ejecutar localmente con uv
+## Run locally with uv
 
 ```bash
 uv sync
@@ -74,24 +74,24 @@ uv run python manage.py migrate
 uv run python manage.py runserver
 ```
 
-Abre `http://127.0.0.1:8000/`. En local usa SQLite, no requiere PostgreSQL.
+Open `http://127.0.0.1:8000/`. Local setup uses SQLite and does not require PostgreSQL.
 
-## Variables de entorno
+## Environment Variables
 
-| Variable | Descripción | Valor por defecto |
-|----------|-------------|-------------------|
-| `SECRET_KEY` | Clave secreta de Django | — (obligatorio en producción) |
-| `DEBUG` | Modo debug | `False` |
-| `ALLOWED_HOSTS` | Hosts permitidos (separados por coma) | `localhost,127.0.0.1` |
-| `DB_NAME` | Nombre de la base de datos PostgreSQL | — (sin esto usa SQLite) |
-| `DB_USER` | Usuario de PostgreSQL | — |
-| `DB_PASSWORD` | Contraseña de PostgreSQL | — |
-| `DB_HOST` | Host de PostgreSQL | `db` |
-| `DB_PORT` | Puerto de PostgreSQL | `5432` |
+| Variable | Description | Default Value |
+|----------|-------------|---------------|
+| `SECRET_KEY` | Django secret key | — (required in production) |
+| `DEBUG` | Debug mode | `False` |
+| `ALLOWED_HOSTS` | Allowed hosts (comma-separated) | `localhost,127.0.0.1` |
+| `DB_NAME` | PostgreSQL database name | — (uses SQLite if empty) |
+| `DB_USER` | PostgreSQL user | — |
+| `DB_PASSWORD` | PostgreSQL password | — |
+| `DB_HOST` | PostgreSQL host | `db` |
+| `DB_PORT` | PostgreSQL port | `5432` |
 
-## Panel de administración
+## Administration Panel
 
-Disponible en `/admin/`. Para crear un superusuario:
+Available at `/admin/`. To create a superuser:
 
 ```bash
 docker-compose exec web uv run python manage.py createsuperuser
@@ -99,19 +99,19 @@ docker-compose exec web uv run python manage.py createsuperuser
 
 ## 12-Factor App
 
-El proyecto sigue las [12-factor guidelines](https://12factor.net/):
+The project follows the [12-factor guidelines](https://12factor.net/):
 
-| Factor | Implementación |
+| Factor | Implementation |
 |--------|---------------|
-| I. Codebase | Repositorio Git único en GitHub |
-| II. Dependencies | Declaradas en `pyproject.toml` + `uv.lock` |
-| III. Config | Variables de entorno via `.env` (nunca en código) |
-| IV. Backing services | PostgreSQL como servicio adjunto configurable |
-| V. Build/release/run | Docker separa build y runtime |
-| VI. Processes | Gunicorn sin estado, sesiones en base de datos |
-| VII. Port binding | Puerto 8000 configurable vía docker-compose |
-| VIII. Concurrency | Escalable vía workers de Gunicorn |
-| IX. Disposability | Arranque rápido, migraciones al inicio |
-| X. Dev/prod parity | Docker garantiza paridad de entornos |
-| XI. Logs | Django escribe logs a stdout/stderr |
-| XII. Admin processes | `manage.py` para migraciones y comandos de gestión |
+| I. Codebase | Single Git repository on GitHub |
+| II. Dependencies | Declared in `pyproject.toml` + `uv.lock` |
+| III. Config | Environment variables via `.env` (never in code) |
+| IV. Backing services | Configurable attachable PostgreSQL service |
+| V. Build/release/run | Docker separates build and runtime |
+| VI. Processes | Stateless Gunicorn, sessions in database |
+| VII. Port binding | Port 8000 configurable via docker-compose |
+| VIII. Concurrency | Scalable via Gunicorn workers |
+| IX. Disposability | Fast startup, migrations at beginning |
+| X. Dev/prod parity | Docker ensures environment parity |
+| XI. Logs | Django writes logs to stdout/stderr |
+| XII. Admin processes | `manage.py` for migrations and management commands |

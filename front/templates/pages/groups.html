@@ -6,7 +6,8 @@
     <div class="groups-hero__copy">
       <p class="page-kicker">Your Real Groups</p>
       <h1>Groups</h1>
-      <p>Manage the squads you actually belong to, with their members, live votes, and the activities that define each group.</p>
+      <p>Manage the squads you actually belong to, with their members, live votes, and the activities that define each
+        group.</p>
     </div>
 
     {% if request.user.is_authenticated %}
@@ -17,7 +18,7 @@
     {% else %}
     <div class="groups-auth-note">
       <span class="material-symbols-outlined">lock</span>
-      <span>Inicia sesion para crear grupos y ver solo tus squads reales.</span>
+      <span>Log in to create groups and see only your real squads.</span>
     </div>
     {% endif %}
   </header>
@@ -32,7 +33,8 @@
   <article class="groups-overview">
     <div class="groups-overview__copy">
       <h2>Vista de pertenencia</h2>
-      <p>Every card is tied to membership, pending invitations, current votes, and the activities used on invitation pages.</p>
+      <p>Every card is tied to membership, pending invitations, current votes, and the activities used on invitation
+        pages.</p>
     </div>
     <div class="groups-overview__stats">
       <div class="groups-stat">
@@ -68,7 +70,7 @@
             <h3>{{ group.name }}</h3>
             <span class="group-row__status">{{ group.get_status_display }}</span>
           </div>
-          <p>{{ group.description|default:"Grupo listo para organizar el siguiente plan." }}</p>
+          <p>{{ group.description|default:"Group ready to organize the next plan." }}</p>
           <div class="group-activity-strip" aria-label="Group activities">
             {% for activity in group.activity_preview %}
             <span class="group-activity-chip">
@@ -90,10 +92,14 @@
             {% endif %}
           </div>
           <div class="group-row__meta">
-            <span><span class="material-symbols-outlined">group</span>{{ group.member_count }} member{{ group.member_count|pluralize }}</span>
-            <span><span class="material-symbols-outlined">how_to_vote</span>{{ group.voting_plans_count }} option{{ group.voting_plans_count|pluralize }} in voting</span>
-            <span><span class="material-symbols-outlined">mail</span>{{ group.pending_invites_count }} pending invite{{ group.pending_invites_count|pluralize }}</span>
-            <span><span class="material-symbols-outlined">history</span>Updated {{ group.updated_at|timesince }} ago</span>
+            <span><span class="material-symbols-outlined">group</span>{{ group.member_count }} member{{
+              group.member_count|pluralize }}</span>
+            <span><span class="material-symbols-outlined">how_to_vote</span>{{ group.voting_plans_count }} option{{
+              group.voting_plans_count|pluralize }} in voting</span>
+            <span><span class="material-symbols-outlined">mail</span>{{ group.pending_invites_count }} pending invite{{
+              group.pending_invites_count|pluralize }}</span>
+            <span><span class="material-symbols-outlined">history</span>Updated {{ group.updated_at|timesince }}
+              ago</span>
             {% if request.user.is_authenticated and group.owner_id == request.user.id %}
             <span><span class="material-symbols-outlined">workspace_premium</span>Owner</span>
             {% endif %}
@@ -137,9 +143,9 @@
           <input type="hidden" name="action" value="add_member" />
           <input type="hidden" name="group_id" value="{{ group.id }}" />
           <input class="groups-input groups-input--compact" type="text" name="username"
-            placeholder="username a invitar" />
+            placeholder="username to invite" />
           <input class="groups-input groups-input--compact" type="text" name="display_name"
-            placeholder="nombre visible opcional" />
+            placeholder="optional display name" />
           <button class="group-inline-form__button" type="submit">Add member</button>
         </form>
         {% endif %}
@@ -222,7 +228,7 @@
           <div class="group-row__title">
             <h3>No groups yet</h3>
           </div>
-          <p>Cuando crees tu primer grupo en localhost aparecerá aquí y podrás empezar a invitar usuarios.</p>
+          <p>When you create your first group on localhost it will appear here and you can start inviting users.</p>
         </div>
       </div>
     </article>
@@ -262,11 +268,13 @@
       </div>
       <fieldset class="groups-field groups-activity-picker">
         <legend>Activities</legend>
-        <small class="groups-field__hint">Pick the activities this squad will organize. The selected cards appear on the group and invitation screens.</small>
+        <small class="groups-field__hint">Pick the activities this squad will organize. The selected cards appear on the
+          group and invitation screens.</small>
         <div class="activity-option-grid">
           {% for option in activity_options %}
           <label class="activity-option-card">
-            <input type="checkbox" name="interests" value="{{ option.label }}" {% if option.selected %}checked{% endif %} />
+            <input type="checkbox" name="interests" value="{{ option.label }}" {% if option.selected %}checked{% endif
+              %} />
             <span class="activity-option-card__image" style="background-image: url('{{ option.image_url }}');"></span>
             <span class="activity-option-card__shade"></span>
             <span class="activity-option-card__check">
@@ -290,7 +298,8 @@
             <span class="activity-option-card__content">
               <span class="activity-option-card__icon choosy-activity-icon">C</span>
               <strong>Other</strong>
-              <input class="activity-option-card__input" type="text" name="custom_interest" placeholder="Type an activity" data-custom-activity-input />
+              <input class="activity-option-card__input" type="text" name="custom_interest"
+                placeholder="Type an activity" data-custom-activity-input />
             </span>
           </label>
         </div>

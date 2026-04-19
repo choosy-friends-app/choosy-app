@@ -42,7 +42,7 @@ def groups(request):
 
     if request.method == "POST":
         if not request.user.is_authenticated:
-            error_message = "Necesitas iniciar sesion para crear grupos o invitar miembros."
+            error_message = "You need to log in to create groups or invite members."
         else:
             action = request.POST.get("action")
             try:
@@ -55,7 +55,7 @@ def groups(request):
                     interests = _group_interests_from_post(request.POST)
                     
                     if not name:
-                        raise ValueError("El nombre del grupo es obligatorio.")
+                        raise ValueError("Group name is required.")
                     group = Group.objects.create(
                         name=name,
                         description=description,
@@ -65,14 +65,14 @@ def groups(request):
                         owner=request.user,
                     )
                     group.add_member(user=request.user, role=GroupMember.Role.OWNER)
-                    success_message = f"Grupo '{group.name}' creado correctamente."
+                    success_message = f"Group '{group.name}' created successfully."
                     open_create_modal = False
                 elif action == "add_member":
                     group = _resolve_group_for_request(request, request.POST.get("group_id"))
                     _require_group_admin(group, request.user)
                     username = (request.POST.get("username") or "").strip()
                     if not username:
-                        raise ValueError("Debes indicar un username para invitar.")
+                        raise ValueError("You must provide a username to invite.")
                     target_user = get_object_or_404(User, username=username)
 
                     member, created = GroupMember.objects.get_or_create(
@@ -102,7 +102,7 @@ def groups(request):
                             message=f"{request.user.username} invited you to '{group.name}'",
                             group=group,
                         )
-                        success_message = f"Invitación enviada a {member.display_name}."
+                        success_message = f"Invitation sent to {member.display_name}."
                 elif action == "leave_group":
                     group = _resolve_group_for_request(request, request.POST.get("group_id"))
                     previous_owner_id = group.owner_id
@@ -110,18 +110,18 @@ def groups(request):
                     if previous_owner_id == request.user.id and group.owner_id:
                         promoted_member = group.members.filter(user_id=group.owner_id).first()
                         promoted_name = promoted_member.display_name if promoted_member else "another member"
-                        success_message = f"Has salido de '{group.name}'. {promoted_name} ahora es el owner del grupo."
+                        success_message = f"You have left '{group.name}'. {promoted_name} is now the group owner."
                     elif previous_owner_id == request.user.id:
                         success_message = (
-                            f"Has salido de '{group.name}'. "
-                            "El grupo se ha quedado sin owner porque no quedaban miembros activos."
+                            f"You have left '{group.name}'. "
+                            "The group has been left without an owner because there were no active members remaining."
                         )
                     else:
-                        success_message = f"Has salido de '{group.name}'."
+                        success_message = f"You have left '{group.name}'."
                 elif action == "remove_member":
                     group = _resolve_group_for_request(request, request.POST.get("group_id"))
                     removed_member = _remove_group_member(group, request.user, request.POST.get("member_id"))
-                    success_message = f"{removed_member.display_name} ya no forma parte de '{group.name}'."
+                    success_message = f"{removed_member.display_name} is no longer part of '{group.name}'."
                 elif action == "promote_admin":
                     group = _resolve_group_for_request(request, request.POST.get("group_id"))
                     promoted_member = _set_group_member_role(
@@ -130,7 +130,7 @@ def groups(request):
                         request.POST.get("member_id"),
                         GroupMember.Role.ADMIN,
                     )
-                    success_message = f"{promoted_member.display_name} ahora es admin en '{group.name}'."
+                    success_message = f"{promoted_member.display_name} is now an admin in '{group.name}'."
                 elif action == "demote_admin":
                     group = _resolve_group_for_request(request, request.POST.get("group_id"))
                     demoted_member = _set_group_member_role(
@@ -139,9 +139,9 @@ def groups(request):
                         request.POST.get("member_id"),
                         GroupMember.Role.MEMBER,
                     )
-                    success_message = f"{demoted_member.display_name} vuelve a ser member en '{group.name}'."
+                    success_message = f"{demoted_member.display_name} is back to being a member in '{group.name}'."
                 else:
-                    error_message = "Accion no soportada."
+                    error_message = "Unsupported action."
             except PermissionDenied as exc:
                 error_message = str(exc)
             except ValueError as exc:

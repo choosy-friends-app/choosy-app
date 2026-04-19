@@ -14,7 +14,7 @@ def login_view(request):
         password = request.POST.get("password") or ""
         user = authenticate(request, username=username, password=password)
         if user is None:
-            error_message = "Usuario o password incorrectos."
+            error_message = "Invalid username or password."
         else:
             login(request, user)
             return redirect("dashboard")
@@ -42,13 +42,13 @@ def register_view(request):
         password_confirm = request.POST.get("password_confirm") or ""
 
         if not username:
-            error_message = "El username es obligatorio."
+            error_message = "Username is required."
         elif User.objects.filter(username=username).exists():
-            error_message = "Ese username ya existe."
+            error_message = "That username already exists."
         elif len(password) < 8:
-            error_message = "La password debe tener al menos 8 caracteres."
+            error_message = "The password must be at least 8 characters long."
         elif password != password_confirm:
-            error_message = "Las passwords no coinciden."
+            error_message = "Passwords do not match."
         else:
             user = User.objects.create_user(
                 username=username,

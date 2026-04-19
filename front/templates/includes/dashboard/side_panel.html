@@ -13,7 +13,7 @@
         <div class="vi-details">
           <strong>{{ group.name }}</strong>
           <span>
-            {{ group.active_proposal.title }} · {{ group.voting_plans_count }} opciones
+            {{ group.active_proposal.title }} · {{ group.voting_plans_count }} options
           </span>
         </div>
         <a href="{% url 'vote' group.id %}" class="vi-jump">
@@ -37,14 +37,14 @@
         </div>
         <div class="vi-details">
           <strong>{% firstof vote.member.display_name vote.user.username "Guest session" %}</strong>
-          <span>ha votado {{ vote.plan.title }} en {{ vote.plan.proposal.title }}</span>
+          <span>has voted for {{ vote.plan.title }} in {{ vote.plan.proposal.title }}</span>
         </div>
         <a href="{% url 'vote' vote.plan.group.id %}" class="vi-jump">
           <span class="material-symbols-outlined">chevron_right</span>
         </a>
       </div>
       {% empty %}
-      <p class="muted" style="font-size: 0.85rem; margin-top: 0.5rem; opacity: 0.5;">Aun no hay votos reales registrados.</p>
+      <p class="muted" style="font-size: 0.85rem; margin-top: 0.5rem; opacity: 0.5;">No real votes registered yet.</p>
       {% endfor %}
     </div>
   </section>
