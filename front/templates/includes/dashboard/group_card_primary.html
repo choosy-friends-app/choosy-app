@@ -1,0 +1,70 @@
+<article class="group-card-godmode">
+  <div class="gc-header">
+    <div class="gc-identity">
+      <div class="gc-icon-hex">
+        <span class="material-symbols-outlined">
+          {% if group.voting_plans_count > 0 %}bolt{% else %}groups{% endif %}
+        </span>
+      </div>
+      <div class="gc-title">
+        <h3>{{ group.name }}</h3>
+        <p>
+          {% if group.active_proposal %}
+          {{ group.active_proposal.title }} · cierra {{ group.active_proposal.voting_ends_at|date:"d/m H:i" }}
+          {% else %}
+          {{ group.description|default:"Coordinating the next big group decision together." }}
+          {% endif %}
+        </p>
+      </div>
+    </div>
+    <div class="gc-status">
+      {% if group.voting_plans_count > 0 %}
+      <div class="badge-pulse">
+        <span class="pulse-dot"></span>
+        {{ group.voting_plans_count }} PENDING
+      </div>
+      {% else %}
+      <span class="status-chip status-chip--muted">STABLE</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="gc-content">
+    <div class="gc-avatars">
+      {% for member in group.preview_members %}
+      <div class="avav avav--initial" title="{{ member.display_name }}">{{ member.display_name|slice:":1"|upper }}</div>
+      {% empty %}
+      <div class="avav avav--initial">?</div>
+      {% endfor %}
+      {% if group.extra_members_count > 0 %}
+      <div class="avav-more">+{{ group.extra_members_count }}</div>
+      {% endif %}
+    </div>
+    <div class="gc-meta">
+      <span class="material-symbols-outlined">history</span>
+      <span>
+        {% if group.active_proposal and group.active_proposal.leading_option %}
+        Lidera {{ group.active_proposal.leading_option.title }}
+        {% else %}
+        {{ group.updated_at|timesince }} ago
+        {% endif %}
+      </span>
+    </div>
+  </div>
+
+  <div class="gc-actions">
+    {% if group.voting_plans_count > 0 %}
+    <a href="{% url 'vote' group.id %}" class="btn-god-mode btn-god-mode--primary">
+      <span class="material-symbols-outlined">how_to_vote</span>
+      <span>Cast Your Vote</span>
+      <div class="btn-shine"></div>
+    </a>
+    {% else %}
+    <a href="{% url 'start_new_plan' %}?group_id={{ group.id }}" class="btn-god-mode">
+      <span class="material-symbols-outlined">add_circle</span>
+      <span>New Proposal</span>
+      <div class="btn-shine"></div>
+    </a>
+    {% endif %}
+  </div>
+</article>

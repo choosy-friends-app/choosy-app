@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="archive-page">
+    <header class="archive-hero">
+      <p class="page-kicker">Past Decisions</p>
+      <h1>Archive</h1>
+      <p>Recull dels plans que ja s han fet, amb les opcions guanyadores i els records mes destacats de cada grup.</p>
+    </header>
+
+    <section class="archive-grid">
+      <article class="archive-memory archive-memory--tall archive-memory--night">
+        <div class="archive-memory__glow"></div>
+        <div class="archive-memory__frame archive-memory__frame--cabin" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+
+        <div class="archive-memory__overlay">
+          <div>
+            <div class="archive-memory__tag">
+              <span class="material-symbols-outlined">stars</span>
+              <span>Guanyador • 72% consens</span>
+            </div>
+            <h2>Escapada a la Cerdanya</h2>
+            <p class="archive-memory__group">Amb el grup En panas</p>
+          </div>
+
+          <span class="archive-memory__date">Ago 2023</span>
+        </div>
+
+        <div class="archive-memory__foot">
+          <div class="archive-avatar-row" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span class="archive-avatar-row__extra">+6</span>
+          </div>
+
+          <div class="archive-memory__actions">
+            <span class="material-symbols-outlined">favorite</span>
+            <span class="material-symbols-outlined">share</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="archive-memory archive-memory--tall archive-memory--food">
+        <div class="archive-memory__badge">
+          <span class="material-symbols-outlined">emoji_events</span>
+        </div>
+
+        <div class="archive-memory__art archive-memory__art--taco" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+
+        <div class="archive-memory__copy">
+          <div class="archive-memory__tag archive-memory__tag--secondary">
+            <span class="material-symbols-outlined">restaurant</span>
+            <span>Tapes del born • 64% triat</span>
+          </div>
+          <h2>Sopar de divendres</h2>
+          <p class="archive-memory__group">Amb el grup Equipo LEC</p>
+        </div>
+
+        <div class="archive-memory__meta">
+          <div class="archive-voters">
+            <div class="archive-avatar-row archive-avatar-row--small" aria-hidden="true">
+              <span></span>
+              <span></span>
+            </div>
+            <span>5 del grup hi van votar</span>
+          </div>
+
+          <span class="archive-memory__stamp">JULIOL 22</span>
+        </div>
+      </article>
+
+      <article class="archive-memory archive-memory--wide archive-memory--neon">
+        <div class="archive-memory__art archive-memory__art--portrait" aria-hidden="true">
+          <span></span>
+        </div>
+
+        <div class="archive-memory__copy archive-memory__copy--bottom">
+          <h2>Nit tematica neon</h2>
+          <p>Opcio guanyadora</p>
+          <p class="archive-memory__group">Amb el grup En panas</p>
+        </div>
+
+        <div class="archive-memory__meta archive-memory__meta--soft">
+          <span>Proposat per Laia</span>
+          <span>JUNY 10</span>
+        </div>
+      </article>
+
+      <article class="archive-empty">
+        <div class="archive-empty__circle">
+          <span class="material-symbols-outlined">archive</span>
+        </div>
+        <div class="archive-empty__copy">
+          <h3>Els records es creen sols</h3>
+          <p>Cada plan acabat passa automaticament a l arxiu i despres es pot completar des del detall amb fotos i mes info.</p>
+        </div>
+      </article>
+    </section>
+
+    <section class="archive-stats">
+      <div class="archive-stat">
+        <strong>28</strong>
+        <span>PLANS GUARDATS</span>
+      </div>
+      <div class="archive-stat">
+        <strong>91%</strong>
+        <span>PARTICIPACIO MITJA</span>
+      </div>
+      <div class="archive-stat">
+        <strong>4.1h</strong>
+        <span>TEMPS MIG DE VOT</span>
+      </div>
+      <button class="archive-stats__button" type="button">Veure historial complet</button>
+    </section>
+  </section>
+{% endblock %}

@@ -1,0 +1,116 @@
+<div class="vote-immersive-universe" id="universe">
+    <div class="dynamic-ambient-bg" id="ambient-bg"></div>
+    <!-- Fullscreen tint layer -->
+    <div id="vote-tint"></div>
+
+    <div class="vote-app-adv" id="vote-app">
+
+        <!-- Branding Header -->
+        <div class="vote-brand-header">
+            <span class="brand-logo">CHOOSY.<span class="brand-accent">LY</span></span>
+            <div class="brand-actions">
+                <span class="material-symbols-outlined">group</span>
+                <span class="material-symbols-outlined">history</span>
+            </div>
+        </div>
+
+        <!-- Top Progress -->
+        <div class="vote-timeline">
+            <div class="tl-progress-bar">
+                <div class="tl-fill" id="master-progress"></div>
+            </div>
+            <div class="tl-label">
+                <span id="plan-counter">1</span> / {{ plan_total }}
+            </div>
+        </div>
+
+        <!-- Consolidated Meta Header -->
+        {% if proposal %}
+        <div class="vote-meta-bar">
+            <div class="vmb-left">
+                <strong>{{ proposal.title }}</strong>
+                <span id="vote-deadline-label"
+                    data-deadline="{% if proposal.voting_ends_at %}{{ proposal.voting_ends_at|date:'c' }}{% endif %}">
+                    Voting closes soon
+                </span>
+            </div>
+            <div class="vmb-right" title="Voting as {{ current_voter }}">
+                <div class="vmb-avatar">{{ current_voter|slice:":1"|upper }}</div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Empty State -->
+        <div class="vote-empty-state" id="empty-state" style="display: none;">
+            <div class="empty-icon">✨</div>
+            <h2>All set!</h2>
+            <p>Your choices are locked in. Let's see what the group picks!</p>
+            <a href="{% url 'dashboard' %}" class="btn-primary-adv" style="text-decoration:none;">Back to Home</a>
+        </div>
+
+        <!-- Cards Carrousel Container -->
+        <div class="vote-viewport" id="viewport">
+            <!-- Swipe Feedback - positioned over viewport -->
+            <div class="swipe-feedback swipe-like" id="fb-like">👍 LIKE</div>
+            <div class="swipe-feedback swipe-nope" id="fb-nope">👎 NOPE</div>
+
+            <div class="vote-deck-stack" id="deck">
+                <!-- Cards rendered via JS -->
+            </div>
+        </div>
+
+        <!-- Floating Actions -->
+        <div class="vote-float-actions" id="controls">
+            <button class="fa-btn fa-btn-skip" id="btn-skip">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            <button class="fa-btn fa-btn-star" id="btn-star">
+                <span class="material-symbols-outlined">star</span>
+            </button>
+            <button class="fa-btn fa-btn-vote" id="btn-love">
+                <span class="material-symbols-outlined">done_all</span>
+            </button>
+        </div>
+
+        <!-- Holographic Data Drawer -->
+        <div class="vote-drawer" id="data-drawer">
+            <button class="drawer-trigger" id="drawer-toggle">
+                <span class="material-symbols-outlined">analytics</span>
+                <span>Round Intel</span>
+            </button>
+            <div class="drawer-content">
+                {% if proposal and proposal.options %}
+                <div class="vote-live-board">
+                    <div class="vote-live-board__header">
+                        <strong>LIVE BOARD</strong>
+                        <span>{{ group.name }}</span>
+                    </div>
+                    <div class="vote-live-board__list">
+                        {% for option in proposal.options %}
+                        <div class="vote-live-item">
+                            <div class="vi-card-mini">
+                                <strong>{{ option.title }}</strong>
+                                <span>{% if option.recent_voters %}{{ option.recent_voters|join:", " }}{% else
+                                    %}Standing by{% endif %}</span>
+                            </div>
+                            <div class="vi-score">{{ option.upvote_count }}+</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if proposal %}
+                <div class="vote-my-state" id="vote-my-state">
+                    <div class="vote-my-state__header">
+                        <strong>YOUR VOTE STATE</strong>
+                        <span id="vote-state-counter">{{ proposal.current_user_voted_option_count }} / {{
+                            proposal.option_count }}</span>
+                    </div>
+                    <div class="vote-my-state__list" id="vote-state-list"></div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

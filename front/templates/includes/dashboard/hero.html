@@ -1,0 +1,26 @@
+<section class="hero">
+  <p class="page-kicker">GOD MODE > OVERVIEW</p>
+
+  <div class="hero-grid">
+    <div class="hero-copy">
+      <h1>The world is <span>yours to choose.</span></h1>
+      <p>You have <strong>{{ groups|length }} active groups</strong> coordinating decisions.
+        {% if recent_votes %}
+        Recent activity detected in <strong>{{ recent_votes.0.plan.group.name }}</strong>.
+        {% else %}
+        Initiate a new proposal to start the momentum.
+        {% endif %}
+      </p>
+    </div>
+
+    <article class="pulse-card">
+      <div class="pulse-icon">
+        <span class="material-symbols-outlined">bolt</span>
+      </div>
+      <div class="pulse-content">
+        <span>Active Momentum</span>
+        <strong>{% if groups %}{{ groups.0.name|truncatechars:18 }}{% else %}Standing By{% endif %}</strong>
+      </div>
+    </article>
+  </div>
+</section>

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% include "includes/dashboard/hero.html" %}
+
+<section class="dashboard-grid">
+  <div class="dashboard-main">
+    <div class="section-header">
+      <h2>My Groups</h2>
+      <span>View all groups</span>
+    </div>
+
+    {% for group in groups %}
+    {% include "includes/dashboard/group_card_primary.html" with group=group %}
+    {% empty %}
+    <p class="muted">No groups found. Create one to get started!</p>
+    {% endfor %}
+  </div>
+
+  {% include "includes/dashboard/side_panel.html" %}
+</section>
+{% endblock %}

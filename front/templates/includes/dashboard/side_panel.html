@@ -1,0 +1,91 @@
+<aside class="dashboard-side">
+  <section class="side-panel">
+    <div class="side-panel__header">
+      <h2>Pending Votes</h2>
+    </div>
+    <div class="vote-stack-preview">
+      {% for group in groups %}
+      {% if group.voting_plans_count > 0 %}
+      <div class="vote-item-godmode">
+        <div class="vi-icon">
+          <span class="material-symbols-outlined">how_to_vote</span>
+        </div>
+        <div class="vi-details">
+          <strong>{{ group.name }}</strong>
+          <span>
+            {{ group.active_proposal.title }} · {{ group.voting_plans_count }} opciones
+          </span>
+        </div>
+        <a href="{% url 'vote' group.id %}" class="vi-jump">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </a>
+      </div>
+      {% endif %}
+      {% empty %}
+      <p class="muted" style="font-size: 0.8rem; opacity: 0.6;">All caught up! No votes pending.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="side-panel">
+    <h2>Recent Activity</h2>
+    <div class="vote-stack-preview">
+      {% for vote in recent_votes %}
+      <div class="vote-item-godmode">
+        <div class="vi-icon">
+          <span class="material-symbols-outlined">how_to_vote</span>
+        </div>
+        <div class="vi-details">
+          <strong>{% firstof vote.member.display_name vote.user.username "Guest session" %}</strong>
+          <span>ha votado {{ vote.plan.title }} en {{ vote.plan.proposal.title }}</span>
+        </div>
+        <a href="{% url 'vote' vote.plan.group.id %}" class="vi-jump">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </a>
+      </div>
+      {% empty %}
+      <p class="muted" style="font-size: 0.85rem; margin-top: 0.5rem; opacity: 0.5;">Aun no hay votos reales registrados.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <article class="promo-card" onclick="showBetaNotice()">
+    <div class="promo-visual-god" aria-hidden="true">
+      <div class="globe-wireframe">
+        <div class="globe-node" style="top: 20%; left: 30%;"></div>
+        <div class="globe-node" style="top: 50%; left: 80%;"></div>
+        <div class="globe-node" style="top: 70%; left: 20%;"></div>
+        <div class="globe-node" style="top: 40%; left: 40%;"></div>
+        <div class="globe-ring"></div>
+      </div>
+    </div>
+    <div class="promo-content">
+      <span class="promo-tag">Unlock Premium</span>
+      <h3>Choosy Pro</h3>
+      <p>Unlimited groups, anonymous voting, and custom decision logic.</p>
+      <div class="promo-link">
+        <span>Learn More</span>
+        <span class="material-symbols-outlined">arrow_forward</span>
+      </div>
+    </div>
+  </article>
+
+  <script>
+    function showBetaNotice() {
+      const notice = document.createElement('div');
+      notice.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 10000; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="this.remove()">
+          <div style="background: #1a1a1e; border: 1px solid rgba(165,165,255,0.3); padding: 3rem; border-radius: 2rem; max-width: 400px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.5);">
+            <div style="width: 4rem; height: 4rem; background: rgba(165,165,255,0.1); border-radius: 1rem; color: var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+              <span class="material-symbols-outlined" style="font-size: 2rem;">verified</span>
+            </div>
+            <h2 style="font-family: Manrope, sans-serif; font-size: 1.8rem; margin-bottom: 0.8rem; color: #fff;">Coming Soon</h2>
+            <p style="color: #7f7b84; line-height: 1.6; margin-bottom: 2rem;">Choosy Pro features are currently in development. You are among the first to experience the beta dashboard!</p>
+            <div style="color: var(--primary); font-weight: 700;">PRO LEVEL ACCESS · BETA 1.0</div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(notice);
+    }
+  </script>
+</aside>

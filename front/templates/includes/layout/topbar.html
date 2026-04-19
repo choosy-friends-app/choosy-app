@@ -1,0 +1,27 @@
+<header class="topbar">
+  <div class="search-shell" aria-hidden="true">
+    <span class="material-symbols-outlined">search</span>
+    <span>Search groups or plans...</span>
+  </div>
+
+  <div class="topbar-side">
+    <a class="topbar-bell" href="{% url 'notifications' %}" aria-label="Open notifications" data-notification-bell>
+      <span class="material-symbols-outlined">notifications</span>
+      <span class="topbar-bell__badge {% if not topbar_unread_count %}is-empty{% endif %}" data-notification-count>{% if topbar_unread_count > 99 %}99+{% else %}{{ topbar_unread_count }}{% endif %}</span>
+    </a>
+
+    <div class="session-chip">
+      <div>
+        <span>{% if request.user.is_authenticated %}Active user{% else %}Session{% endif %}</span>
+        <strong>{{ topbar_context|default:"Dashboard" }}</strong>
+      </div>
+      <span class="session-avatar">
+        {% if request.user.is_authenticated %}
+          {{ request.user.username|slice:":1"|upper }}
+        {% else %}
+          G
+        {% endif %}
+      </span>
+    </div>
+  </div>
+</header>

@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="plans-page">
+    <header class="plans-hero">
+      <div class="plans-hero__copy">
+        <p class="page-kicker">Live Voting Rounds</p>
+        <h1>Active Plans</h1>
+        <p>Selecciona una votacion en progreso para ver solo su estado, su progreso y quien ya ha votado.</p>
+      </div>
+    </header>
+
+    <section class="plans-layout">
+      <div class="plans-main">
+        <article class="plans-card">
+          <div class="plans-card__head">
+            <span class="plans-card__icon">
+              <span class="material-symbols-outlined">tune</span>
+            </span>
+            <div>
+              <h2>Focus one voting round</h2>
+              <p>Selecciona una votacion activa y mira solo como va esa.</p>
+            </div>
+          </div>
+
+          <div class="plans-selector-list">
+            {% for proposal in proposals %}
+              <a
+                href="{% url 'active_plans' %}?proposal={{ proposal.id }}"
+                class="plans-selector-item {% if selected_proposal and selected_proposal.id == proposal.id %}is-active{% endif %}"
+              >
+                <div>
+                  <strong>{{ proposal.title }}</strong>
+                  <span>{{ proposal.group.name }} · {{ proposal.option_count }} opciones · cierra {{ proposal.voting_ends_at|date:"d/m H:i" }}</span>
+                </div>
+                <span class="material-symbols-outlined">chevron_right</span>
+              </a>
+            {% empty %}
+              <div class="plans-mini-item">
+                <strong>No active proposals</strong>
+                <span>Cuando exista una votacion activa podras enfocarla aqui.</span>
+              </div>
+            {% endfor %}
+          </div>
+        </article>
+
+        {% if selected_proposal %}
+          <article class="plans-card plans-card--focus">
+            <div class="plans-card__head plans-card__head--spread">
+              <div class="plans-card__title">
+                <span class="plans-card__icon plans-card__icon--secondary">
+                  <span class="material-symbols-outlined">center_focus_strong</span>
+                </span>
+                <div>
+                  <h2>{{ selected_proposal.title }}</h2>
+                  <p>{{ selected_proposal.group.name }} · {{ selected_proposal.total_votes }} votos emitidos · cierra {{ selected_proposal.voting_ends_at|date:"d/m H:i" }}</p>
+                </div>
+              </div>
+
+              <a href="{% url 'vote' selected_proposal.group.id %}" class="group-row__link group-row__link--primary">Open vote</a>
+            </div>
+
+            <div class="plans-deadline-note">
+              <span class="material-symbols-outlined">schedule</span>
+              <span>Puedes votar o cambiar tu voto hasta el cierre de esta ronda.</span>
+            </div>
+
+            <div class="plans-progress-list">
+              {% for option in selected_proposal.options %}
+                <div class="plans-progress-item">
+                  <div class="plans-progress-item__head">
+                    <strong>{{ option.title }}</strong>
+                    <span>{{ option.upvote_count }} votos</span>
+                  </div>
+                  <div class="plans-progress-bar">
+                    <div
+                      class="plans-progress-fill"
+                      style="width: {% if selected_proposal.total_votes %}{% widthratio option.upvote_count selected_proposal.total_votes 100 %}{% else %}0{% endif %}%;">
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+
+            <div class="plans-voters-card">
+              <div class="plans-voters-card__head">
+                <strong>Estado de votacion</strong>
+                <span>{{ selected_proposal.completed_voter_count }} de {{ selected_proposal.expected_voter_count }} han acabado</span>
+              </div>
+
+              <div class="plans-voters-card__section">
+                <p>Ya han votado</p>
+                <div class="plans-focus-voters__chips">
+                  {% for voter in selected_proposal.completed_voters %}
+                    <span class="plans-voter-chip plans-voter-chip--done">{{ voter }}</span>
+                  {% empty %}
+                    <span class="plans-voter-chip">Aun nadie</span>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <div class="plans-voters-card__section">
+                <p>Faltan por votar</p>
+                <div class="plans-focus-voters__chips">
+                  {% for voter in selected_proposal.pending_voters %}
+                    <span class="plans-voter-chip plans-voter-chip--pending">{{ voter }}</span>
+                  {% empty %}
+                    <span class="plans-voter-chip">No falta nadie</span>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </article>
+        {% elif proposals %}
+          <article class="plans-card plans-card--focus">
+            <div class="plans-card__head">
+              <span class="plans-card__icon plans-card__icon--secondary">
+                <span class="material-symbols-outlined">touch_app</span>
+              </span>
+              <div>
+                <h2>Select a voting round</h2>
+                <p>Escoge una de las votaciones activas para ver su progreso y el estado de participacion.</p>
+              </div>
+            </div>
+          </article>
+        {% endif %}
+
+        <div class="plans-grid">
+          <article class="plans-card">
+            <div class="plans-card__head">
+              <span class="plans-card__icon plans-card__icon--secondary">
+                <span class="material-symbols-outlined">groups</span>
+              </span>
+              <div>
+                <h2>Groups voting</h2>
+                <p>Grupos que ahora mismo tienen una ronda abierta</p>
+              </div>
+            </div>
+
+            <div class="plans-mini-list">
+              {% for proposal in proposals %}
+                <div class="plans-mini-item">
+                  <strong>{{ proposal.group.name }}</strong>
+                  <span>{{ proposal.option_count }} opciones · {{ proposal.total_votes }} votos</span>
+                </div>
+              {% empty %}
+                <div class="plans-mini-item">
+                  <strong>No active groups</strong>
+                  <span>No hay rondas de voto activas</span>
+                </div>
+              {% endfor %}
+            </div>
+          </article>
+
+          <article class="plans-card">
+            <div class="plans-card__head">
+              <span class="plans-card__icon plans-card__icon--tertiary">
+                <span class="material-symbols-outlined">local_activity</span>
+              </span>
+              <div>
+                <h2>Top proposals</h2>
+                <p>Opciones reales que lideran las rondas abiertas</p>
+              </div>
+            </div>
+
+            <div class="plans-mini-list">
+              {% for option in top_options %}
+                <div class="plans-mini-item">
+                  <strong>{{ option.title }}</strong>
+                  <span>{{ option.upvote_count }} positivos · {{ option.proposal.title }}</span>
+                </div>
+              {% empty %}
+                <div class="plans-mini-item">
+                  <strong>No ranking yet</strong>
+                  <span>Faltan votos reales para construir el ranking</span>
+                </div>
+              {% endfor %}
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <aside class="plans-side">
+        <article class="plans-card plans-card--side">
+          <div class="plans-card__head">
+            <span class="plans-card__icon plans-card__icon--tertiary">
+              <span class="material-symbols-outlined">emoji_events</span>
+            </span>
+            <div>
+              <h2>Winning now</h2>
+              <p>Opcion lider entre todas las rondas activas</p>
+            </div>
+          </div>
+
+          <div class="plans-winning">
+            <strong>{% if top_options %}{{ top_options.0.title }}{% else %}No leader yet{% endif %}</strong>
+            <span>{% if top_options %}{{ top_options.0.proposal.group.name }} · {{ top_options.0.proposal.title }}{% else %}Esperando actividad{% endif %}</span>
+            <div class="plans-winning__meter">
+              <div class="plans-winning__fill" style="width: {% if top_options and top_options.0.vote_count %}{% widthratio top_options.0.upvote_count top_options.0.vote_count 100 %}{% else %}12{% endif %}%;"></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="plans-card plans-card--side">
+          <div class="plans-card__head">
+            <span class="plans-card__icon">
+              <span class="material-symbols-outlined">notifications_active</span>
+            </span>
+            <div>
+              <h2>Recent activity</h2>
+              <p>Ultimos votos reales registrados</p>
+            </div>
+          </div>
+
+          <div class="plans-mini-list">
+            {% for vote in recent_votes %}
+              <div class="plans-mini-item">
+                <strong>{% firstof vote.member.display_name vote.user.username "Guest" %}</strong>
+                <span>ha votado {{ vote.plan.title }} en {{ vote.plan.proposal.title }}</span>
+              </div>
+            {% empty %}
+              <div class="plans-mini-item">
+                <strong>No recent activity</strong>
+                <span>Todavia no hay votos en rondas activas</span>
+              </div>
+            {% endfor %}
+          </div>
+        </article>
+      </aside>
+    </section>
+  </section>
+{% endblock %}

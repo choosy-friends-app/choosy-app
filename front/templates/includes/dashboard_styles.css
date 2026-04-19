@@ -1,0 +1,4 @@
+{% include "includes/dashboard_styles/base.css" %}
+{% include "includes/dashboard_styles/dashboard.css" %}
+{% include "includes/dashboard_styles/notifications.css" %}
+{% include "includes/dashboard_styles/invitation.css" %}

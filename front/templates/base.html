@@ -1,0 +1,123 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ meta_title|default:"Dashboard" }} · Choosy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@0..1&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      {% include "includes/dashboard_styles.css" %}
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      {% include "includes/layout/sidebar.html" %}
+
+      <div class="main-shell">
+        {% include "includes/layout/topbar.html" %}
+
+        <main class="page-shell">
+          {% block content %}{% endblock %}
+        </main>
+      </div>
+    </div>
+    <div class="notification-toast" data-notification-toast hidden>
+      <div class="notification-toast__icon">
+        <span class="material-symbols-outlined">notifications_active</span>
+      </div>
+      <div class="notification-toast__copy">
+        <span>New notification</span>
+        <strong data-notification-toast-title>
+          {% if topbar_latest_notification %}{{ topbar_latest_notification.title }}{% endif %}
+        </strong>
+        <p data-notification-toast-message>
+          {% if topbar_latest_notification %}{{ topbar_latest_notification.message }}{% endif %}
+        </p>
+      </div>
+    </div>
+    <script>
+      (() => {
+        const countEl = document.querySelector("[data-notification-count]");
+        const toast = document.querySelector("[data-notification-toast]");
+        const toastTitle = document.querySelector("[data-notification-toast-title]");
+        const toastMessage = document.querySelector("[data-notification-toast-message]");
+        const initialLatest = {% if topbar_latest_notification %}{
+          id: {{ topbar_latest_notification.id }},
+          title: "{{ topbar_latest_notification.title|escapejs }}",
+          message: "{{ topbar_latest_notification.message|escapejs }}"
+        }{% else %}null{% endif %};
+        let latestSeenId = Number(sessionStorage.getItem("choosy.latestNotificationId") || 0);
+        let toastTimer = null;
+
+        const setCount = (count) => {
+          if (!countEl) return;
+          const safeCount = Number(count || 0);
+          countEl.textContent = safeCount > 99 ? "99+" : String(safeCount);
+          countEl.classList.toggle("is-empty", safeCount <= 0);
+        };
+
+        const showToast = (notification) => {
+          if (!toast || !toastTitle || !toastMessage || !notification) return;
+          if (window.location.pathname.startsWith("/notifications/")) return;
+          toastTitle.textContent = notification.title || "New notification";
+          toastMessage.textContent = notification.message || "You have a new Choosy update.";
+          toast.hidden = false;
+          requestAnimationFrame(() => toast.classList.add("is-visible"));
+          window.clearTimeout(toastTimer);
+          toastTimer = window.setTimeout(() => {
+            toast.classList.remove("is-visible");
+            window.setTimeout(() => {
+              toast.hidden = true;
+            }, 260);
+          }, 3600);
+        };
+
+        const handleStatus = (payload, options) => {
+          if (!payload || payload.status !== "ok") return;
+          setCount(payload.unread_count);
+          if (!payload.latest) return;
+          const latestId = Number(payload.latest.id || 0);
+          if (options.allowToast && latestId && latestId !== latestSeenId) {
+            showToast(payload.latest);
+          }
+          if (latestId) {
+            latestSeenId = latestId;
+            sessionStorage.setItem("choosy.latestNotificationId", String(latestId));
+          }
+        };
+
+        if (initialLatest) {
+          handleStatus(
+            { status: "ok", unread_count: {{ topbar_unread_count|default:0 }}, latest: initialLatest },
+            { allowToast: true }
+          );
+        } else {
+          setCount({{ topbar_unread_count|default:0 }});
+        }
+
+        const refreshNotifications = () => {
+          fetch("{% url 'api_notification_status' %}", {
+            headers: { "Accept": "application/json" }
+          })
+            .then((response) => response.ok ? response.json() : null)
+            .then((payload) => handleStatus(payload, { allowToast: true }))
+            .catch(() => {});
+        };
+
+        if (countEl) {
+          window.setInterval(refreshNotifications, 12000);
+        }
+      })();
+    </script>
+  </body>
+</html>
