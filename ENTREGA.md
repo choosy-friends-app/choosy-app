@@ -1,8 +1,8 @@
 # Deliverable 1 — Choosy App
 
-**Curs:** 2025/26  
-**Assignatura:** Projecte Web  
-**Grup:** choosy-friends-app
+**Course:** 2025/26  
+**Subject:** Web Project  
+**Group:** choosy-friends-app
 
 ---
 
@@ -10,66 +10,75 @@
 
 **https://github.com/choosy-friends-app/choosy-app**
 
-El repositori és públic i accessible sense autenticació.
+The code is available in this GitHub repository created specifically for this purpose. The repository is publicly accessible without any authentication. Each participant member of the team has contributed using a different GitHub username, as requested.
 
 ---
 
 ## 2. Design decisions
 
-### Escenari proposat
-L'aplicació Choosy resol el problema de presa de decisions col·lectives en grups (plans d'oci, restaurants, activitats). El model reflecteix un flux complet: un grup de persones proposa opcions, vota entre elles i la decisió es registra com a historial.
+### Proposed scenario
+The Choosy application solves the problem of collective decision-making in groups (leisure plans, restaurants, activities). The model reflects a complete workflow: a group of people proposes options, votes on them, and the final decision is saved as history.
 
-### Model de dades
-S'han implementat 6 entitats amb relacions complexes:
+### Data model
+Six entities have been implemented with complex relationships:
 
-- **Group** — Entitat central amb estat (planning/voting/active/archived), imatge hero, interessos (camp JSON) i missió.
-- **GroupMember** — Relació M2M entre User i Group enriquida amb rol (owner/admin/member) i estat d'invitació (invited/active/left). Permet membres sense compte registrat (display_name + avatar_url).
-- **PlanProposal** — Ronda de votació temporal. Restricció de només una proposta oberta per grup (unique constraint condicional).
-- **Plan** — Opció individual dins una proposta. Inclou preu, durada, etiqueta, ubicació i imatge. Ordre explícit (option_order).
-- **Vote** — Vot upvote/downvote. Suporta tres modes d'identificació: membre autenticat, usuari de sessió, o sessió anònima. Restriccions úniques a nivell de base de dades per evitar doble vot.
-- **Notification** — Sistema de notificacions intern per a invitacions, nous plans i decisions. Linked a grup i proposta per context.
+- **Group** — Central entity with state (planning/voting/active/archived), hero image, interests (JSON field), and mission.
+- **GroupMember** — M2M relationship between User and Group, enriched with role (owner/admin/member) and invitation status (invited/active/left). Allows members without a registered account (display_name + avatar_url).
+- **PlanProposal** — Temporal voting round. Restricted to only one open proposal per group (conditional unique constraint).
+- **Plan** — Individual option within a proposal. Includes price, duration, tag, location, and image. Explicit ordering (option_order).
+- **Vote** — Upvote/downvote system. Supports three modes of identification: authenticated member, session user, or anonymous session. Unique constraints at the database level to prevent double voting.
+- **Notification** — Internal notification system for invitations, new plans, and decisions. Linked to the group and proposal for context.
 
-Totes les entitats hereten de `TimestampedModel` (abstract) per tenir `created_at` i `updated_at` automàtics.
+All entities inherit from `TimestampedModel` (abstract) to automatically include `created_at` and `updated_at`.
 
-### Arquitectura de l'aplicació
-- Les vistes estan organitzades per funcionalitat dins `core/web/` (auth, dashboard, groups, plans, notifications, shared) en lloc d'un únic fitxer `views.py`, per mantenibilitat.
-- Les utilitats compartides (decoradors, helpers de query, enriquiment de templates) estan centralitzades a `shared.py`.
-- El frontend usa Django Template Language amb components reutilitzables a `front/templates/includes/`, sense frameworks JS externs.
-- El CSS és modular per pàgina/funcionalitat per evitar col·lisions i facilitar el manteniment.
+### Application architecture
+- Views are organized by functionality inside `core/web/` (auth, dashboard, groups, plans, notifications, shared) instead of a single `views.py` file, to improve maintainability.
+- Shared utilities (decorators, query helpers, template enrichment) are centralized in `shared.py`.
+- The frontend uses Django Template Language with reusable components in `front/templates/includes/`, avoiding external JS frameworks.
+- CSS is modular per page/functionality to prevent collisions and ease maintenance.
 
-### Autenticació
-S'usa el sistema d'autenticació integrat de Django (`django.contrib.auth`) amb un formulari de registre personalitzat (`RegisterForm`) que inclou validació de correu electrònic.
+### Authentication
+It uses the built-in Django authentication system (`django.contrib.auth`) with a custom registration form (`RegisterForm`) that includes email validation.
 
-### Docker i desplegament
-- La configuració commuta automàticament entre SQLite (desenvolupament local) i PostgreSQL (Docker) en funció de si `DB_NAME` està definit a l'entorn.
-- Es fa servir Gunicorn com a servidor WSGI de producció (en lloc del servidor de desenvolupament de Django).
-- Les migracions s'executen automàticament a l'arrencada del contenidor.
+### Docker and deployment
+- The configuration automatically switches between SQLite (local development) and PostgreSQL (Docker) depending on whether the `DB_NAME` environment variable is defined.
+- Gunicorn is used as the production WSGI server (instead of the Django development server).
+- Database migrations are automatically executed when the container starts.
 
 ### 12-Factor App
-El projecte implementa les 12-factor guidelines: configuració via variables d'entorn, dependències declarades a `pyproject.toml` + `uv.lock`, logs a stdout, processos sense estat, i paritat dev/prod via Docker. Vegeu el README per al detall complet.
+The project implements the 12-factor app guidelines: configuration via environment variables, dependencies declared in `pyproject.toml` + `uv.lock`, logs to stdout, stateless processes, and dev/prod parity via Docker. See the README file for full details.
 
 ---
 
-## 3. Distribució de notes
+## 3. Grade distribution
 
-Tots els membres de l'equip han contribuït de manera equivalent al projecte. La nota hauria de ser la mateixa per a tots els membres.
-
-| Membre | Contribució |
-|--------|-------------|
-| Aleix Rosinach | Model de dades, autenticació, backend general, Docker |
-| Bru | Frontend, sistema de votació, notificacions |
-
-> Si la distribució ha de ser diferent, cal actualitzar aquesta secció amb els percentatges acordats.
+All members of the group have worked and contributed equally to the project. Therefore, the grades should be perfectly equal for all members of the team.
 
 ---
 
-## Instruccions d'execució
+## 4. Instructions on how to run/deploy the application
 
-Vegeu el fitxer `README.md` per a les instruccions detallades de desplegament.
+To run and deploy the application using Docker, follow these steps:
 
-```bash
-cp .env.example .env
-docker-compose up --build
-```
+1. Clone the repository and navigate to the project root:
+   ```bash
+   git clone https://github.com/choosy-friends-app/choosy-app.git
+   cd choosy-app
+   ```
 
-Aplicació disponible a `http://localhost:8000`.
+2. Copy the example environment variables file to create your local configuration:
+   ```bash
+   cp .env.example .env
+   ```
+
+3. Build and start the Docker containers:
+   ```bash
+   docker-compose up --build
+   ```
+
+4. The application will automatically execute the necessary database migrations during the container startup.
+
+5. Open your web browser and access the application at:
+   **http://localhost:8000**
+
+For more detailed deployment instructions and development setup, please refer to the `README.md` file located at the root of the project.

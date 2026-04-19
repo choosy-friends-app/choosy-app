@@ -1,0 +1,148 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage[utf8]{inputenc}
+% Removing T1 fontenc and special font packages to avoid missing map errors
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{listings}
+
+% Color definitions
+\definecolor{primary}{HTML}{2D3748}
+\definecolor{secondary}{HTML}{4A5568}
+\definecolor{linkcolor}{HTML}{3182CE}
+\definecolor{codebackground}{HTML}{F7FAFC}
+\definecolor{codeborder}{HTML}{E2E8F0}
+
+% Hyperref setup
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primary,
+    filecolor=linkcolor,      
+    urlcolor=linkcolor,
+    pdftitle={Deliverable 1 - Choosy App},
+    pdfpagemode=FullScreen,
+}
+
+% Section styling
+\titleformat{\section}
+  {\color{primary}\normalfont\Large\bfseries}{\thesection}{1em}{}[{\titlerule[0.8pt]}]
+\titleformat{\subsection}
+  {\color{primary}\normalfont\large\bfseries}{\thesubsection}{1em}{}
+
+% Listings setup
+\lstset{
+    backgroundcolor=\color{codebackground},
+    basicstyle=\ttfamily\small,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    commentstyle=\color{secondary},
+    frame=single,
+    rulecolor=\color{codeborder},
+    keywordstyle=\color{linkcolor},
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    language=bash
+}
+
+\begin{document}
+
+\begin{flushright}
+    {\large \textbf{Academic Year:}} 2025/26 \\
+    {\large \textbf{Subject:}} Web Project \\
+    {\large \textbf{Group:}} \texttt{choosy-friends-app}
+\end{flushright}
+
+\vspace{1cm}
+
+\begin{center}
+    {\Huge \textbf{\color{primary} Deliverable 1 --- Choosy App}}
+\end{center}
+
+\vspace{1cm}
+
+\section{GitHub Public Address}
+
+\noindent\textbf{\url{https://github.com/choosy-friends-app/choosy-app}}
+
+\vspace{0.5cm}
+\noindent The code is available in this GitHub repository created specifically for this purpose. The repository is publicly accessible without any authentication. Each participant member of the team has contributed using a different GitHub username, as requested.
+
+\section{Design Decisions}
+
+\subsection{Proposed Scenario}
+The Choosy application solves the problem of collective decision-making in groups (leisure plans, restaurants, activities). The model reflects a complete workflow: a group of people proposes options, votes on them, and the final decision is saved as history.
+
+\subsection{Data Model}
+Six entities have been implemented with complex relationships:
+
+\begin{itemize}[noitemsep]
+    \item \textbf{Group} -- Central entity with state (planning/voting/active/archived), hero image, interests (JSON field), and mission.
+    \item \textbf{GroupMember} -- M2M relationship between User and Group, enriched with role (owner/admin/member) and invitation status (invited/active/left). Allows members without a registered account.
+    \item \textbf{PlanProposal} -- Temporal voting round. Restricted to only one open proposal per group (conditional unique constraint).
+    \item \textbf{Plan} -- Individual option within a proposal. Includes price, duration, tag, location, and image.
+    \item \textbf{Vote} -- Upvote/downvote system. Supports three modes of identification: authenticated member, session user, or anonymous session.
+    \item \textbf{Notification} -- Internal notification system for invitations, new plans, and decisions.
+\end{itemize}
+
+\noindent All entities inherit from \texttt{TimestampedModel} to automatically include \texttt{created\_at} and \texttt{updated\_at}.
+
+\subsection{Application Architecture}
+\begin{itemize}
+    \item Views are organized by functionality inside \texttt{core/web/} instead of a single \texttt{views.py} file, to improve maintainability.
+    \item Shared utilities (decorators, query helpers, template enrichment) are centralized in \texttt{shared.py}.
+    \item The frontend uses Django Template Language with reusable components, avoiding external JS frameworks.
+    \item CSS is modular per page/functionality to prevent collisions and ease maintenance.
+\end{itemize}
+
+\subsection{Authentication}
+It uses the built-in Django authentication system (\texttt{django.contrib.auth}) with a custom registration form (\texttt{RegisterForm}) that includes email validation.
+
+\subsection{Docker and Deployment}
+\begin{itemize}
+    \item The configuration automatically switches between SQLite and PostgreSQL depending on environment variables.
+    \item Gunicorn is used as the production WSGI server.
+    \item Database migrations are automatically executed when the container starts.
+\end{itemize}
+
+\subsection{12-Factor App}
+The project implements the 12-factor app guidelines: configuration via environment variables, dependencies declared in \texttt{pyproject.toml} + \texttt{uv.lock}, logs to stdout, stateless processes, and dev/prod parity via Docker.
+
+\section{Grade Distribution}
+
+\noindent All members of the group have worked and contributed equally to the project. Therefore, the grades should be perfectly equal for all members of the team.
+
+\section{Instructions: Run and Deploy}
+
+To run and deploy the application using Docker, follow these steps:
+
+\begin{enumerate}
+    \item \textbf{Clone the repository:}
+\begin{lstlisting}
+git clone https://github.com/choosy-friends-app/choosy-app.git
+cd choosy-app
+\end{lstlisting}
+
+    \item \textbf{Configure environment:}
+\begin{lstlisting}
+cp .env.example .env
+\end{lstlisting}
+
+    \item \textbf{Build and start Docker containers:}
+\begin{lstlisting}
+docker-compose up --build
+\end{lstlisting}
+
+    \item \textbf{Access the application:} \\
+    Open your web browser at \textbf{\url{http://localhost:8000}}.
+\end{enumerate}
+
+\noindent For more detailed deployment instructions and development setup, please refer to the \texttt{README.md} file located at the root of the project.
+
+\end{document}
