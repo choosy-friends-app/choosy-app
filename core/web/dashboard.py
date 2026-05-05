@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.template.loader import render_to_string
@@ -7,20 +8,22 @@ from core.web.shared import (
     _active_group_proposal,
     _decorate_groups,
     _decorate_proposal_for_user,
-    _seed_demo_groups,
     _user_groups_queryset,
 )
 
 
+@login_required
 def dashboard(request):
     user_groups = _user_groups_queryset(request)
-
-    if not request.user.is_authenticated and not user_groups.exists():
-        _seed_demo_groups()
-        user_groups = _user_groups_queryset(request)
-
+    group_ids = list(user_groups.values_list("id", flat=True))
     user_groups = _decorate_groups(user_groups, request.user)
-    recent_votes = Vote.objects.select_related("plan", "plan__group", "member", "user").order_by("-created_at")[:5]
+    recent_votes = (
+        Vote.objects.filter(plan__group_id__in=group_ids)
+        .select_related("plan", "plan__group", "member", "user")
+        .order_by("-created_at")[:5]
+        if group_ids
+        else []
+    )
 
     return render(
         request,
@@ -35,13 +38,10 @@ def dashboard(request):
     )
 
 
+@login_required
 def active_plans(request):
     user_groups = _user_groups_queryset(request)
     proposals = []
-
-    if not request.user.is_authenticated and not user_groups.exists():
-        _seed_demo_groups()
-        user_groups = _user_groups_queryset(request)
 
     for group in user_groups:
         proposal = _decorate_proposal_for_user(_active_group_proposal(group), request.user)
@@ -90,6 +90,7 @@ def active_plans(request):
     )
 
 
+@login_required
 def archive(request):
     return render(
         request,
