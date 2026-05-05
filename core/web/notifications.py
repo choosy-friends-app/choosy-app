@@ -1,8 +1,9 @@
 import json
 
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.csrf import csrf_exempt
 
 from core.models import Group, GroupMember, Notification, PlanProposal
 from core.web.shared import (
@@ -17,10 +18,8 @@ from core.web.shared import (
 )
 
 
+@login_required
 def notification_center(request):
-    if not request.user.is_authenticated:
-        return redirect("login")
-
     _sync_user_notification_states(request.user)
     notifications = [
         _decorate_notification(notification)
@@ -49,32 +48,22 @@ def notification_center(request):
     )
 
 
+@login_required
 def invitation_detail(request, group_id):
-    if not request.user.is_authenticated:
-        return redirect("login")
-
     group = get_object_or_404(Group, id=group_id)
-    
-    # Check if for some reason the user is already an active member
     existing_member = GroupMember.objects.filter(group=group, user=request.user).first()
-    
+
     if existing_member and existing_member.status == GroupMember.Status.ACTIVE:
-        # Already in, no need to invite
-        return redirect("dashboard") # Or to a specific group page if it exists
-    
-    # If they are invited, get that record
+        return redirect("dashboard")
+
     member = GroupMember.objects.filter(
         group=group,
         user=request.user,
         status=GroupMember.Status.INVITED,
     ).first()
 
-    # Fallback for God-Mode preview or if they just stumbled upon the link
     if not member:
-        # If no invite exists, we might want to allow them to "Request to join" 
-        # but for now, let's just make it not 404 if group exists.
-        # We can pass a 'mock' member for preview if needed, or a 'guest' state.
-        pass
+        raise PermissionDenied("You do not have access to this invitation.")
 
     active_plan = _active_group_proposal(group)
     active_members = list(group.members.filter(status=GroupMember.Status.ACTIVE).select_related("user")[:4])
@@ -112,7 +101,6 @@ def invitation_detail(request, group_id):
     )
 
 
-@csrf_exempt
 def api_invite_user(request, group_id):
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -160,7 +148,6 @@ def api_invite_user(request, group_id):
         return JsonResponse({"error": str(exc)}, status=400)
 
 
-@csrf_exempt
 def api_respond_invitation(request, group_id, action):
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -219,7 +206,6 @@ def api_respond_invitation(request, group_id, action):
     return JsonResponse({"error": "Invalid action"}, status=400)
 
 
-@csrf_exempt
 def api_mark_notifications_read(request):
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -230,7 +216,6 @@ def api_mark_notifications_read(request):
     return JsonResponse({"status": "ok", "updated_count": updated_count})
 
 
-@csrf_exempt
 def api_clear_notifications(request):
     if request.method not in {"POST", "DELETE"}:
         return JsonResponse({"error": "Method not allowed"}, status=405)

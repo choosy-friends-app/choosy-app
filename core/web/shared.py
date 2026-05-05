@@ -326,7 +326,7 @@ def _user_groups_queryset(request):
             Q(owner=request.user)
             | Q(members__user=request.user, members__status=GroupMember.Status.ACTIVE)
         ).distinct()
-    return Group.objects.all()
+    return Group.objects.none()
 
 
 def _seed_demo_groups():
@@ -546,7 +546,7 @@ def _resolve_member(group, user):
 def _resolve_group_for_request(request, group_id):
     group = get_object_or_404(Group, id=group_id)
     if not request.user.is_authenticated:
-        return group
+        raise PermissionDenied("Authentication required.")
     _resolve_member(group, request.user)
     return group
 
@@ -652,15 +652,11 @@ def _remove_group_member(group, actor, member_id):
 
 
 def _vote_identity_for_request(request, plan):
-    if request.user.is_authenticated:
-        member = _resolve_member(plan.group, request.user)
-        return {"user": request.user, "member": member, "session_key": ""}
+    if not request.user.is_authenticated:
+        raise PermissionDenied("Authentication required.")
 
-    session_key = request.session.session_key
-    if not session_key:
-        request.session.save()
-        session_key = request.session.session_key
-    return {"user": None, "member": None, "session_key": session_key}
+    member = _resolve_member(plan.group, request.user)
+    return {"user": request.user, "member": member, "session_key": ""}
 
 
 def _active_group_proposal(group):

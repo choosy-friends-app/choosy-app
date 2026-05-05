@@ -1,8 +1,9 @@
 import json
 
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.csrf import csrf_exempt
 
 from core.models import Group, Notification, Plan, PlanProposal, Vote
 from core.web.shared import (
@@ -13,26 +14,22 @@ from core.web.shared import (
     _parse_voting_end,
     _resolve_group_for_request,
     _resolve_member,
-    _seed_demo_groups,
     _user_completed_proposal_vote,
     _user_groups_queryset,
     _vote_identity_for_request,
 )
 
 
+@login_required
 def start_new_plan(request):
     user_groups = _user_groups_queryset(request)
     default_voting_end = _default_voting_end()
-
-    if not request.user.is_authenticated and not user_groups.exists():
-        _seed_demo_groups()
-        user_groups = _user_groups_queryset(request)
 
     if request.method == "POST":
         group_id = request.POST.get("group_id")
         global_title = request.POST.get("title")
         global_description = request.POST.get("description", "")
-        created_by = request.user if request.user.is_authenticated else None
+        created_by = request.user
 
         options_data = request.POST.get("options_json", "[]")
         try:
@@ -146,14 +143,12 @@ def start_new_plan(request):
     )
 
 
+@login_required
 def vote(request, group_id):
     group = _resolve_group_for_request(request, group_id)
     active_proposal = _decorate_proposal_for_user(_active_group_proposal(group), request.user)
     active_plans = active_proposal.options if active_proposal else Plan.objects.none()
-    if request.user.is_authenticated:
-        current_voter = _resolve_member(group, request.user).display_name
-    else:
-        current_voter = "Guest session"
+    current_voter = _resolve_member(group, request.user).display_name
 
     return render(
         request,
@@ -171,15 +166,16 @@ def vote(request, group_id):
     )
 
 
-@csrf_exempt
 def api_submit_vote(request, plan_id):
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Authentication required"}, status=403)
 
     try:
         data = json.loads(request.body)
         value = int(data.get("value", 0))
-        if value not in {-1, 1, 2}:
+        if value not in {-1, 1}:
             return JsonResponse({"error": "Invalid vote value"}, status=400)
 
         plan = get_object_or_404(Plan, id=plan_id)
@@ -202,5 +198,7 @@ def api_submit_vote(request, plan_id):
                 plan_proposal=plan.proposal,
             ).update(is_read=True)
         return JsonResponse({"status": "ok"})
+    except PermissionDenied as exc:
+        return JsonResponse({"error": str(exc)}, status=403)
     except Exception as exc:
         return JsonResponse({"error": str(exc)}, status=400)
