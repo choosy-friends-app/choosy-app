@@ -90,8 +90,7 @@
                         <div class="vote-live-item">
                             <div class="vi-card-mini">
                                 <strong>{{ option.title }}</strong>
-                                <span>{% if option.recent_voters %}{{ option.recent_voters|join:", " }}{% else
-                                    %}Standing by{% endif %}</span>
+                                <span>{% if option.recent_voters %}{{ option.recent_voters|join:", " }}{% else %}Standing by{% endif %}</span>
                             </div>
                             <div class="vi-score">{{ option.upvote_count }}+</div>
                         </div>

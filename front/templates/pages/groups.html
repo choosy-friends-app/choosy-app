@@ -273,8 +273,7 @@
         <div class="activity-option-grid">
           {% for option in activity_options %}
           <label class="activity-option-card">
-            <input type="checkbox" name="interests" value="{{ option.label }}" {% if option.selected %}checked{% endif
-              %} />
+            <input type="checkbox" name="interests" value="{{ option.label }}" {% if option.selected %}checked{% endif %} />
             <span class="activity-option-card__image" style="background-image: url('{{ option.image_url }}');"></span>
             <span class="activity-option-card__shade"></span>
             <span class="activity-option-card__check">
