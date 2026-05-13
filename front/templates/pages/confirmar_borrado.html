@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="groups-page">
+    <header class="groups-hero">
+        <div class="groups-hero__copy">
+            <p class="page-kicker">Panel de Eliminación</p>
+            <h1>{{ title }}</h1>
+            <p>¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer.</p>
+        </div>
+    </header>
+
+    <div class="dashboard-grid">
+        <div class="dashboard-main">
+            <div class="group-card">
+                <form method="post" class="groups-modal__form">
+                    {% csrf_token %}
+                    
+                    <div class="groups-form-grid" style="padding: 2rem 0; text-align: center;">
+                        <p style="color: var(--text-color); font-size: 1.1rem;">
+                            Estás a punto de eliminar definitivamente: <br>
+                            <strong style="color: #ff6b6b; font-size: 1.3rem; display: block; margin-top: 1rem;">{{ object }}</strong>
+                        </p>
+                    </div>
+
+                    <div class="groups-modal__actions" style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                        <a href="javascript:history.back()" class="group-row__link group-row__link--ghost" style="padding: 0.8rem 1.5rem;">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="groups-hero__action" style="padding: 0.8rem 2rem; background: #ff4757; color: white;">
+                            <span class="material-symbols-outlined">delete_forever</span>
+                            <span>Sí, Eliminar</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <aside class="dashboard-side">
+            <div class="promo-card">
+                <div class="promo-visual-god">
+                    <div class="globe-wireframe" style="border-color: rgba(255, 71, 87, 0.2);">
+                        <div class="globe-ring" style="border-color: rgba(255, 71, 87, 0.4);"></div>
+                    </div>
+                </div>
+                <div class="promo-content">
+                    <span class="promo-tag" style="background: rgba(255, 71, 87, 0.2); color: #ff6b6b;">Atención</span>
+                    <h3>Punto de no retorno</h3>
+                    <p>Al confirmar esta acción, los datos asociados serán eliminados de forma permanente de la base de datos.</p>
+                </div>
+            </div>
+        </aside>
+    </div>
+</section>
+{% endblock %}

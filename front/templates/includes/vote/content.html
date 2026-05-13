@@ -87,9 +87,19 @@
                     </div>
                     <div class="vote-live-board__list">
                         {% for option in proposal.options %}
-                        <div class="vote-live-item">
+                        <div class="vote-live-item" style="display: flex; justify-content: space-between; align-items: center;">
                             <div class="vi-card-mini">
-                                <strong>{{ option.title }}</strong>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <strong>{{ option.title }}</strong>
+                                    {% if request.user.is_authenticated and option.created_by_id == request.user.id %}
+                                    <a href="{% url 'editar_plan' option.id %}" title="Edit Plan" style="color: var(--primary); text-decoration: none; display: flex; align-items: center;">
+                                        <span class="material-symbols-outlined" style="font-size: 1rem;">edit</span>
+                                    </a>
+                                    <a href="{% url 'eliminar_plan' option.id %}" title="Delete Plan" style="color: #ff6b6b; text-decoration: none; display: flex; align-items: center;">
+                                        <span class="material-symbols-outlined" style="font-size: 1rem;">delete</span>
+                                    </a>
+                                    {% endif %}
+                                </div>
                                 <span>{% if option.recent_voters %}{{ option.recent_voters|join:", " }}{% else %}Standing by{% endif %}</span>
                             </div>
                             <div class="vi-score">{{ option.upvote_count }}+</div>

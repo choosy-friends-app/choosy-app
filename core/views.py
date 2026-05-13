@@ -1,6 +1,10 @@
 from core.web.auth import login_view, logout_view, register_view
 from core.web.dashboard import active_plans, archive, dashboard, dashboard_css
-from core.web.crud import GroupCreateView, PlanProposalCreateView, PlanCreateView
+from core.web.crud import (
+    GroupCreateView, GroupUpdateView, GroupDeleteView,
+    PlanProposalCreateView, PlanProposalUpdateView, PlanProposalDeleteView,
+    PlanCreateView, PlanUpdateView, PlanDeleteView
+)
 from core.web.groups import api_add_group_member, api_create_group, groups
 from core.web.notifications import (
     api_clear_notifications,
@@ -28,8 +32,14 @@ __all__ = [
     "dashboard_css",
     "groups",
     "GroupCreateView",
+    "GroupUpdateView",
+    "GroupDeleteView",
     "PlanProposalCreateView",
+    "PlanProposalUpdateView",
+    "PlanProposalDeleteView",
     "PlanCreateView",
+    "PlanUpdateView",
+    "PlanDeleteView",
     "invitation_detail",
     "login_view",
     "logout_view",

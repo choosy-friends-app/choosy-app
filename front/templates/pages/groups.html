@@ -68,6 +68,14 @@
         <div class="group-row__copy">
           <div class="group-row__title">
             <h3>{{ group.name }}</h3>
+            {% if request.user.is_authenticated and group.owner_id == request.user.id %}
+            <a href="{% url 'editar_grupo' group.id %}" class="group-row__edit-link" title="Edit Group" style="margin-left: 0.5rem; color: var(--primary); text-decoration: none; display: flex; align-items: center;">
+              <span class="material-symbols-outlined" style="font-size: 1.2rem;">edit</span>
+            </a>
+            <a href="{% url 'eliminar_grupo' group.id %}" class="group-row__delete-link" title="Delete Group" style="margin-left: 0.5rem; color: #ff6b6b; text-decoration: none; display: flex; align-items: center;">
+              <span class="material-symbols-outlined" style="font-size: 1.2rem;">delete</span>
+            </a>
+            {% endif %}
             <span class="group-row__status">{{ group.get_status_display }}</span>
           </div>
           <p>{{ group.description|default:"Group ready to organize the next plan." }}</p>
