@@ -7,7 +7,7 @@ from core.models import Group, GroupMember, PlanProposal
 class Command(BaseCommand):
     help = "Create local demo users for testing groups, invites, and voting flows."
 
-    DEFAULT_PASSWORD = "testpass123"
+    DEFAULT_PASSWORD = "demo1234"
     DEMO_USERS = [
         {
             "username": "aleix",
