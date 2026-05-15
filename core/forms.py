@@ -57,7 +57,10 @@ class PlanForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         if user is not None:
-            self.fields['proposal'].queryset = PlanProposal.objects.filter(created_by=user).select_related("group")
+            self.fields['proposal'].queryset = PlanProposal.objects.filter(
+                created_by=user,
+                status__in=[PlanProposal.Status.DRAFT, PlanProposal.Status.VOTING],
+            ).select_related("group")
 
     class Meta:
         model = Plan

@@ -10,10 +10,19 @@ class OwnerRequiredMixin(UserPassesTestMixin):
     raise_exception = True
 
     owner_field = "created_by"
+    require_open_proposal = False
 
     def test_func(self):
         obj = self.get_object()
-        return getattr(obj, self.owner_field) == self.request.user
+        if getattr(obj, self.owner_field) != self.request.user:
+            return False
+        if not self.require_open_proposal:
+            return True
+        proposal = getattr(obj, "proposal", None)
+        return (
+            proposal is not None
+            and proposal.status in {PlanProposal.Status.DRAFT, PlanProposal.Status.VOTING}
+        )
 
 class GroupCreateView(LoginRequiredMixin, CreateView):
     model = Group
@@ -124,6 +133,7 @@ class PlanUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
     form_class = PlanForm
     template_name = 'pages/plan_form.html'
     success_url = reverse_lazy('dashboard')
+    require_open_proposal = True
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -167,6 +177,7 @@ class PlanDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):
     model = Plan
     template_name = 'pages/confirmar_borrado.html'
     success_url = reverse_lazy('dashboard')
+    require_open_proposal = True
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
