@@ -12,7 +12,16 @@
   <div class="plan-error-banner">{{ error }}</div>
   {% endif %}
 
-  <form method="POST" action="{% url 'start_new_plan' %}" id="plan-form" class="plan-grid">
+  <form
+    method="POST"
+    action="{% url 'start_new_plan' %}"
+    id="plan-form"
+    class="plan-grid"
+    data-location-url="{% url 'api_location_search' %}"
+    data-weather-url="{% url 'api_weather_forecast' %}"
+    data-default-option-date="{{ default_voting_end_date }}"
+    data-default-option-time="{{ default_voting_end_time }}"
+  >
     {% csrf_token %}
     <input type="hidden" name="options_json" id="options-json-input" value="[]">
 
@@ -54,8 +63,8 @@
         <label class="s-label">SELECT GROUP</label>
         <div class="group-select-list">
           {% for g in groups %}
-          <label class="group-radio-item {% if forloop.first %}is-active{% endif %}">
-            <input type="radio" name="group_id" value="{{ g.id }}" {% if forloop.first %}checked{% endif %}
+          <label class="group-radio-item {% if g.id|stringformat:'s' == selected_group_id %}is-active{% endif %}">
+            <input type="radio" name="group_id" value="{{ g.id }}" {% if g.id|stringformat:'s' == selected_group_id %}checked{% endif %}
               style="display:none;">
             <div class="group-radio-info">
               <strong>{{ g.name }}</strong>

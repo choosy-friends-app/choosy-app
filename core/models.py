@@ -229,7 +229,7 @@ class Plan(TimestampedModel):
         return self.title
 
     def clean(self) -> None:
-        if self.proposal and self.group_id != self.proposal.group_id:
+        if self.proposal_id and self.group_id and self.group_id != self.proposal.group_id:
             raise ValidationError("Plan option must belong to the same group as its proposal.")
 
 

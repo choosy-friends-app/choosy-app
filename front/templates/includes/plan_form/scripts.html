@@ -1,0 +1,292 @@
+(function () {
+  const form = document.querySelector("[data-plan-form]");
+  if (!form) return;
+
+  const locationInput = form.querySelector("[data-location-input]");
+  const addressInput = form.querySelector("[data-address-input]");
+  const scheduledFor = form.querySelector("#id_scheduled_for");
+  const latitudeInput = form.querySelector("#id_location_latitude");
+  const longitudeInput = form.querySelector("#id_location_longitude");
+  const suggestions = form.querySelector("[data-location-suggestions]");
+  const locationStatus = form.querySelector("[data-location-status]");
+  const weatherCard = form.querySelector("[data-weather-card]");
+  const weatherIcon = form.querySelector("[data-weather-icon]");
+  const weatherSummary = form.querySelector("[data-weather-summary]");
+  const weatherDetail = form.querySelector("[data-weather-detail]");
+  const mapFrame = form.querySelector("[data-map-frame]");
+  const mapTitle = form.querySelector("[data-map-title]");
+
+  if (!locationInput || !scheduledFor || !suggestions || !weatherCard) return;
+
+  const locationUrl = form.dataset.locationUrl;
+  const weatherUrl = form.dataset.weatherUrl;
+  let selectedLocation = readSelectedLocation();
+  let lastResults = [];
+  let locationRequest = null;
+  let weatherRequest = null;
+  let debounceTimer = null;
+
+  const weatherLabels = {
+    0: ["wb_sunny", "Clear sky"],
+    1: ["partly_cloudy_day", "Mainly clear"],
+    2: ["partly_cloudy_day", "Partly cloudy"],
+    3: ["cloud", "Overcast"],
+    45: ["foggy", "Fog"],
+    48: ["foggy", "Rime fog"],
+    51: ["rainy_light", "Light drizzle"],
+    53: ["rainy_light", "Drizzle"],
+    55: ["rainy", "Dense drizzle"],
+    61: ["rainy_light", "Slight rain"],
+    63: ["rainy", "Rain"],
+    65: ["rainy_heavy", "Heavy rain"],
+    71: ["weather_snowy", "Slight snow"],
+    73: ["weather_snowy", "Snow"],
+    75: ["ac_unit", "Heavy snow"],
+    80: ["rainy", "Rain showers"],
+    81: ["rainy", "Rain showers"],
+    82: ["thunderstorm", "Violent showers"],
+    95: ["thunderstorm", "Thunderstorm"],
+    96: ["thunderstorm", "Thunderstorm with hail"],
+    99: ["thunderstorm", "Severe thunderstorm"]
+  };
+
+  function ajaxGet(url, data) {
+    if (window.jQuery && window.jQuery.ajax) {
+      return window.jQuery.ajax({ url, data, method: "GET", dataType: "json" });
+    }
+
+    const query = new URLSearchParams(data);
+    return fetch(`${url}?${query.toString()}`, { headers: { Accept: "application/json" } }).then((response) => {
+      return response.json().then((payload) => {
+        if (!response.ok) {
+          const error = new Error(payload.error || "Request failed");
+          error.payload = payload;
+          throw error;
+        }
+        return payload;
+      });
+    });
+  }
+
+  function abortRequest(request) {
+    if (request && typeof request.abort === "function") request.abort();
+  }
+
+  function readSelectedLocation() {
+    if (!latitudeInput.value || !longitudeInput.value) return null;
+    return {
+      latitude: latitudeInput.value,
+      longitude: longitudeInput.value,
+      name: locationInput.value,
+      address: addressInput ? addressInput.value : ""
+    };
+  }
+
+  function planDate() {
+    return scheduledFor.value ? scheduledFor.value.slice(0, 10) : "";
+  }
+
+  function setLocationStatus(message, state) {
+    if (!locationStatus) return;
+    locationStatus.textContent = message;
+    locationStatus.classList.toggle("is-error", state === "error");
+    locationStatus.classList.toggle("is-success", state === "success");
+  }
+
+  function setWeatherState(state, icon, summary, detail) {
+    weatherCard.classList.toggle("weather-card--idle", state === "idle");
+    weatherCard.classList.toggle("weather-card--error", state === "error");
+    weatherIcon.textContent = icon;
+    weatherSummary.textContent = summary;
+    weatherDetail.textContent = detail;
+  }
+
+  function mapQueryFor(location) {
+    if (location && location.latitude && location.longitude) {
+      return `${location.latitude},${location.longitude}`;
+    }
+    const address = addressInput && addressInput.value.trim() ? addressInput.value.trim() : "";
+    const place = locationInput.value.trim();
+    return address || place || "Barcelona, Spain";
+  }
+
+  function updateMap(location) {
+    if (!mapFrame) return;
+    const query = mapQueryFor(location);
+    mapFrame.src = `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=&z=13&ie=UTF8&iwloc=&output=embed`;
+    if (mapTitle) {
+      mapTitle.textContent = location && location.address ? location.address : query;
+    }
+  }
+
+  function hideSuggestions() {
+    suggestions.innerHTML = "";
+    suggestions.hidden = true;
+  }
+
+  function showEmptySuggestion(title, detail) {
+    suggestions.innerHTML = "";
+    const empty = document.createElement("div");
+    empty.className = "location-suggestion-empty";
+    empty.innerHTML = '<span class="material-symbols-outlined">info</span><span><strong></strong><small></small></span>';
+    empty.querySelector("strong").textContent = title;
+    empty.querySelector("small").textContent = detail;
+    suggestions.appendChild(empty);
+    suggestions.hidden = false;
+  }
+
+  function selectLocation(item) {
+    selectedLocation = item;
+    locationInput.value = item.name;
+    if (addressInput) addressInput.value = item.address;
+    latitudeInput.value = item.latitude;
+    longitudeInput.value = item.longitude;
+    hideSuggestions();
+    setLocationStatus(`Selected ${item.address}`, "success");
+    updateMap(item);
+    refreshWeather();
+  }
+
+  function renderSuggestions(results) {
+    lastResults = results || [];
+    suggestions.innerHTML = "";
+
+    if (!lastResults.length) {
+      showEmptySuggestion("No places found", "Try a more specific city, venue, or street.");
+      return;
+    }
+
+    lastResults.forEach((item) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "location-suggestion";
+      button.innerHTML = '<span class="material-symbols-outlined">place</span><span><strong></strong><small></small></span>';
+      button.querySelector("strong").textContent = item.name;
+      button.querySelector("small").textContent = item.address;
+      button.addEventListener("click", () => selectLocation(item));
+      suggestions.appendChild(button);
+    });
+
+    suggestions.hidden = false;
+    setLocationStatus("Choose one suggestion to pin coordinates for the forecast.", "");
+  }
+
+  function searchLocations(query, options) {
+    const trimmed = query.trim();
+    if (trimmed.length < 3) {
+      hideSuggestions();
+      setLocationStatus("Type at least 3 characters to search OpenStreetMap.", "");
+      return Promise.resolve([]);
+    }
+
+    abortRequest(locationRequest);
+    setLocationStatus("Searching real locations...", "");
+    locationRequest = ajaxGet(locationUrl, { q: trimmed });
+
+    return Promise.resolve(locationRequest)
+      .then((payload) => {
+        const results = payload.results || [];
+        if (!options || !options.silent) renderSuggestions(results);
+        return results;
+      })
+      .catch((error) => {
+        if (error && error.statusText === "abort") return [];
+        showEmptySuggestion("Location search unavailable", "Try again in a moment.");
+        setLocationStatus("Location search is temporarily unavailable.", "error");
+        return [];
+      });
+  }
+
+  function ensureLocationForWeather() {
+    if (selectedLocation && latitudeInput.value && longitudeInput.value) {
+      return Promise.resolve(selectedLocation);
+    }
+
+    if (lastResults.length) {
+      selectLocation(lastResults[0]);
+      return Promise.resolve(lastResults[0]);
+    }
+
+    return searchLocations(locationInput.value, { silent: true }).then((results) => {
+      if (!results.length) return null;
+      selectLocation(results[0]);
+      return results[0];
+    });
+  }
+
+  function refreshWeather() {
+    const date = planDate();
+    if (!date) {
+      setWeatherState("idle", "event", "Waiting for date", "Choose a plan date to load the forecast.");
+      return;
+    }
+
+    ensureLocationForWeather().then((location) => {
+      if (!location) {
+        setWeatherState("idle", "travel_explore", "Waiting for location", "Select a real location to load weather.");
+        return;
+      }
+
+      abortRequest(weatherRequest);
+      setWeatherState("loading", "hourglass_top", "Fetching forecast...", "Open-Meteo is checking the selected date.");
+      weatherRequest = ajaxGet(weatherUrl, {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        date
+      });
+
+      Promise.resolve(weatherRequest)
+        .then((payload) => {
+          const code = Number(payload.weather_code);
+          const label = weatherLabels[code] || ["wb_cloudy", "Forecast available"];
+          const max = payload.temperature_max ?? "-";
+          const min = payload.temperature_min ?? "-";
+          const rain = payload.precipitation_probability ?? "-";
+          setWeatherState(
+            "ready",
+            label[0],
+            label[1],
+            `High ${max} C · Low ${min} C · Rain chance ${rain}%`
+          );
+        })
+        .catch((error) => {
+          if (error && error.statusText === "abort") return;
+          const message = (error && error.payload && error.payload.error) || error.message || "Weather forecast unavailable.";
+          setWeatherState("error", "cloud_off", "Forecast unavailable", message);
+        });
+    });
+  }
+
+  locationInput.addEventListener("input", () => {
+    selectedLocation = null;
+    latitudeInput.value = "";
+    longitudeInput.value = "";
+    updateMap(null);
+    window.clearTimeout(debounceTimer);
+
+    debounceTimer = window.setTimeout(() => {
+      searchLocations(locationInput.value);
+    }, 260);
+  });
+
+  locationInput.addEventListener("blur", () => {
+    window.setTimeout(() => {
+      if (!latitudeInput.value && planDate() && locationInput.value.trim().length >= 3) {
+        refreshWeather();
+      }
+    }, 160);
+  });
+
+  scheduledFor.addEventListener("change", refreshWeather);
+
+  if (addressInput) {
+    addressInput.addEventListener("change", () => updateMap(selectedLocation));
+  }
+
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".plan-location-field")) hideSuggestions();
+  });
+
+  refreshWeather();
+  updateMap(selectedLocation);
+})();

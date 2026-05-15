@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="groups-page">
+    <header class="groups-hero">
+        <div class="groups-hero__copy">
+            <p class="page-kicker">Creation Panel</p>
+            <h1>{{ title }}</h1>
+            <p>Define the details for this new workspace item.</p>
+        </div>
+    </header>
+
+    <div class="dashboard-grid">
+        <div class="dashboard-main">
+            <div class="group-card">
+                <form method="post" class="groups-modal__form">
+                    {% csrf_token %}
+                    
+                    <div class="groups-form-grid" style="display: grid; gap: 1.5rem;">
+                        {% for field in form %}
+                            <label class="groups-field">
+                                <span style="display: block; margin-bottom: 0.5rem; color: var(--primary); font-weight: 800; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em;">
+                                    {{ field.label }}
+                                </span>
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <small class="groups-field__hint" style="display: block; margin-top: 0.3rem; color: var(--muted); font-size: 0.75rem;">
+                                        {{ field.help_text }}
+                                    </small>
+                                {% endif %}
+                                {% for error in field.errors %}
+                                    <div style="color: #ff6b6b; font-size: 0.75rem; mt-1;">{{ error }}</div>
+                                {% endfor %}
+                            </label>
+                        {% endfor %}
+                    </div>
+
+                    <div class="groups-modal__actions" style="margin-top: 2.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                        <a href="{% url 'dashboard' %}" class="group-row__link group-row__link--ghost" style="padding: 0.8rem 1.5rem;">
+                            Cancel
+                        </a>
+                        <button type="submit" class="groups-hero__action" style="padding: 0.8rem 2rem;">
+                            <span class="material-symbols-outlined">auto_awesome</span>
+                            <span>Save</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <aside class="dashboard-side">
+            <div class="promo-card">
+                <div class="promo-visual-god">
+                    <div class="globe-wireframe">
+                        <div class="globe-ring"></div>
+                        <div class="globe-node" style="top: 20%; left: 30%;"></div>
+                        <div class="globe-node" style="bottom: 40%; right: 10%;"></div>
+                    </div>
+                </div>
+                <div class="promo-content">
+                    <span class="promo-tag">Choosy</span>
+                    <h3>Manage Details</h3>
+                    <p>Create and edit groups, proposals, and plans directly from the app interface.</p>
+                </div>
+            </div>
+        </aside>
+    </div>
+</section>
+{% endblock %}

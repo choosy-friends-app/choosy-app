@@ -1,8 +1,11 @@
+{% load static %}
 <aside class="app-rail">
   <div class="rail-panel">
     <div class="brand">
-      <span class="brand-title">CHOOSY.<span style="opacity: 0.6; font-weight: 400;">LY</span></span>
-      <span class="brand-subtitle">THE GOD-MODE DECISION ENGINE</span>
+      <a class="brand-lockup" href="{% url 'dashboard' %}" aria-label="Choosy dashboard">
+        <img class="brand-logo" src="{% static 'img/choosy-logo-cropped.webp' %}" alt="Choosy logo">
+        <span class="brand-title">Choosy</span>
+      </a>
     </div>
 
     <nav class="rail-nav" aria-label="Main structure">
@@ -16,7 +19,7 @@
       </a>
       <a class="rail-link {% if active_page == 'groups' %}is-active{% endif %}" href="{% url 'groups' %}">
         <span class="material-symbols-outlined">groups</span>
-        <span>Squads</span>
+        <span>Groups</span>
       </a>
       <a class="rail-link {% if active_page == 'notifications' %}is-active{% endif %}" href="{% url 'notifications' %}">
         <span class="material-symbols-outlined">notifications</span>
