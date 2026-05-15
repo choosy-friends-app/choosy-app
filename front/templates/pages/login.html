@@ -6,26 +6,28 @@
   <div class="auth-panel">
     <div class="auth-panel__intro">
       <a class="auth-brand-mark" href="{% url 'dashboard' %}" aria-label="Choosy home">
-        <img src="{% static 'img/choosy-logo-white.webp' %}" alt="Choosy logo">
+        <img src="{% static 'img/choosy-logo-cropped.webp' %}" alt="Choosy logo">
       </a>
-      <p class="page-kicker">Choosy Workspace</p>
-      <h1>Welcome back.</h1>
-      <p class="auth-copy">
-        Sign in to test your groups, proposals, votes, and notifications with the new plan workflow.
-      </p>
+      <div class="auth-intro__content">
+        <p class="page-kicker">Choosy Workspace</p>
+        <h1>Welcome back.</h1>
+        <p class="auth-copy">
+          Sign in to test your groups, proposals, votes, and notifications with the new plan workflow.
+        </p>
 
-      <div class="auth-highlights" aria-label="Choosy features">
-        <div>
-          <span class="material-symbols-outlined">groups</span>
-          <strong>Group decisions</strong>
-        </div>
-        <div>
-          <span class="material-symbols-outlined">event_available</span>
-          <strong>Plan voting</strong>
-        </div>
-        <div>
-          <span class="material-symbols-outlined">notifications_active</span>
-          <strong>Live updates</strong>
+        <div class="auth-highlights" aria-label="Choosy features">
+          <div>
+            <span class="material-symbols-outlined">groups</span>
+            <strong>Group decisions</strong>
+          </div>
+          <div>
+            <span class="material-symbols-outlined">event_available</span>
+            <strong>Plan voting</strong>
+          </div>
+          <div>
+            <span class="material-symbols-outlined">notifications_active</span>
+            <strong>Live updates</strong>
+          </div>
         </div>
       </div>
     </div>

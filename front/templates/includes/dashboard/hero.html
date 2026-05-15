@@ -4,7 +4,8 @@
   <div class="hero-grid">
     <div class="hero-copy">
       <h1>The world is <span>yours to choose.</span></h1>
-      <p>You have <strong>{{ groups|length }} active groups</strong> coordinating decisions.
+      <p>You have <strong>{{ groups|length }} active groups</strong> coordinating decisions.</p>
+      <p>
         {% if recent_votes %}
         Recent activity detected in <strong>{{ recent_votes.0.plan.group.name }}</strong>.
         {% else %}

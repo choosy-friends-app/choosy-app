@@ -6,26 +6,28 @@
   <div class="auth-panel auth-panel--register">
     <div class="auth-panel__intro">
       <a class="auth-brand-mark" href="{% url 'dashboard' %}" aria-label="Choosy home">
-        <img src="{% static 'img/choosy-logo-white.webp' %}" alt="Choosy logo">
+        <img src="{% static 'img/choosy-logo-cropped.webp' %}" alt="Choosy logo">
       </a>
-      <p class="page-kicker">Join Choosy</p>
-      <h1>Create your workspace identity.</h1>
-      <p class="auth-copy">
-        One account is enough to create groups, propose plans, vote with your squad, and receive updates.
-      </p>
+      <div class="auth-intro__content">
+        <p class="page-kicker">Join Choosy</p>
+        <h1>Create your workspace identity.</h1>
+        <p class="auth-copy">
+          One account is enough to create groups, propose plans, vote with your squad, and receive updates.
+        </p>
 
-      <div class="auth-highlights" aria-label="Account benefits">
-        <div>
-          <span class="material-symbols-outlined">add_circle</span>
-          <strong>Create plans</strong>
-        </div>
-        <div>
-          <span class="material-symbols-outlined">how_to_vote</span>
-          <strong>Vote safely</strong>
-        </div>
-        <div>
-          <span class="material-symbols-outlined">mail</span>
-          <strong>Track invites</strong>
+        <div class="auth-highlights" aria-label="Account benefits">
+          <div>
+            <span class="material-symbols-outlined">add_circle</span>
+            <strong>Create plans</strong>
+          </div>
+          <div>
+            <span class="material-symbols-outlined">how_to_vote</span>
+            <strong>Vote safely</strong>
+          </div>
+          <div>
+            <span class="material-symbols-outlined">mail</span>
+            <strong>Track invites</strong>
+          </div>
         </div>
       </div>
     </div>
