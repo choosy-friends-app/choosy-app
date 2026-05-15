@@ -98,14 +98,10 @@
             {% endif %}
           </div>
           <div class="group-row__meta">
-            <span><span class="material-symbols-outlined">group</span>{{ group.member_count }} member{{
-              group.member_count|pluralize }}</span>
-            <span><span class="material-symbols-outlined">how_to_vote</span>{{ group.voting_plans_count }} option{{
-              group.voting_plans_count|pluralize }} in voting</span>
-            <span><span class="material-symbols-outlined">mail</span>{{ group.pending_invites_count }} pending invite{{
-              group.pending_invites_count|pluralize }}</span>
-            <span><span class="material-symbols-outlined">history</span>Updated {{ group.updated_at|timesince }}
-              ago</span>
+            <span><span class="material-symbols-outlined">group</span>{{ group.member_count }} member{{ group.member_count|pluralize }}</span>
+            <span><span class="material-symbols-outlined">how_to_vote</span>{{ group.voting_plans_count }} option{{ group.voting_plans_count|pluralize }} in voting</span>
+            <span><span class="material-symbols-outlined">mail</span>{{ group.pending_invites_count }} pending invite{{ group.pending_invites_count|pluralize }}</span>
+            <span><span class="material-symbols-outlined">history</span>Updated {{ group.updated_at|timesince }} ago</span>
             {% if request.user.is_authenticated and group.owner_id == request.user.id %}
             <span><span class="material-symbols-outlined">workspace_premium</span>Owner</span>
             {% endif %}

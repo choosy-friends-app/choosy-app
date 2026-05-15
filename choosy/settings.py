@@ -92,7 +92,7 @@ if os.environ.get("DB_NAME"):
 
 AUTH_PASSWORD_VALIDATORS = []
 
-LANGUAGE_CODE = "es-es"
+LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
