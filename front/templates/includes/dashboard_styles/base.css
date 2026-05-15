@@ -12,7 +12,7 @@
   --line-soft: rgba(255, 255, 255, 0.05);
   --shadow: 0 40px 60px -5px rgba(0, 0, 0, 0.4);
   --radius-full: 999px;
-  --content-width: 1280px;
+  --content-width: 1480px;
 }
 
 *,
@@ -207,7 +207,7 @@ button {
   min-height: 3.5rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 1.5rem;
 }
 
@@ -302,7 +302,7 @@ button {
 .page-shell {
   max-width: var(--content-width);
   margin: 0 auto;
-  padding: 0.5rem 2rem 3.5rem;
+  padding: 0.75rem clamp(1.25rem, 3vw, 3rem) 3.5rem;
 }
 
 .notification-toast {

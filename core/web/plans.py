@@ -46,7 +46,7 @@ def start_new_plan(request):
                     "active_page": "start_new_plan",
                     "topbar_context": "Start New Plan",
                     "groups": user_groups,
-                    "error": "Per favor, selecciona un grup per proposar el pla.",
+                    "error": "Please select a group before proposing a plan.",
                 },
             )
 
@@ -60,7 +60,7 @@ def start_new_plan(request):
                     "active_page": "start_new_plan",
                     "topbar_context": "Start New Plan",
                     "groups": user_groups,
-                    "error": "Aquest grup ja te una votacio activa. Tanca-la abans de crear-ne una altra.",
+                    "error": "This group already has an active vote. Close it before creating another one.",
                     "default_voting_end_date": request.POST.get("voting_end_date")
                     or default_voting_end.date().isoformat(),
                     "default_voting_end_time": request.POST.get("voting_end_time")

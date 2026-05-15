@@ -176,7 +176,7 @@
                         height="100%" 
                         frameborder="0" 
                         style="border:0"
-                        src="https://maps.google.com/maps?q=${encodeURIComponent(defaultAddr || 'Lleida')}&t=&z=13&ie=UTF8&iwloc=&output=embed" 
+                        src="https://maps.google.com/maps?q=${encodeURIComponent(defaultAddr || 'Barcelona')}&t=&z=13&ie=UTF8&iwloc=&output=embed"
                         allowfullscreen>
                     </iframe>
                     <div class="map-overlay-glow"></div>
@@ -327,7 +327,7 @@
       addrInput.addEventListener("input", () => {
         clearTimeout(timeout);
         timeout = setTimeout(() => {
-          const q = encodeURIComponent(addrInput.value || "Lleida");
+          const q = encodeURIComponent(addrInput.value || "Barcelona");
           mapFrame.src = `https://maps.google.com/maps?q=${q}&t=&z=13&ie=UTF8&iwloc=&output=embed`;
         }, 600);
       });
@@ -362,8 +362,8 @@
 
     addBtn.onclick = () => addOption();
 
-    // Default first option with Lleida context
-    addOption("Sopar de benvinguda @ UdL", "Universitat de Lleida, Campus Cappont");
+    // Default first option with Barcelona context
+    addOption("Welcome dinner", "Barcelona, Spain");
 
     document.querySelectorAll(".group-radio-item").forEach(item => {
       item.onclick = () => {
