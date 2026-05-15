@@ -1,5 +1,6 @@
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.db import IntegrityError, transaction
 from django.db.models import Max
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from core.models import Group, PlanProposal, Plan, GroupMember
@@ -85,12 +86,24 @@ class PlanCreateView(LoginRequiredMixin, CreateView):
         return initial
 
     def form_valid(self, form):
+        proposal = form.cleaned_data["proposal"]
+        if proposal.status not in {PlanProposal.Status.DRAFT, PlanProposal.Status.VOTING}:
+            form.add_error("proposal", "This proposal is closed and cannot receive new options.")
+            return self.form_invalid(form)
+
         form.instance.created_by = self.request.user
-        # Automatically set the group from the proposal
-        form.instance.group = form.instance.proposal.group
-        max_order = Plan.objects.filter(proposal=form.instance.proposal).aggregate(Max("option_order"))["option_order__max"]
-        form.instance.option_order = 0 if max_order is None else max_order + 1
-        return super().form_valid(form)
+        form.instance.group = proposal.group
+        try:
+            with transaction.atomic():
+                max_order = (
+                    Plan.objects.filter(proposal=proposal)
+                    .aggregate(Max("option_order"))["option_order__max"]
+                )
+                form.instance.option_order = 0 if max_order is None else max_order + 1
+                return super().form_valid(form)
+        except IntegrityError:
+            form.add_error(None, "Could not save this option. Please try again.")
+            return self.form_invalid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

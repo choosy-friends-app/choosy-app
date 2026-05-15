@@ -1,6 +1,8 @@
 import json
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 from django.test import TestCase
 from django.urls import reverse
 
@@ -144,3 +146,27 @@ class SecurityAccessTests(TestCase):
         response = self.client.get(reverse("eliminar_plan", args=[self.closed_plan.id]))
 
         self.assertEqual(response.status_code, 403)
+
+    @patch("core.web.crud.Plan.objects.filter")
+    def test_plan_create_handles_order_conflict_without_500(self, plan_filter):
+        self.client.force_login(self.owner)
+        plan_filter.return_value.aggregate.side_effect = IntegrityError("duplicate key")
+
+        response = self.client.post(
+            reverse("crear_plan"),
+            data={
+                "proposal": self.proposal.id,
+                "title": "Race-safe option",
+                "description": "Should return a form error, not 500",
+                "price": "10.00",
+                "duration_minutes": "45",
+                "tag": "food",
+                "image_url": "",
+                "place_name": "Barcelona",
+                "address": "Barcelona, Spain",
+                "scheduled_for": "",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Could not save this option. Please try again.")
