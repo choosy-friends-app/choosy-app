@@ -37,6 +37,11 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+body.auth-body {
+  display: block;
+  overflow-x: hidden;
+}
+
 h1,
 h2,
 h3,
@@ -1012,15 +1017,23 @@ body.groups-modal-open {
   overflow: hidden;
 }
 
+.auth-shell {
+  width: 100%;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 3rem);
+}
+
 .auth-page {
-  min-height: calc(100vh - 12rem);
+  width: 100%;
+  min-height: 100%;
   display: grid;
   place-items: center;
 }
 
 .auth-page--login {
   align-items: center;
-  min-height: calc(100vh - 8rem);
 }
 
 .auth-panel {
