@@ -1,11 +1,12 @@
 {% extends "auth_base.html" %}
+{% load static %}
 
 {% block content %}
 <section class="auth-page auth-page--login">
   <div class="auth-panel">
     <div class="auth-panel__intro">
       <a class="auth-brand-mark" href="{% url 'dashboard' %}" aria-label="Choosy home">
-        <span class="material-symbols-outlined">how_to_vote</span>
+        <img src="{% static 'img/choosy-logo-white.webp' %}" alt="Choosy logo">
       </a>
       <p class="page-kicker">Choosy Workspace</p>
       <h1>Welcome back.</h1>

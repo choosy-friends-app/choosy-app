@@ -1,8 +1,11 @@
+{% load static %}
 <aside class="app-rail">
   <div class="rail-panel">
     <div class="brand">
-      <span class="brand-title">CHOOSY.<span style="opacity: 0.6; font-weight: 400;">LY</span></span>
-      <span class="brand-subtitle">GROUP DECISION WORKSPACE</span>
+      <a class="brand-lockup" href="{% url 'dashboard' %}" aria-label="Choosy dashboard">
+        <img class="brand-logo" src="{% static 'img/choosy-logo.webp' %}" alt="Choosy logo">
+        <span class="brand-title">Choosy</span>
+      </a>
     </div>
 
     <nav class="rail-nav" aria-label="Main structure">
