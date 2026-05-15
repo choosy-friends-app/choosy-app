@@ -2267,6 +2267,262 @@ body.groups-modal-open {
   color: #ff9d9d;
 }
 
+.plan-builder-page {
+  gap: 2rem;
+}
+
+.plan-builder-hero h1 {
+  max-width: 48rem;
+}
+
+.plan-form-card {
+  overflow: visible;
+}
+
+.plan-form {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.plan-form-section {
+  display: grid;
+  gap: 1.1rem;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.plan-form-section--location {
+  background:
+    linear-gradient(135deg, rgba(105, 218, 255, 0.075), transparent 42%),
+    rgba(255, 255, 255, 0.025);
+}
+
+.plan-form-section__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+
+.plan-form-section__header > .material-symbols-outlined {
+  width: 2.45rem;
+  height: 2.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: 0.85rem;
+  color: #09091b;
+  background: linear-gradient(135deg, var(--tertiary), var(--primary));
+}
+
+.plan-form-section__header h2 {
+  font-family: "Manrope", sans-serif;
+  font-size: 1.12rem;
+}
+
+.plan-form-section__header p {
+  color: var(--muted);
+  line-height: 1.5;
+  margin-top: 0.15rem;
+}
+
+.plan-form-grid {
+  display: grid;
+  gap: 1.15rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.plan-form-grid__wide {
+  grid-column: 1 / -1;
+}
+
+.groups-field {
+  position: relative;
+}
+
+.groups-field > span {
+  color: var(--primary);
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+}
+
+.field-error {
+  color: #ff9d9d;
+  font-size: 0.78rem;
+  margin-top: 0.35rem;
+}
+
+.plan-field-hint {
+  color: var(--muted);
+  display: block;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  margin-top: 0.45rem;
+}
+
+.plan-field-hint.is-error {
+  color: #ff9d9d;
+}
+
+.plan-field-hint.is-success {
+  color: #98f0b5;
+}
+
+.location-suggestions {
+  background: rgba(13, 17, 28, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 0.85rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.36);
+  left: 0;
+  max-height: 18rem;
+  overflow: auto;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.45rem);
+  z-index: 30;
+}
+
+.location-suggestion,
+.location-suggestion-empty {
+  align-items: flex-start;
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  text-align: left;
+  width: 100%;
+}
+
+.location-suggestion {
+  cursor: pointer;
+}
+
+.location-suggestion:hover,
+.location-suggestion:focus {
+  background: rgba(105, 218, 255, 0.12);
+  outline: 0;
+}
+
+.location-suggestion .material-symbols-outlined,
+.location-suggestion-empty .material-symbols-outlined {
+  color: var(--tertiary);
+  flex: 0 0 auto;
+  font-size: 1.2rem;
+  margin-top: 0.1rem;
+}
+
+.location-suggestion strong,
+.location-suggestion-empty strong {
+  display: block;
+  line-height: 1.3;
+}
+
+.location-suggestion small,
+.location-suggestion-empty small {
+  color: var(--muted);
+  display: block;
+  line-height: 1.35;
+  margin-top: 0.18rem;
+}
+
+.weather-card {
+  align-items: center;
+  background:
+    linear-gradient(135deg, rgba(14, 165, 233, 0.16), rgba(34, 197, 94, 0.1)),
+    rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(125, 211, 252, 0.22);
+  border-radius: 1rem;
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.weather-card--idle {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.weather-card--error {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.weather-card__icon {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 0.85rem;
+  color: #fde68a;
+  display: flex;
+  flex: 0 0 3.2rem;
+  font-family: "Material Symbols Outlined";
+  font-size: 1.85rem;
+  height: 3.2rem;
+  justify-content: center;
+}
+
+.weather-card--error .weather-card__icon {
+  color: #ff9d9d;
+}
+
+.weather-card__body span {
+  color: var(--primary);
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+}
+
+.weather-card__body strong {
+  color: var(--text);
+  display: block;
+  font-size: 1rem;
+}
+
+.weather-card__body p {
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 0.25rem 0 0;
+}
+
+.plan-form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.plan-helper-card {
+  position: sticky;
+  top: 1.5rem;
+}
+
+@media (max-width: 760px) {
+  .plan-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .plan-form-section {
+    padding: 1rem;
+  }
+
+  .weather-card {
+    align-items: flex-start;
+  }
+
+  .plan-form-actions {
+    flex-direction: column-reverse;
+  }
+}
+
 .groups-overview {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(20rem, 0.95fr);

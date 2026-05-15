@@ -1,19 +1,25 @@
 {% extends "base.html" %}
-
 {% block content %}
-<section class="groups-page">
-  <header class="groups-hero">
+<section class="groups-page plan-builder-page">
+  <header class="groups-hero plan-builder-hero">
     <div class="groups-hero__copy">
       <p class="page-kicker">Plan Builder</p>
       <h1>{{ title }}</h1>
-      <p>Choose the details, pin the location, and check the forecast before your group votes.</p>
+      <p>Build a real option for the vote with location search and live weather context.</p>
     </div>
   </header>
 
   <div class="dashboard-grid">
     <div class="dashboard-main">
       <div class="group-card plan-form-card">
-        <form method="post" class="groups-modal__form" data-plan-form novalidate>
+        <form
+          method="post"
+          class="groups-modal__form plan-form"
+          data-plan-form
+          data-location-url="{% url 'api_location_search' %}"
+          data-weather-url="{% url 'api_weather_forecast' %}"
+          novalidate
+        >
           {% csrf_token %}
           {{ form.location_latitude }}
           {{ form.location_longitude }}
@@ -22,75 +28,98 @@
             <div class="groups-flash groups-flash--error">{{ form.non_field_errors }}</div>
           {% endif %}
 
-          <div class="plan-form-grid">
-            <label class="groups-field">
-              <span>Proposal</span>
-              {{ form.proposal }}
-              {% for error in form.proposal.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
-            </label>
+          <div class="plan-form-section">
+            <div class="plan-form-section__header">
+              <span class="material-symbols-outlined">edit_calendar</span>
+              <div>
+                <h2>Plan details</h2>
+                <p>Keep it clear enough for the group to compare quickly.</p>
+              </div>
+            </div>
 
-            <label class="groups-field">
-              <span>Title</span>
-              {{ form.title }}
-              {% for error in form.title.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
-            </label>
+            <div class="plan-form-grid">
+              <label class="groups-field">
+                <span>Proposal</span>
+                {{ form.proposal }}
+                {% for error in form.proposal.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+              </label>
 
-            <label class="groups-field plan-form-grid__wide">
-              <span>Description</span>
-              {{ form.description }}
-              {% for error in form.description.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
-            </label>
+              <label class="groups-field">
+                <span>Title</span>
+                {{ form.title }}
+                {% for error in form.title.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+              </label>
 
-            <label class="groups-field">
-              <span>Price</span>
-              {{ form.price }}
-              {% for error in form.price.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
-            </label>
+              <label class="groups-field plan-form-grid__wide">
+                <span>Description</span>
+                {{ form.description }}
+                {% for error in form.description.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+              </label>
 
-            <label class="groups-field">
-              <span>Duration</span>
-              {{ form.duration_minutes }}
-              {% for error in form.duration_minutes.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
-            </label>
+              <label class="groups-field">
+                <span>Price</span>
+                {{ form.price }}
+                {% for error in form.price.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+              </label>
 
-            <label class="groups-field">
-              <span>Tag</span>
-              {{ form.tag }}
-              {% for error in form.tag.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
-            </label>
+              <label class="groups-field">
+                <span>Duration in minutes</span>
+                {{ form.duration_minutes }}
+                {% for error in form.duration_minutes.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+              </label>
 
-            <label class="groups-field">
-              <span>Date and time</span>
-              {{ form.scheduled_for }}
-              {% for error in form.scheduled_for.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
-            </label>
+              <label class="groups-field">
+                <span>Tag</span>
+                {{ form.tag }}
+                {% for error in form.tag.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+              </label>
 
-            <label class="groups-field plan-location-field">
-              <span>Location</span>
-              {{ form.place_name }}
-              <div class="location-suggestions" data-location-suggestions hidden></div>
-              {% for error in form.place_name.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
-            </label>
-
-            <label class="groups-field">
-              <span>Address</span>
-              {{ form.address }}
-              {% for error in form.address.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
-            </label>
-
-            <label class="groups-field plan-form-grid__wide">
-              <span>Image URL</span>
-              {{ form.image_url }}
-              {% for error in form.image_url.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
-            </label>
+              <label class="groups-field">
+                <span>Date and time</span>
+                {{ form.scheduled_for }}
+                {% for error in form.scheduled_for.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+              </label>
+            </div>
           </div>
 
-          <div class="weather-card" data-weather-card hidden>
-            <div class="weather-card__icon" data-weather-icon>wb_sunny</div>
-            <div class="weather-card__body">
-              <span data-weather-eyebrow>Weather Forecast</span>
-              <strong data-weather-summary>Pick a location and date</strong>
-              <p data-weather-detail></p>
+          <div class="plan-form-section plan-form-section--location">
+            <div class="plan-form-section__header">
+              <span class="material-symbols-outlined">travel_explore</span>
+              <div>
+                <h2>Location intelligence</h2>
+                <p>Search a real place, then Choosy checks the forecast automatically.</p>
+              </div>
+            </div>
+
+            <div class="plan-form-grid">
+              <label class="groups-field plan-location-field">
+                <span>Location</span>
+                {{ form.place_name }}
+                <div class="location-suggestions" data-location-suggestions hidden></div>
+                <small class="plan-field-hint" data-location-status>Type at least 3 characters to search OpenStreetMap.</small>
+                {% for error in form.place_name.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+              </label>
+
+              <label class="groups-field">
+                <span>Address</span>
+                {{ form.address }}
+                {% for error in form.address.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+              </label>
+
+              <label class="groups-field plan-form-grid__wide">
+                <span>Image URL</span>
+                {{ form.image_url }}
+                {% for error in form.image_url.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+              </label>
+            </div>
+
+            <div class="weather-card weather-card--idle" data-weather-card>
+              <div class="weather-card__icon" data-weather-icon>routine</div>
+              <div class="weather-card__body">
+                <span data-weather-eyebrow>Weather Forecast</span>
+                <strong data-weather-summary>Waiting for location and date</strong>
+                <p data-weather-detail>Select a suggestion and choose a date to load Open-Meteo data.</p>
+              </div>
             </div>
           </div>
 
@@ -106,308 +135,19 @@
     </div>
 
     <aside class="dashboard-side">
-      <div class="promo-card">
+      <div class="promo-card plan-helper-card">
         <div class="promo-content">
-          <span class="promo-tag">Live Context</span>
-          <h3>Location-aware planning</h3>
-          <p>Suggestions come from OpenStreetMap. Forecasts come from Open-Meteo after a location and date are selected.</p>
+          <span class="promo-tag">Live APIs</span>
+          <h3>Real-world context</h3>
+          <p>Location suggestions are proxied through Django from OpenStreetMap. Forecasts are proxied from Open-Meteo so browser CORS and third-party outages fail gracefully.</p>
         </div>
       </div>
     </aside>
   </div>
 </section>
 
-<style>
-  .plan-form-card {
-    overflow: visible;
-  }
-
-  .plan-form-grid {
-    display: grid;
-    gap: 1.25rem;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .plan-form-grid__wide {
-    grid-column: 1 / -1;
-  }
-
-  .groups-field {
-    position: relative;
-  }
-
-  .groups-field > span {
-    color: var(--primary);
-    display: block;
-    font-size: 0.78rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    margin-bottom: 0.5rem;
-    text-transform: uppercase;
-  }
-
-  .field-error {
-    color: #ff6b6b;
-    font-size: 0.78rem;
-    margin-top: 0.35rem;
-  }
-
-  .location-suggestions {
-    background: rgba(11, 18, 32, 0.96);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 8px;
-    box-shadow: 0 18px 46px rgba(0, 0, 0, 0.32);
-    left: 0;
-    max-height: 260px;
-    overflow: auto;
-    position: absolute;
-    right: 0;
-    top: calc(100% + 0.45rem);
-    z-index: 20;
-  }
-
-  .location-suggestion {
-    align-items: flex-start;
-    background: transparent;
-    border: 0;
-    color: var(--text-color);
-    cursor: pointer;
-    display: flex;
-    gap: 0.75rem;
-    padding: 0.85rem 1rem;
-    text-align: left;
-    width: 100%;
-  }
-
-  .location-suggestion:hover,
-  .location-suggestion:focus {
-    background: rgba(125, 211, 252, 0.12);
-    outline: 0;
-  }
-
-  .location-suggestion small {
-    color: var(--muted);
-    display: block;
-    line-height: 1.35;
-    margin-top: 0.15rem;
-  }
-
-  .weather-card {
-    align-items: center;
-    background: linear-gradient(135deg, rgba(14, 165, 233, 0.16), rgba(34, 197, 94, 0.12));
-    border: 1px solid rgba(125, 211, 252, 0.26);
-    border-radius: 8px;
-    display: flex;
-    gap: 1rem;
-    margin-top: 1.5rem;
-    padding: 1rem;
-  }
-
-  .weather-card__icon {
-    align-items: center;
-    background: rgba(255, 255, 255, 0.12);
-    border-radius: 8px;
-    color: #fde68a;
-    display: flex;
-    flex: 0 0 3rem;
-    font-family: "Material Symbols Outlined";
-    font-size: 1.8rem;
-    height: 3rem;
-    justify-content: center;
-  }
-
-  .weather-card__body span {
-    color: var(--primary);
-    display: block;
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    margin-bottom: 0.25rem;
-    text-transform: uppercase;
-  }
-
-  .weather-card__body strong {
-    color: var(--text-color);
-    display: block;
-    font-size: 1rem;
-  }
-
-  .weather-card__body p {
-    color: var(--muted);
-    margin: 0.25rem 0 0;
-  }
-
-  .plan-form-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: flex-end;
-    margin-top: 2rem;
-  }
-
-  @media (max-width: 760px) {
-    .plan-form-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .plan-form-actions {
-      flex-direction: column-reverse;
-    }
-  }
-</style>
-
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
-  $(function () {
-    const $locationInput = $("[data-location-input]");
-    const $suggestions = $("[data-location-suggestions]");
-    const $scheduledFor = $("#id_scheduled_for");
-    const $address = $("#id_address");
-    const $lat = $("#id_location_latitude");
-    const $lon = $("#id_location_longitude");
-    const $weatherCard = $("[data-weather-card]");
-    const $weatherIcon = $("[data-weather-icon]");
-    const $weatherSummary = $("[data-weather-summary]");
-    const $weatherDetail = $("[data-weather-detail]");
-    let selectedLocation = null;
-    let locationRequest = null;
-    let debounceTimer = null;
-
-    const weatherLabels = {
-      0: ["wb_sunny", "Clear sky"],
-      1: ["partly_cloudy_day", "Mainly clear"],
-      2: ["partly_cloudy_day", "Partly cloudy"],
-      3: ["cloud", "Overcast"],
-      45: ["foggy", "Fog"],
-      48: ["foggy", "Depositing rime fog"],
-      51: ["rainy_light", "Light drizzle"],
-      53: ["rainy_light", "Drizzle"],
-      55: ["rainy", "Dense drizzle"],
-      61: ["rainy_light", "Slight rain"],
-      63: ["rainy", "Rain"],
-      65: ["rainy_heavy", "Heavy rain"],
-      71: ["weather_snowy", "Slight snow"],
-      73: ["weather_snowy", "Snow"],
-      75: ["ac_unit", "Heavy snow"],
-      80: ["rainy", "Rain showers"],
-      81: ["rainy", "Rain showers"],
-      82: ["thunderstorm", "Violent rain showers"],
-      95: ["thunderstorm", "Thunderstorm"]
-    };
-
-    function hideSuggestions() {
-      $suggestions.empty().prop("hidden", true);
-    }
-
-    function setWeatherLoading() {
-      $weatherIcon.text("hourglass_top");
-      $weatherSummary.text("Fetching forecast...");
-      $weatherDetail.text("Open-Meteo is checking the selected date.");
-      $weatherCard.prop("hidden", false);
-    }
-
-    function selectedDate() {
-      const raw = $scheduledFor.val();
-      return raw ? raw.slice(0, 10) : "";
-    }
-
-    function fetchWeather() {
-      if (!selectedLocation || !selectedDate()) return;
-      setWeatherLoading();
-
-      $.ajax({
-        url: "https://api.open-meteo.com/v1/forecast",
-        method: "GET",
-        dataType: "json",
-        data: {
-          latitude: selectedLocation.lat,
-          longitude: selectedLocation.lon,
-          daily: "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max",
-          timezone: "auto",
-          start_date: selectedDate(),
-          end_date: selectedDate()
-        }
-      }).done(function (payload) {
-        const daily = payload.daily || {};
-        const code = Number((daily.weather_code || [])[0]);
-        const label = weatherLabels[code] || ["wb_cloudy", "Forecast available"];
-        const max = (daily.temperature_2m_max || [])[0];
-        const min = (daily.temperature_2m_min || [])[0];
-        const rain = (daily.precipitation_probability_max || [])[0];
-        $weatherIcon.text(label[0]);
-        $weatherSummary.text(label[1]);
-        $weatherDetail.text(`High ${max}°C · Low ${min}°C · Rain chance ${rain}%`);
-      }).fail(function () {
-        $weatherIcon.text("cloud_off");
-        $weatherSummary.text("Forecast unavailable");
-        $weatherDetail.text("The plan can still be saved. Try another date or location if needed.");
-      });
-    }
-
-    function renderSuggestions(results) {
-      $suggestions.empty();
-      if (!results.length) {
-        hideSuggestions();
-        return;
-      }
-
-      results.forEach(function (item) {
-        const title = item.name || item.display_name.split(",")[0];
-        const $button = $("<button/>", {
-          type: "button",
-          class: "location-suggestion",
-          html: `<span class="material-symbols-outlined">place</span><span><strong></strong><small></small></span>`
-        });
-        $button.find("strong").text(title);
-        $button.find("small").text(item.display_name);
-        $button.on("click", function () {
-          selectedLocation = { lat: item.lat, lon: item.lon };
-          $locationInput.val(title);
-          $address.val(item.display_name);
-          $lat.val(item.lat);
-          $lon.val(item.lon);
-          hideSuggestions();
-          fetchWeather();
-        });
-        $suggestions.append($button);
-      });
-      $suggestions.prop("hidden", false);
-    }
-
-    $locationInput.on("input", function () {
-      const query = $.trim($locationInput.val());
-      selectedLocation = null;
-      $lat.val("");
-      $lon.val("");
-      window.clearTimeout(debounceTimer);
-      if (query.length < 3) {
-        hideSuggestions();
-        return;
-      }
-
-      debounceTimer = window.setTimeout(function () {
-        if (locationRequest) locationRequest.abort();
-        locationRequest = $.ajax({
-          url: "https://nominatim.openstreetmap.org/search",
-          method: "GET",
-          dataType: "json",
-          data: {
-            q: query,
-            format: "jsonv2",
-            addressdetails: 1,
-            limit: 5
-          }
-        }).done(renderSuggestions).fail(function () {
-          hideSuggestions();
-        });
-      }, 280);
-    });
-
-    $scheduledFor.on("change", fetchWeather);
-    $(document).on("click", function (event) {
-      if (!$(event.target).closest(".plan-location-field").length) {
-        hideSuggestions();
-      }
-    });
-  });
+  {% include "includes/plan_form/scripts.html" %}
 </script>
 {% endblock %}

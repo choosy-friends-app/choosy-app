@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+
 from .models import Group, PlanProposal, Plan
 
 class RegisterForm(UserCreationForm):
@@ -48,6 +49,7 @@ class PlanProposalForm(forms.ModelForm):
             ),
         }
 
+
 class PlanForm(forms.ModelForm):
     location_latitude = forms.DecimalField(required=False, widget=forms.HiddenInput())
     location_longitude = forms.DecimalField(required=False, widget=forms.HiddenInput())
@@ -55,7 +57,7 @@ class PlanForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         if user is not None:
-            self.fields['proposal'].queryset = PlanProposal.objects.filter(created_by=user)
+            self.fields['proposal'].queryset = PlanProposal.objects.filter(created_by=user).select_related("group")
 
     class Meta:
         model = Plan
@@ -66,19 +68,23 @@ class PlanForm(forms.ModelForm):
         ]
         widgets = {
             'proposal': forms.Select(attrs={'class': 'groups-input'}),
-            'title': forms.TextInput(attrs={'class': 'groups-input'}),
-            'description': forms.TextInput(attrs={'class': 'groups-input'}),
-            'price': forms.NumberInput(attrs={'class': 'groups-input'}),
-            'duration_minutes': forms.NumberInput(attrs={'class': 'groups-input'}),
-            'tag': forms.TextInput(attrs={'class': 'groups-input'}),
-            'image_url': forms.URLInput(attrs={'class': 'groups-input'}),
+            'title': forms.TextInput(attrs={'class': 'groups-input', 'placeholder': 'e.g. Rooftop dinner'}),
+            'description': forms.TextInput(attrs={'class': 'groups-input', 'placeholder': 'Short pitch for the group'}),
+            'price': forms.NumberInput(attrs={'class': 'groups-input', 'min': '0', 'step': '0.01', 'placeholder': '0.00'}),
+            'duration_minutes': forms.NumberInput(attrs={'class': 'groups-input', 'min': '1', 'placeholder': '90'}),
+            'tag': forms.TextInput(attrs={'class': 'groups-input', 'placeholder': 'food, culture, sport...'}),
+            'image_url': forms.URLInput(attrs={'class': 'groups-input', 'placeholder': 'https://...'}),
             'place_name': forms.TextInput(attrs={
                 'class': 'groups-input',
                 'autocomplete': 'off',
                 'data-location-input': 'true',
-                'placeholder': 'Start typing a city, venue, or address',
+                'placeholder': 'Type a city, venue, or address',
             }),
-            'address': forms.TextInput(attrs={'class': 'groups-input'}),
+            'address': forms.TextInput(attrs={
+                'class': 'groups-input',
+                'data-address-input': 'true',
+                'placeholder': 'Autofills after selecting a location',
+            }),
             'scheduled_for': forms.DateTimeInput(
                 attrs={'class': 'groups-input', 'type': 'datetime-local'},
                 format='%Y-%m-%dT%H:%M',
