@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
+from core.models import Group, GroupMember, PlanProposal
+
 
 class Command(BaseCommand):
     help = "Create local demo users for testing groups, invites, and voting flows."
@@ -59,6 +61,42 @@ class Command(BaseCommand):
                     f" - {user.username} ({user.get_full_name() or user.username}) [{action}]"
                 )
             )
+
+        owner = user_model.objects.get(username="aleix")
+        group, group_created = Group.objects.get_or_create(
+            name="Aleix Demo Squad",
+            owner=owner,
+            defaults={
+                "description": "Local group for testing Choosy plan creation.",
+                "mission_statement": "Pick the plan with the least friction.",
+                "interests": ["food", "culture", "outdoors"],
+            },
+        )
+        group.add_member(user=owner, role=GroupMember.Role.OWNER)
+        proposal = PlanProposal.objects.filter(
+            group=group,
+            status__in=[PlanProposal.Status.DRAFT, PlanProposal.Status.VOTING],
+        ).first()
+        proposal_created = proposal is None
+        if proposal is None:
+            proposal = PlanProposal.objects.create(
+                group=group,
+                created_by=owner,
+                status=PlanProposal.Status.VOTING,
+                title="Weekend Demo Vote",
+                description="Use this proposal to test location search and weather.",
+            )
+        self.stdout.write("")
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Demo group ready: {group.name} [{'created' if group_created else 'existing'}]"
+            )
+        )
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Demo proposal ready: {proposal.title} [{'created' if proposal_created else 'existing'}]"
+            )
+        )
 
         self.stdout.write("")
         self.stdout.write(
