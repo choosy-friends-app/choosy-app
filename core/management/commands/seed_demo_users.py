@@ -8,6 +8,8 @@ class Command(BaseCommand):
     help = "Create local demo users for testing groups, invites, and voting flows."
 
     DEFAULT_PASSWORD = "demo1234"
+    ADMIN_USERNAME = "admin"
+    ADMIN_PASSWORD = "admin1234"
     DEMO_USERS = [
         {
             "username": "aleix",
@@ -37,6 +39,25 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         user_model = get_user_model()
+
+        admin_user, admin_created = user_model.objects.get_or_create(
+            username=self.ADMIN_USERNAME,
+            defaults={
+                "is_staff": True,
+                "is_superuser": True,
+                "email": "admin@example.com",
+            },
+        )
+        admin_user.is_staff = True
+        admin_user.is_superuser = True
+        admin_user.set_password(self.ADMIN_PASSWORD)
+        admin_user.save(update_fields=["is_staff", "is_superuser", "password"])
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f" - {admin_user.username} (Admin) [{'created' if admin_created else 'updated'}]"
+            )
+        )
 
         self.stdout.write("Creating demo users for localhost...")
         for user_data in self.DEMO_USERS:
@@ -103,5 +124,10 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.WARNING(
                 f"Demo password for all seeded users: {self.DEFAULT_PASSWORD}"
+            )
+        )
+        self.stdout.write(
+            self.style.WARNING(
+                f"Admin credentials: {self.ADMIN_USERNAME} / {self.ADMIN_PASSWORD}"
             )
         )
