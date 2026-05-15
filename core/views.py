@@ -6,6 +6,7 @@ from core.web.crud import (
     PlanCreateView, PlanUpdateView, PlanDeleteView
 )
 from core.web.groups import api_add_group_member, api_create_group, groups
+from core.web.integrations import api_location_search, api_weather_forecast
 from core.web.notifications import (
     api_clear_notifications,
     api_invite_user,
@@ -23,10 +24,12 @@ __all__ = [
     "api_clear_notifications",
     "api_create_group",
     "api_invite_user",
+    "api_location_search",
     "api_mark_notifications_read",
     "api_notification_status",
     "api_respond_invitation",
     "api_submit_vote",
+    "api_weather_forecast",
     "archive",
     "dashboard",
     "dashboard_css",

@@ -24,6 +24,8 @@ urlpatterns = [
     path("api/groups/", views.api_create_group, name="api_create_group"),
     path("api/groups/<int:group_id>/members/", views.api_add_group_member, name="api_add_group_member"),
     path("api/vote/<int:plan_id>/", views.api_submit_vote, name="api_submit_vote"),
+    path("api/locations/search/", views.api_location_search, name="api_location_search"),
+    path("api/weather/forecast/", views.api_weather_forecast, name="api_weather_forecast"),
     
     path("notifications/", views.notification_center, name="notifications"),
     path("invitation/<int:group_id>/", views.invitation_detail, name="invitation_detail"),
