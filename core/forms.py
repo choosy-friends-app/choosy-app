@@ -30,6 +30,11 @@ class GroupForm(forms.ModelForm):
         }
 
 class PlanProposalForm(forms.ModelForm):
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if user is not None:
+            self.fields['group'].queryset = Group.objects.filter(owner=user)
+
     class Meta:
         model = PlanProposal
         fields = ['group', 'title', 'description', 'voting_ends_at']
@@ -37,10 +42,21 @@ class PlanProposalForm(forms.ModelForm):
             'group': forms.Select(attrs={'class': 'groups-input'}),
             'title': forms.TextInput(attrs={'class': 'groups-input'}),
             'description': forms.TextInput(attrs={'class': 'groups-input'}),
-            'voting_ends_at': forms.DateTimeInput(attrs={'class': 'groups-input', 'type': 'datetime-local'}),
+            'voting_ends_at': forms.DateTimeInput(
+                attrs={'class': 'groups-input', 'type': 'datetime-local'},
+                format='%Y-%m-%dT%H:%M',
+            ),
         }
 
 class PlanForm(forms.ModelForm):
+    location_latitude = forms.DecimalField(required=False, widget=forms.HiddenInput())
+    location_longitude = forms.DecimalField(required=False, widget=forms.HiddenInput())
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if user is not None:
+            self.fields['proposal'].queryset = PlanProposal.objects.filter(created_by=user)
+
     class Meta:
         model = Plan
         fields = [
@@ -56,7 +72,15 @@ class PlanForm(forms.ModelForm):
             'duration_minutes': forms.NumberInput(attrs={'class': 'groups-input'}),
             'tag': forms.TextInput(attrs={'class': 'groups-input'}),
             'image_url': forms.URLInput(attrs={'class': 'groups-input'}),
-            'place_name': forms.TextInput(attrs={'class': 'groups-input'}),
+            'place_name': forms.TextInput(attrs={
+                'class': 'groups-input',
+                'autocomplete': 'off',
+                'data-location-input': 'true',
+                'placeholder': 'Start typing a city, venue, or address',
+            }),
             'address': forms.TextInput(attrs={'class': 'groups-input'}),
-            'scheduled_for': forms.DateTimeInput(attrs={'class': 'groups-input', 'type': 'datetime-local'}),
+            'scheduled_for': forms.DateTimeInput(
+                attrs={'class': 'groups-input', 'type': 'datetime-local'},
+                format='%Y-%m-%dT%H:%M',
+            ),
         }

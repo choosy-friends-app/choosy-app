@@ -1,9 +1,19 @@
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.db.models import Max
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.shortcuts import redirect
 from core.models import Group, PlanProposal, Plan, GroupMember
 from core.forms import GroupForm, PlanProposalForm, PlanForm
+
+
+class OwnerRequiredMixin(UserPassesTestMixin):
+    raise_exception = True
+
+    owner_field = "created_by"
+
+    def test_func(self):
+        obj = self.get_object()
+        return getattr(obj, self.owner_field) == self.request.user
 
 class GroupCreateView(LoginRequiredMixin, CreateView):
     model = Group
@@ -30,6 +40,11 @@ class PlanProposalCreateView(LoginRequiredMixin, CreateView):
     template_name = 'pages/crear_entidad.html'
     success_url = reverse_lazy('dashboard')
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
     def form_valid(self, form):
         form.instance.created_by = self.request.user
         return super().form_valid(form)
@@ -43,13 +58,20 @@ class PlanProposalCreateView(LoginRequiredMixin, CreateView):
 class PlanCreateView(LoginRequiredMixin, CreateView):
     model = Plan
     form_class = PlanForm
-    template_name = 'pages/crear_entidad.html'
+    template_name = 'pages/plan_form.html'
     success_url = reverse_lazy('dashboard')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
         # Automatically set the group from the proposal
         form.instance.group = form.instance.proposal.group
+        max_order = Plan.objects.filter(proposal=form.instance.proposal).aggregate(Max("option_order"))["option_order__max"]
+        form.instance.option_order = 0 if max_order is None else max_order + 1
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
@@ -58,15 +80,12 @@ class PlanCreateView(LoginRequiredMixin, CreateView):
         context['meta_title'] = 'Crear Plan'
         return context
 
-class GroupUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class GroupUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
     model = Group
     form_class = GroupForm
     template_name = 'pages/crear_entidad.html'
     success_url = reverse_lazy('groups')
-
-    def test_func(self):
-        obj = self.get_object()
-        return obj.owner == self.request.user
+    owner_field = "owner"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -74,15 +93,16 @@ class GroupUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         context['meta_title'] = 'Editar Grupo'
         return context
 
-class PlanProposalUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class PlanProposalUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
     model = PlanProposal
     form_class = PlanProposalForm
     template_name = 'pages/crear_entidad.html'
     success_url = reverse_lazy('dashboard')
 
-    def test_func(self):
-        obj = self.get_object()
-        return obj.created_by == self.request.user
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -90,15 +110,16 @@ class PlanProposalUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         context['meta_title'] = 'Editar Propuesta'
         return context
 
-class PlanUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class PlanUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
     model = Plan
     form_class = PlanForm
-    template_name = 'pages/crear_entidad.html'
+    template_name = 'pages/plan_form.html'
     success_url = reverse_lazy('dashboard')
 
-    def test_func(self):
-        obj = self.get_object()
-        return obj.created_by == self.request.user
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
     def form_valid(self, form):
         form.instance.group = form.instance.proposal.group
@@ -110,14 +131,11 @@ class PlanUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         context['meta_title'] = 'Editar Plan'
         return context
 
-class GroupDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class GroupDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):
     model = Group
     template_name = 'pages/confirmar_borrado.html'
     success_url = reverse_lazy('groups')
-
-    def test_func(self):
-        obj = self.get_object()
-        return obj.owner == self.request.user
+    owner_field = "owner"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -125,14 +143,10 @@ class GroupDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         context['meta_title'] = 'Eliminar Grupo'
         return context
 
-class PlanProposalDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class PlanProposalDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):
     model = PlanProposal
     template_name = 'pages/confirmar_borrado.html'
     success_url = reverse_lazy('dashboard')
-
-    def test_func(self):
-        obj = self.get_object()
-        return obj.created_by == self.request.user
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -140,14 +154,10 @@ class PlanProposalDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView
         context['meta_title'] = 'Eliminar Propuesta'
         return context
 
-class PlanDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class PlanDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):
     model = Plan
     template_name = 'pages/confirmar_borrado.html'
     success_url = reverse_lazy('dashboard')
-
-    def test_func(self):
-        obj = self.get_object()
-        return obj.created_by == self.request.user
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

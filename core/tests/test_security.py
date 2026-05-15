@@ -54,3 +54,39 @@ class SecurityAccessTests(TestCase):
         response = self.client.get(reverse("invitation_detail", args=[self.group.id]))
 
         self.assertEqual(response.status_code, 403)
+
+    def test_plan_update_rejects_non_creator_with_403(self):
+        self.client.force_login(self.member)
+
+        response = self.client.get(reverse("editar_plan", args=[self.plan.id]))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_plan_delete_rejects_non_creator_with_403(self):
+        self.client.force_login(self.member)
+
+        response = self.client.get(reverse("eliminar_plan", args=[self.plan.id]))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_plan_create_cannot_use_another_users_proposal(self):
+        self.client.force_login(self.member)
+
+        response = self.client.post(
+            reverse("crear_plan"),
+            data={
+                "proposal": self.proposal.id,
+                "title": "Unauthorized plan",
+                "description": "Should not be accepted",
+                "price": "10.00",
+                "duration_minutes": "45",
+                "tag": "food",
+                "image_url": "",
+                "place_name": "Barcelona",
+                "address": "Barcelona, Spain",
+                "scheduled_for": "",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Plan.objects.filter(title="Unauthorized plan").exists())
