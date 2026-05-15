@@ -1,23 +1,97 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="auth-page">
-  <div class="auth-card">
-    <p class="page-kicker">Local Authentication</p>
-    <h1>Login</h1>
+<section class="auth-page auth-page--login">
+  <div class="auth-panel">
+    <div class="auth-panel__intro">
+      <a class="auth-brand-mark" href="{% url 'dashboard' %}" aria-label="Choosy home">
+        <span class="material-symbols-outlined">how_to_vote</span>
+      </a>
+      <p class="page-kicker">Choosy Workspace</p>
+      <h1>Welcome back.</h1>
+      <p class="auth-copy">
+        Sign in to test your groups, proposals, votes, and notifications with the new plan workflow.
+      </p>
 
-    {% if error_message %}
-    <div class="groups-flash groups-flash--error">{{ error_message }}</div>
-    {% endif %}
+      <div class="auth-highlights" aria-label="Choosy features">
+        <div>
+          <span class="material-symbols-outlined">groups</span>
+          <strong>Group decisions</strong>
+        </div>
+        <div>
+          <span class="material-symbols-outlined">event_available</span>
+          <strong>Plan voting</strong>
+        </div>
+        <div>
+          <span class="material-symbols-outlined">notifications_active</span>
+          <strong>Live updates</strong>
+        </div>
+      </div>
+    </div>
 
-    <form class="auth-form" method="post">
-      {% csrf_token %}
-      <input class="groups-input" type="text" name="username" placeholder="Username" required />
-      <input class="groups-input" type="password" name="password" placeholder="Password" required />
-      <button class="groups-hero__action auth-submit" type="submit">Entrar</button>
-    </form>
+    <div class="auth-card auth-card--login">
+      <div class="auth-card__header">
+        <span class="auth-card__eyebrow">Secure access</span>
+        <h2>Log in</h2>
+        <p>Use your Choosy username and password.</p>
+      </div>
 
-    <p class="auth-switch">Don't have an account yet? <a href="{% url 'register' %}">Create one now</a></p>
+      {% if error_message %}
+      <div class="groups-flash groups-flash--error auth-error" role="alert">
+        <span class="material-symbols-outlined">error</span>
+        <span>{{ error_message }}</span>
+      </div>
+      {% endif %}
+
+      <form class="auth-form" method="post" novalidate>
+        {% csrf_token %}
+        <label class="auth-field">
+          <span>Username</span>
+          <div class="auth-input-shell">
+            <span class="material-symbols-outlined" aria-hidden="true">person</span>
+            <input class="groups-input" type="text" name="username" autocomplete="username" required autofocus />
+          </div>
+        </label>
+
+        <label class="auth-field">
+          <span>Password</span>
+          <div class="auth-input-shell">
+            <span class="material-symbols-outlined" aria-hidden="true">lock</span>
+            <input class="groups-input" type="password" name="password" autocomplete="current-password" required data-password-input />
+            <button class="auth-password-toggle" type="button" aria-label="Show password" data-password-toggle>
+              <span class="material-symbols-outlined">visibility</span>
+            </button>
+          </div>
+        </label>
+
+        <div class="auth-form__meta">
+          <span>Protected local session</span>
+          <a href="{% url 'register' %}">Create account</a>
+        </div>
+
+        <button class="groups-hero__action auth-submit" type="submit">
+          <span>Enter Choosy</span>
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </form>
+
+      <p class="auth-switch">No account yet? <a href="{% url 'register' %}">Create one in seconds</a></p>
+    </div>
   </div>
 </section>
+
+<script>
+  (() => {
+    const input = document.querySelector("[data-password-input]");
+    const toggle = document.querySelector("[data-password-toggle]");
+    if (!input || !toggle) return;
+
+    toggle.addEventListener("click", () => {
+      const isPassword = input.type === "password";
+      input.type = isPassword ? "text" : "password";
+      toggle.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
+      toggle.querySelector(".material-symbols-outlined").textContent = isPassword ? "visibility_off" : "visibility";
+    });
+  })();
+</script>
 {% endblock %}
