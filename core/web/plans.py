@@ -24,6 +24,11 @@ from core.web.shared import (
 def start_new_plan(request):
     user_groups = _user_groups_queryset(request)
     default_voting_end = _default_voting_end()
+    selected_group_id = request.GET.get("group_id")
+    if selected_group_id and not user_groups.filter(id=selected_group_id).exists():
+        selected_group_id = None
+    if selected_group_id is None and user_groups.exists():
+        selected_group_id = str(user_groups.first().id)
 
     if request.method == "POST":
         group_id = request.POST.get("group_id")
@@ -46,6 +51,7 @@ def start_new_plan(request):
                     "active_page": "start_new_plan",
                     "topbar_context": "Start New Plan",
                     "groups": user_groups,
+                    "selected_group_id": group_id or selected_group_id,
                     "error": "Please select a group before proposing a plan.",
                 },
             )
@@ -60,6 +66,7 @@ def start_new_plan(request):
                     "active_page": "start_new_plan",
                     "topbar_context": "Start New Plan",
                     "groups": user_groups,
+                    "selected_group_id": group_id or selected_group_id,
                     "error": "This group already has an active vote. Close it before creating another one.",
                     "default_voting_end_date": request.POST.get("voting_end_date")
                     or default_voting_end.date().isoformat(),
@@ -79,6 +86,7 @@ def start_new_plan(request):
                     "active_page": "start_new_plan",
                     "topbar_context": "Start New Plan",
                     "groups": user_groups,
+                    "selected_group_id": group_id or selected_group_id,
                     "error": str(exc),
                     "default_voting_end_date": request.POST.get("voting_end_date")
                     or default_voting_end.date().isoformat(),
@@ -137,6 +145,7 @@ def start_new_plan(request):
             "active_page": "start_new_plan",
             "topbar_context": "Start New Plan",
             "groups": user_groups,
+            "selected_group_id": selected_group_id,
             "default_voting_end_date": default_voting_end.date().isoformat(),
             "default_voting_end_time": default_voting_end.strftime("%H:%M"),
         },

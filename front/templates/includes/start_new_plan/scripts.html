@@ -4,6 +4,53 @@
     const addBtn = document.getElementById("add-option-trigger");
     const jsonInp = document.getElementById("options-json-input");
     const form = document.getElementById("plan-form");
+    const locationUrl = form.dataset.locationUrl;
+    const weatherUrl = form.dataset.weatherUrl;
+    const defaultOptionDate = form.dataset.defaultOptionDate || new Date().toISOString().slice(0, 10);
+    const defaultOptionTime = form.dataset.defaultOptionTime || "20:00";
+
+    const weatherLabels = {
+      0: ["wb_sunny", "Clear sky"],
+      1: ["partly_cloudy_day", "Mainly clear"],
+      2: ["partly_cloudy_day", "Partly cloudy"],
+      3: ["cloud", "Overcast"],
+      45: ["foggy", "Fog"],
+      48: ["foggy", "Rime fog"],
+      51: ["rainy_light", "Light drizzle"],
+      53: ["rainy_light", "Drizzle"],
+      55: ["rainy", "Dense drizzle"],
+      61: ["rainy_light", "Slight rain"],
+      63: ["rainy", "Rain"],
+      65: ["rainy_heavy", "Heavy rain"],
+      71: ["weather_snowy", "Slight snow"],
+      73: ["weather_snowy", "Snow"],
+      75: ["ac_unit", "Heavy snow"],
+      80: ["rainy", "Rain showers"],
+      81: ["rainy", "Rain showers"],
+      82: ["thunderstorm", "Violent showers"],
+      95: ["thunderstorm", "Thunderstorm"],
+      96: ["thunderstorm", "Thunderstorm with hail"],
+      99: ["thunderstorm", "Severe thunderstorm"]
+    };
+
+    const escapeHtml = (value) => String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+
+    const ajaxGet = (url, params) => {
+      const query = new URLSearchParams(params);
+      return fetch(`${url}?${query.toString()}`, { headers: { Accept: "application/json" } })
+        .then((response) => response.json().then((payload) => {
+          if (!response.ok) {
+            const error = new Error(payload.error || "Request failed");
+            error.payload = payload;
+            throw error;
+          }
+          return payload;
+        }));
+    };
 
     // --- MAIN DEADLINE PICKERS LOGIC (SIDEBAR) ---
     const mainDateBox = document.getElementById("date-picker-box");
@@ -114,6 +161,14 @@
     };
 
     document.addEventListener("click", closeAllOverlays);
+    document.addEventListener("click", (event) => {
+      if (!event.target.closest(".mini-box")) {
+        document.querySelectorAll(".start-location-suggestions").forEach((el) => {
+          el.innerHTML = "";
+          el.hidden = true;
+        });
+      }
+    });
 
     setupMainPickers();
 
@@ -124,7 +179,7 @@
             <div class="opt-idx">01</div>
             <div class="opt-fields">
                 <input type="text" class="s-input opt-t" placeholder="Option Name (e.g. Sunset Beach Dinner)" 
-                    value="${defaultTitle}" 
+                    value="${escapeHtml(defaultTitle)}"
                     style="margin-bottom:1.2rem; padding: 1.1rem; font-weight: 800; font-size: 1.1rem; letter-spacing: -0.02em;">
                 <div class="opt-grid-inner">
                     <div class="mini-box">
@@ -132,8 +187,8 @@
                         <div class="schedule-inputs-custom">
                            <div class="custom-picker-box date-box-trigger">
                                <span class="material-symbols-outlined">calendar_today</span>
-                               <span class="picker-val date-display">21/07/2024</span>
-                               <input type="date" class="opt-date" value="2024-07-21" style="position:absolute; inset:0; opacity:0; pointer-events:none;">
+                               <span class="picker-val date-display">${escapeHtml(defaultOptionDate)}</span>
+                               <input type="date" class="opt-date" value="${escapeHtml(defaultOptionDate)}" style="position:absolute; inset:0; opacity:0; pointer-events:none;">
                                <div class="calendar-overlay">
                                    <div class="cal-header">
                                        <button type="button" class="cal-nav-btn prev-mon"><span class="material-symbols-outlined">chevron_left</span></button>
@@ -148,8 +203,8 @@
                            </div>
                            <div class="custom-picker-box time-box-trigger">
                                <span class="material-symbols-outlined">schedule</span>
-                               <span class="picker-val time-display">20:00</span>
-                               <input type="time" class="opt-time" value="20:00" style="position:absolute; inset:0; opacity:0; pointer-events:none;">
+                               <span class="picker-val time-display">${escapeHtml(defaultOptionTime)}</span>
+                               <input type="time" class="opt-time" value="${escapeHtml(defaultOptionTime)}" style="position:absolute; inset:0; opacity:0; pointer-events:none;">
                                <div class="time-picker-overlay">
                                    <div class="tp-grid">
                                        <div class="tp-col h-col"></div>
@@ -163,8 +218,18 @@
                         <strong>LOCATION</strong>
                         <div class="loc-input-group">
                             <span class="material-symbols-outlined" style="color:var(--accent);">location_on</span>
-                            <input type="text" class="opt-addr s-addr-input" placeholder="Search address..." value="${defaultAddr}">
+                            <input type="text" class="opt-addr s-addr-input" placeholder="Search a city, venue, or address..." value="${escapeHtml(defaultAddr)}" autocomplete="off">
                         </div>
+                        <div class="start-location-suggestions" hidden></div>
+                        <small class="start-location-status">Type at least 3 characters to search OpenStreetMap.</small>
+                    </div>
+                </div>
+                <div class="start-weather-card is-idle">
+                    <span class="material-symbols-outlined start-weather-icon">routine</span>
+                    <div>
+                        <span class="start-weather-kicker">Weather Forecast</span>
+                        <strong class="start-weather-summary">Waiting for location and date</strong>
+                        <p class="start-weather-detail">Select a location to load Open-Meteo data for this option.</p>
                     </div>
                 </div>
             </div>
@@ -195,6 +260,154 @@
       const timeDisplay = card.querySelector(".time-display");
       const dateBox = card.querySelector(".date-box-trigger");
       const timeBox = card.querySelector(".time-box-trigger");
+      const suggestions = card.querySelector(".start-location-suggestions");
+      const locationStatus = card.querySelector(".start-location-status");
+      const weatherCard = card.querySelector(".start-weather-card");
+      const weatherIcon = card.querySelector(".start-weather-icon");
+      const weatherSummary = card.querySelector(".start-weather-summary");
+      const weatherDetail = card.querySelector(".start-weather-detail");
+      let selectedLocation = null;
+      let lastResults = [];
+      let locationTimer = null;
+      let locationAbort = null;
+
+      const setLocationStatus = (message, state = "") => {
+        locationStatus.textContent = message;
+        locationStatus.classList.toggle("is-error", state === "error");
+        locationStatus.classList.toggle("is-success", state === "success");
+      };
+
+      const setWeather = (state, icon, summary, detail) => {
+        weatherCard.classList.toggle("is-idle", state === "idle");
+        weatherCard.classList.toggle("is-error", state === "error");
+        weatherIcon.textContent = icon;
+        weatherSummary.textContent = summary;
+        weatherDetail.textContent = detail;
+      };
+
+      const mapQuery = (location) => {
+        if (location && location.latitude && location.longitude) return `${location.latitude},${location.longitude}`;
+        return addrInput.value.trim() || "Barcelona, Spain";
+      };
+
+      const updateMap = (location) => {
+        mapFrame.src = `https://maps.google.com/maps?q=${encodeURIComponent(mapQuery(location))}&t=&z=13&ie=UTF8&iwloc=&output=embed`;
+      };
+
+      const hideSuggestions = () => {
+        suggestions.innerHTML = "";
+        suggestions.hidden = true;
+      };
+
+      const renderEmptySuggestion = (title, detail) => {
+        suggestions.innerHTML = `
+          <div class="start-location-empty">
+            <span class="material-symbols-outlined">info</span>
+            <span><strong>${escapeHtml(title)}</strong><small>${escapeHtml(detail)}</small></span>
+          </div>
+        `;
+        suggestions.hidden = false;
+      };
+
+      const selectLocation = (item) => {
+        selectedLocation = item;
+        addrInput.value = item.address;
+        hideSuggestions();
+        setLocationStatus(`Selected ${item.address}`, "success");
+        updateMap(item);
+        refreshWeather();
+      };
+
+      const renderSuggestions = (results) => {
+        lastResults = results || [];
+        suggestions.innerHTML = "";
+        if (!lastResults.length) {
+          renderEmptySuggestion("No places found", "Try a more specific city, venue, or street.");
+          return;
+        }
+        lastResults.forEach((item) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "start-location-suggestion";
+          button.innerHTML = '<span class="material-symbols-outlined">place</span><span><strong></strong><small></small></span>';
+          button.querySelector("strong").textContent = item.name;
+          button.querySelector("small").textContent = item.address;
+          button.addEventListener("click", () => selectLocation(item));
+          suggestions.appendChild(button);
+        });
+        suggestions.hidden = false;
+        setLocationStatus("Choose a suggestion to pin coordinates for weather and map.", "");
+      };
+
+      const searchLocations = (query, silent = false) => {
+        const trimmed = query.trim();
+        if (trimmed.length < 3) {
+          hideSuggestions();
+          setLocationStatus("Type at least 3 characters to search OpenStreetMap.", "");
+          return Promise.resolve([]);
+        }
+        if (locationAbort) locationAbort.abort();
+        locationAbort = new AbortController();
+        setLocationStatus("Searching real locations...", "");
+        const url = `${locationUrl}?${new URLSearchParams({ q: trimmed }).toString()}`;
+        return fetch(url, { signal: locationAbort.signal, headers: { Accept: "application/json" } })
+          .then((response) => response.json().then((payload) => {
+            if (!response.ok) throw new Error(payload.error || "Location search failed");
+            return payload.results || [];
+          }))
+          .then((results) => {
+            if (!silent) renderSuggestions(results);
+            return results;
+          })
+          .catch((error) => {
+            if (error.name === "AbortError") return [];
+            renderEmptySuggestion("Location search unavailable", "Try again in a moment.");
+            setLocationStatus("Location search is temporarily unavailable.", "error");
+            return [];
+          });
+      };
+
+      const ensureLocation = () => {
+        if (selectedLocation) return Promise.resolve(selectedLocation);
+        if (lastResults.length) {
+          selectLocation(lastResults[0]);
+          return Promise.resolve(lastResults[0]);
+        }
+        return searchLocations(addrInput.value, true).then((results) => {
+          if (!results.length) return null;
+          selectLocation(results[0]);
+          return results[0];
+        });
+      };
+
+      const refreshWeather = () => {
+        if (!dateInput.value) {
+          setWeather("idle", "event", "Waiting for date", "Choose a date to load the forecast.");
+          return;
+        }
+        ensureLocation().then((location) => {
+          if (!location) {
+            setWeather("idle", "travel_explore", "Waiting for location", "Select a real location to load weather.");
+            return;
+          }
+          setWeather("loading", "hourglass_top", "Fetching forecast...", "Open-Meteo is checking this option.");
+          ajaxGet(weatherUrl, {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            date: dateInput.value
+          }).then((payload) => {
+            const code = Number(payload.weather_code);
+            const label = weatherLabels[code] || ["wb_cloudy", "Forecast available"];
+            const max = payload.temperature_max ?? "-";
+            const min = payload.temperature_min ?? "-";
+            const rain = payload.precipitation_probability ?? "-";
+            setWeather("ready", label[0], label[1], `High ${max} C · Low ${min} C · Rain chance ${rain}%`);
+          }).catch((error) => {
+            const message = error.payload?.error || error.message || "Weather forecast unavailable.";
+            setWeather("error", "cloud_off", "Forecast unavailable", message);
+          });
+        });
+      };
 
       // Custom Time Picker Logic
       const tpOverlay = timeBox.querySelector(".time-picker-overlay");
@@ -240,7 +453,7 @@
       const prevMonBtn = calOverlay.querySelector(".prev-mon");
       const nextMonBtn = calOverlay.querySelector(".next-mon");
 
-      let currentViewDate = new Date(2024, 6, 1); // July 2024
+      let currentViewDate = dateInput.value ? new Date(`${dateInput.value}T00:00:00`) : new Date();
 
       const renderCal = () => {
         // Clear previous days (keep weekdays)
@@ -279,6 +492,7 @@
             const [y, m, day] = dateStr.split("-");
             dateDisplay.textContent = `${day}/${m}/${y}`;
             calOverlay.classList.remove("is-active");
+            refreshWeather();
           };
           calGrid.appendChild(dayEl);
         }
@@ -323,14 +537,29 @@
         timeDisplay.textContent = timeInput.value;
       });
 
-      let timeout = null;
       addrInput.addEventListener("input", () => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-          const q = encodeURIComponent(addrInput.value || "Barcelona");
-          mapFrame.src = `https://maps.google.com/maps?q=${q}&t=&z=13&ie=UTF8&iwloc=&output=embed`;
-        }, 600);
+        selectedLocation = null;
+        updateMap(null);
+        window.clearTimeout(locationTimer);
+        locationTimer = window.setTimeout(() => {
+          searchLocations(addrInput.value);
+        }, 260);
       });
+
+      addrInput.addEventListener("blur", () => {
+        window.setTimeout(() => {
+          if (!selectedLocation && addrInput.value.trim().length >= 3) {
+            refreshWeather();
+          }
+        }, 160);
+      });
+
+      updateMap(selectedLocation);
+      if (defaultAddr) {
+        refreshWeather();
+      } else {
+        setWeather("idle", "travel_explore", "Waiting for location", "Select a real location to load weather.");
+      }
 
       card.querySelector(".opt-x").onclick = () => {
         card.remove();
