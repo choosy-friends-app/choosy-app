@@ -13,6 +13,8 @@
   const weatherIcon = form.querySelector("[data-weather-icon]");
   const weatherSummary = form.querySelector("[data-weather-summary]");
   const weatherDetail = form.querySelector("[data-weather-detail]");
+  const mapFrame = form.querySelector("[data-map-frame]");
+  const mapTitle = form.querySelector("[data-map-title]");
 
   if (!locationInput || !scheduledFor || !suggestions || !weatherCard) return;
 
@@ -99,6 +101,24 @@
     weatherDetail.textContent = detail;
   }
 
+  function mapQueryFor(location) {
+    if (location && location.latitude && location.longitude) {
+      return `${location.latitude},${location.longitude}`;
+    }
+    const address = addressInput && addressInput.value.trim() ? addressInput.value.trim() : "";
+    const place = locationInput.value.trim();
+    return address || place || "Barcelona, Spain";
+  }
+
+  function updateMap(location) {
+    if (!mapFrame) return;
+    const query = mapQueryFor(location);
+    mapFrame.src = `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=&z=13&ie=UTF8&iwloc=&output=embed`;
+    if (mapTitle) {
+      mapTitle.textContent = location && location.address ? location.address : query;
+    }
+  }
+
   function hideSuggestions() {
     suggestions.innerHTML = "";
     suggestions.hidden = true;
@@ -123,6 +143,7 @@
     longitudeInput.value = item.longitude;
     hideSuggestions();
     setLocationStatus(`Selected ${item.address}`, "success");
+    updateMap(item);
     refreshWeather();
   }
 
@@ -240,6 +261,7 @@
     selectedLocation = null;
     latitudeInput.value = "";
     longitudeInput.value = "";
+    updateMap(null);
     window.clearTimeout(debounceTimer);
 
     debounceTimer = window.setTimeout(() => {
@@ -257,9 +279,14 @@
 
   scheduledFor.addEventListener("change", refreshWeather);
 
+  if (addressInput) {
+    addressInput.addEventListener("change", () => updateMap(selectedLocation));
+  }
+
   document.addEventListener("click", (event) => {
     if (!event.target.closest(".plan-location-field")) hideSuggestions();
   });
 
   refreshWeather();
+  updateMap(selectedLocation);
 })();

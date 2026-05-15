@@ -63,8 +63,9 @@ class Command(BaseCommand):
             )
 
         owner = user_model.objects.get(username="aleix")
+        Group.objects.filter(name="Aleix Demo Squad", owner=owner).update(name="Aleix Demo Group")
         group, group_created = Group.objects.get_or_create(
-            name="Aleix Demo Squad",
+            name="Aleix Demo Group",
             owner=owner,
             defaults={
                 "description": "Local group for testing Choosy plan creation.",

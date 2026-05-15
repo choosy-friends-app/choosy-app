@@ -121,6 +121,26 @@
                 <p data-weather-detail>Select a suggestion and choose a date to load Open-Meteo data.</p>
               </div>
             </div>
+
+            <div class="plan-map-card" data-map-card>
+              <div class="plan-map-card__header">
+                <div>
+                  <span>Map Preview</span>
+                  <strong data-map-title>Choose a location</strong>
+                </div>
+                <span class="material-symbols-outlined">map</span>
+              </div>
+              <div class="plan-map-frame">
+                <iframe
+                  title="Selected plan location map"
+                  data-map-frame
+                  src="https://maps.google.com/maps?q=Barcelona%2C%20Spain&t=&z=12&ie=UTF8&iwloc=&output=embed"
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade"
+                  allowfullscreen>
+                </iframe>
+              </div>
+            </div>
           </div>
 
           <div class="groups-modal__actions plan-form-actions">
