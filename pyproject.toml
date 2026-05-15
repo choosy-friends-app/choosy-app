@@ -5,7 +5,12 @@ description = "Dashboard skeleton for Choosy"
 requires-python = ">=3.11"
 dependencies = [
   "Django>=5.1,<6.0",
+  "behave>=1.2.6",
+  "cssselect>=1.2.0",
+  "lxml>=5.2.0",
   "psycopg2-binary>=2.9.9",
   "gunicorn>=21.2.0",
   "python-dotenv>=1.0.1",
+  "splinter>=0.21.0",
+  "whitenoise>=6.6.0",
 ]

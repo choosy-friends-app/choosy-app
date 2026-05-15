@@ -6,8 +6,7 @@
     <div class="groups-hero__copy">
       <p class="page-kicker">Your Real Groups</p>
       <h1>Groups</h1>
-      <p>Manage the squads you actually belong to, with their members, live votes, and the activities that define each
-        group.</p>
+      <p>Manage your groups, members, invitations, open votes, and the activities each group plans together.</p>
     </div>
 
     {% if request.user.is_authenticated %}
@@ -18,7 +17,7 @@
     {% else %}
     <div class="groups-auth-note">
       <span class="material-symbols-outlined">lock</span>
-      <span>Log in to create groups and see only your real squads.</span>
+      <span>Log in to create groups and see the groups linked to your account.</span>
     </div>
     {% endif %}
   </header>
@@ -32,9 +31,8 @@
 
   <article class="groups-overview">
     <div class="groups-overview__copy">
-      <h2>Vista de pertenencia</h2>
-      <p>Every card is tied to membership, pending invitations, current votes, and the activities used on invitation
-        pages.</p>
+      <h2>Membership Overview</h2>
+      <p>Each card shows membership, pending invitations, open voting rounds, and the activities that define the group.</p>
     </div>
     <div class="groups-overview__stats">
       <div class="groups-stat">
@@ -68,6 +66,14 @@
         <div class="group-row__copy">
           <div class="group-row__title">
             <h3>{{ group.name }}</h3>
+            {% if request.user.is_authenticated and group.owner_id == request.user.id %}
+            <a href="{% url 'editar_grupo' group.id %}" class="group-row__edit-link" title="Edit Group" style="margin-left: 0.5rem; color: var(--primary); text-decoration: none; display: flex; align-items: center;">
+              <span class="material-symbols-outlined" style="font-size: 1.2rem;">edit</span>
+            </a>
+            <a href="{% url 'eliminar_grupo' group.id %}" class="group-row__delete-link" title="Delete Group" style="margin-left: 0.5rem; color: #ff6b6b; text-decoration: none; display: flex; align-items: center;">
+              <span class="material-symbols-outlined" style="font-size: 1.2rem;">delete</span>
+            </a>
+            {% endif %}
             <span class="group-row__status">{{ group.get_status_display }}</span>
           </div>
           <p>{{ group.description|default:"Group ready to organize the next plan." }}</p>
@@ -92,14 +98,10 @@
             {% endif %}
           </div>
           <div class="group-row__meta">
-            <span><span class="material-symbols-outlined">group</span>{{ group.member_count }} member{{
-              group.member_count|pluralize }}</span>
-            <span><span class="material-symbols-outlined">how_to_vote</span>{{ group.voting_plans_count }} option{{
-              group.voting_plans_count|pluralize }} in voting</span>
-            <span><span class="material-symbols-outlined">mail</span>{{ group.pending_invites_count }} pending invite{{
-              group.pending_invites_count|pluralize }}</span>
-            <span><span class="material-symbols-outlined">history</span>Updated {{ group.updated_at|timesince }}
-              ago</span>
+            <span><span class="material-symbols-outlined">group</span>{{ group.member_count }} member{{ group.member_count|pluralize }}</span>
+            <span><span class="material-symbols-outlined">how_to_vote</span>{{ group.voting_plans_count }} option{{ group.voting_plans_count|pluralize }} in voting</span>
+            <span><span class="material-symbols-outlined">mail</span>{{ group.pending_invites_count }} pending invite{{ group.pending_invites_count|pluralize }}</span>
+            <span><span class="material-symbols-outlined">history</span>Updated {{ group.updated_at|timesince }} ago</span>
             {% if request.user.is_authenticated and group.owner_id == request.user.id %}
             <span><span class="material-symbols-outlined">workspace_premium</span>Owner</span>
             {% endif %}
@@ -157,7 +159,7 @@
             <p class="page-kicker">Group roster</p>
             <h4>{{ group.name }}</h4>
           </div>
-          <p>{{ group.membership_cards|length }} people linked to this squad.</p>
+          <p>{{ group.membership_cards|length }} people linked to this group.</p>
         </div>
 
         <div class="member-card-grid">
@@ -228,7 +230,7 @@
           <div class="group-row__title">
             <h3>No groups yet</h3>
           </div>
-          <p>When you create your first group on localhost it will appear here and you can start inviting users.</p>
+          <p>Create your first group to start inviting members and planning together.</p>
         </div>
       </div>
     </article>
@@ -246,9 +248,9 @@
     </button>
 
     <div class="groups-modal__hero">
-      <p class="page-kicker">Create A New Squad</p>
-      <h2 id="create-group-title">Build the squad profile</h2>
-      <p>These details power the group card, invitation page, and automatic activity icons.</p>
+      <p class="page-kicker">Create A New Group</p>
+      <h2 id="create-group-title">Build the group profile</h2>
+      <p>These details power the group card, invitation page, and activity icons.</p>
     </div>
 
     <form class="groups-modal__form" method="post">
@@ -263,18 +265,17 @@
         <label class="groups-field">
           <span>Mission statement</span>
           <input class="groups-input groups-input--modal" type="text" name="mission_statement"
-            placeholder="Finding the next table, route, or night out." />
+            placeholder="Finding the next table, route, or night out together." />
         </label>
       </div>
       <fieldset class="groups-field groups-activity-picker">
         <legend>Activities</legend>
-        <small class="groups-field__hint">Pick the activities this squad will organize. The selected cards appear on the
+        <small class="groups-field__hint">Pick the activities this group will organize. The selected cards appear on the
           group and invitation screens.</small>
         <div class="activity-option-grid">
           {% for option in activity_options %}
           <label class="activity-option-card">
-            <input type="checkbox" name="interests" value="{{ option.label }}" {% if option.selected %}checked{% endif
-              %} />
+            <input type="checkbox" name="interests" value="{{ option.label }}" {% if option.selected %}checked{% endif %} />
             <span class="activity-option-card__image" style="background-image: url('{{ option.image_url }}');"></span>
             <span class="activity-option-card__shade"></span>
             <span class="activity-option-card__check">

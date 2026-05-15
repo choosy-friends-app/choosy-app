@@ -1,29 +1,137 @@
-{% extends "base.html" %}
+{% extends "auth_base.html" %}
+{% load static %}
 
 {% block content %}
-<section class="auth-page">
-  <div class="auth-card">
-    <p class="page-kicker">Local Authentication</p>
-    <h1>Create Account</h1>
-    <p class="auth-copy">This is enough to test groups, members, and distinct votes on localhost without depending on
-      the final invitation system yet.</p>
+<section class="auth-page auth-page--register">
+  <div class="auth-panel auth-panel--register">
+    <div class="auth-panel__intro">
+      <a class="auth-brand-mark" href="{% url 'dashboard' %}" aria-label="Choosy home">
+        <img src="{% static 'img/choosy-logo-cropped.webp' %}" alt="Choosy logo">
+      </a>
+      <div class="auth-intro__content">
+        <p class="page-kicker">Join Choosy</p>
+        <h1>Create your workspace identity.</h1>
+        <p class="auth-copy">
+          One account is enough to create groups, propose plans, vote with your squad, and receive updates.
+        </p>
 
-    {% if error_message %}
-    <div class="groups-flash groups-flash--error">{{ error_message }}</div>
-    {% endif %}
+        <div class="auth-highlights" aria-label="Account benefits">
+          <div>
+            <span class="material-symbols-outlined">add_circle</span>
+            <strong>Create plans</strong>
+          </div>
+          <div>
+            <span class="material-symbols-outlined">how_to_vote</span>
+            <strong>Vote safely</strong>
+          </div>
+          <div>
+            <span class="material-symbols-outlined">mail</span>
+            <strong>Track invites</strong>
+          </div>
+        </div>
+      </div>
+    </div>
 
-    <form class="auth-form" method="post">
-      {% csrf_token %}
-      <input class="groups-input" type="text" name="username" placeholder="Username" required />
-      <input class="groups-input" type="text" name="first_name" placeholder="First Name" />
-      <input class="groups-input" type="text" name="last_name" placeholder="Last Name" />
-      <input class="groups-input" type="email" name="email" placeholder="Email" />
-      <input class="groups-input" type="password" name="password" placeholder="Password" required />
-      <input class="groups-input" type="password" name="password_confirm" placeholder="Repeat password" required />
-      <button class="groups-hero__action auth-submit" type="submit">Create account</button>
-    </form>
+    <div class="auth-card auth-card--login auth-card--register">
+      <div class="auth-card__header">
+        <span class="auth-card__eyebrow">New account</span>
+        <h2>Sign up</h2>
+        <p>Use a username you will recognize in group activity.</p>
+      </div>
 
-    <p class="auth-switch">Already have an account? <a href="{% url 'login' %}">Log in</a></p>
+      {% if error_message %}
+      <div class="groups-flash groups-flash--error auth-error" role="alert">
+        <span class="material-symbols-outlined">error</span>
+        <span>{{ error_message }}</span>
+      </div>
+      {% endif %}
+
+      <form class="auth-form auth-form--register" method="post" novalidate>
+        {% csrf_token %}
+        <label class="auth-field auth-field--wide">
+          <span>Username</span>
+          <div class="auth-input-shell">
+            <span class="material-symbols-outlined" aria-hidden="true">person</span>
+            <input class="groups-input" type="text" name="username" autocomplete="username" required autofocus />
+          </div>
+        </label>
+
+        <label class="auth-field">
+          <span>First name</span>
+          <div class="auth-input-shell">
+            <span class="material-symbols-outlined" aria-hidden="true">badge</span>
+            <input class="groups-input" type="text" name="first_name" autocomplete="given-name" />
+          </div>
+        </label>
+
+        <label class="auth-field">
+          <span>Last name</span>
+          <div class="auth-input-shell">
+            <span class="material-symbols-outlined" aria-hidden="true">badge</span>
+            <input class="groups-input" type="text" name="last_name" autocomplete="family-name" />
+          </div>
+        </label>
+
+        <label class="auth-field auth-field--wide">
+          <span>Email</span>
+          <div class="auth-input-shell">
+            <span class="material-symbols-outlined" aria-hidden="true">alternate_email</span>
+            <input class="groups-input" type="email" name="email" autocomplete="email" />
+          </div>
+        </label>
+
+        <label class="auth-field">
+          <span>Password</span>
+          <div class="auth-input-shell">
+            <span class="material-symbols-outlined" aria-hidden="true">lock</span>
+            <input class="groups-input" type="password" name="password" autocomplete="new-password" required data-password-input />
+            <button class="auth-password-toggle" type="button" aria-label="Show password" data-password-toggle>
+              <span class="material-symbols-outlined">visibility</span>
+            </button>
+          </div>
+        </label>
+
+        <label class="auth-field">
+          <span>Repeat password</span>
+          <div class="auth-input-shell">
+            <span class="material-symbols-outlined" aria-hidden="true">lock_reset</span>
+            <input class="groups-input" type="password" name="password_confirm" autocomplete="new-password" required data-password-input />
+            <button class="auth-password-toggle" type="button" aria-label="Show password" data-password-toggle>
+              <span class="material-symbols-outlined">visibility</span>
+            </button>
+          </div>
+        </label>
+
+        <div class="auth-note auth-field--wide">
+          <span class="material-symbols-outlined">verified_user</span>
+          <span>Passwords need at least 8 characters. You can update profile details later.</span>
+        </div>
+
+        <button class="groups-hero__action auth-submit auth-field--wide" type="submit">
+          <span>Create account</span>
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </form>
+
+      <p class="auth-switch">Already have an account? <a href="{% url 'login' %}">Log in instead</a></p>
+    </div>
   </div>
 </section>
+
+<script>
+  (() => {
+    document.querySelectorAll("[data-password-toggle]").forEach((toggle) => {
+      const shell = toggle.closest(".auth-input-shell");
+      const input = shell ? shell.querySelector("[data-password-input]") : null;
+      if (!input) return;
+
+      toggle.addEventListener("click", () => {
+        const isPassword = input.type === "password";
+        input.type = isPassword ? "text" : "password";
+        toggle.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
+        toggle.querySelector(".material-symbols-outlined").textContent = isPassword ? "visibility_off" : "visibility";
+      });
+    });
+  })();
+</script>
 {% endblock %}
