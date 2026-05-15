@@ -5,8 +5,6 @@
 - Public repository URL: https://github.com/choosy-friends-app/choosy-app
 - Working branch for this delivery: `second_activity`
 - `db.sqlite3` is committed at repository root to simplify evaluation.
-- Repository access should be granted to the requested evaluator user (`rogargon`).
-
 ## 2) Users for Evaluation
 
 ### Admin user
