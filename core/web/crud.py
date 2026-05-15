@@ -30,8 +30,8 @@ class GroupCreateView(LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Crear Nuevo Grupo'
-        context['meta_title'] = 'Crear Grupo'
+        context['title'] = 'Create New Group'
+        context['meta_title'] = 'Create Group'
         return context
 
 class PlanProposalCreateView(LoginRequiredMixin, CreateView):
@@ -51,8 +51,8 @@ class PlanProposalCreateView(LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Crear Propuesta de Plan'
-        context['meta_title'] = 'Crear Propuesta'
+        context['title'] = 'Create Plan Proposal'
+        context['meta_title'] = 'Create Proposal'
         return context
 
 class PlanCreateView(LoginRequiredMixin, CreateView):
@@ -66,6 +66,15 @@ class PlanCreateView(LoginRequiredMixin, CreateView):
         kwargs['user'] = self.request.user
         return kwargs
 
+    def get_initial(self):
+        initial = super().get_initial()
+        proposal_id = self.request.GET.get("proposal")
+        if proposal_id:
+            proposal = PlanProposal.objects.filter(id=proposal_id, created_by=self.request.user).first()
+            if proposal is not None:
+                initial["proposal"] = proposal
+        return initial
+
     def form_valid(self, form):
         form.instance.created_by = self.request.user
         # Automatically set the group from the proposal
@@ -76,8 +85,8 @@ class PlanCreateView(LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Añadir Opción de Plan'
-        context['meta_title'] = 'Crear Plan'
+        context['title'] = 'Add Plan Option'
+        context['meta_title'] = 'Create Plan'
         return context
 
 class GroupUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
@@ -89,8 +98,8 @@ class GroupUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = f'Editar Grupo: {self.get_object().name}'
-        context['meta_title'] = 'Editar Grupo'
+        context['title'] = f'Edit Group: {self.get_object().name}'
+        context['meta_title'] = 'Edit Group'
         return context
 
 class PlanProposalUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
@@ -106,8 +115,8 @@ class PlanProposalUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = f'Editar Propuesta: {self.get_object().title}'
-        context['meta_title'] = 'Editar Propuesta'
+        context['title'] = f'Edit Proposal: {self.get_object().title}'
+        context['meta_title'] = 'Edit Proposal'
         return context
 
 class PlanUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
@@ -127,8 +136,8 @@ class PlanUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = f'Editar Plan: {self.get_object().title}'
-        context['meta_title'] = 'Editar Plan'
+        context['title'] = f'Edit Plan: {self.get_object().title}'
+        context['meta_title'] = 'Edit Plan'
         return context
 
 class GroupDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):
@@ -139,8 +148,8 @@ class GroupDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Eliminar Grupo'
-        context['meta_title'] = 'Eliminar Grupo'
+        context['title'] = 'Delete Group'
+        context['meta_title'] = 'Delete Group'
         return context
 
 class PlanProposalDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):
@@ -150,8 +159,8 @@ class PlanProposalDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Eliminar Propuesta'
-        context['meta_title'] = 'Eliminar Propuesta'
+        context['title'] = 'Delete Proposal'
+        context['meta_title'] = 'Delete Proposal'
         return context
 
 class PlanDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):
@@ -161,6 +170,6 @@ class PlanDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Eliminar Plan'
-        context['meta_title'] = 'Eliminar Plan'
+        context['title'] = 'Delete Plan'
+        context['meta_title'] = 'Delete Plan'
         return context

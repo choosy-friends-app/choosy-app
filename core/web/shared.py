@@ -400,6 +400,8 @@ def _decorate_proposal(proposal):
     proposal.options = options
     proposal.option_count = len(options)
     proposal.total_votes = sum(option.vote_count for option in options)
+    for option in options:
+        option.vote_percent = round((option.upvote_count / proposal.total_votes) * 100) if proposal.total_votes else 0
     proposal.leading_option = max(
         options,
         key=lambda option: (option.vote_score, option.upvote_count, -option.option_order),

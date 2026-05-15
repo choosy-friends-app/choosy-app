@@ -50,6 +50,7 @@ def active_plans(request):
             proposals.append(proposal)
 
     proposals.sort(key=lambda proposal: proposal.updated_at, reverse=True)
+    manageable_proposals = [proposal for proposal in proposals if proposal.created_by_id == request.user.id]
     selected_proposal = None
     selected_id = request.GET.get("proposal")
     if selected_id:
@@ -84,6 +85,8 @@ def active_plans(request):
             "proposals": proposals,
             "hero_proposal": hero_proposal,
             "selected_proposal": hero_proposal,
+            "manageable_proposals": manageable_proposals,
+            "primary_manageable_proposal": manageable_proposals[0] if manageable_proposals else None,
             "top_options": top_options,
             "recent_votes": recent_votes,
         },
