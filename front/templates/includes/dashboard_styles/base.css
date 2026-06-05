@@ -3915,3 +3915,13 @@ body {
     gap: 0.6rem;
   }
 }
+
+/* responsive: fix auth-form register grid below 600px */
+@media (max-width: 600px) {
+  .auth-form--register {
+    grid-template-columns: 1fr;
+  }
+  .auth-field--wide {
+    grid-column: 1;
+  }
+}
