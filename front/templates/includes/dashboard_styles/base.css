@@ -3855,3 +3855,13 @@ body {
     font-size: 1.3rem;
   }
 }
+
+/* responsive: fix plan-form-grid at 768px */
+@media (max-width: 768px) {
+  .plan-form-card {
+    padding: 1.25rem;
+  }
+  .plan-builder-hero h1 {
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+  }
+}
