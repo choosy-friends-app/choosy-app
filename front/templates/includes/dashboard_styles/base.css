@@ -4023,3 +4023,8 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* responsive: prevent background scroll when sidebar is open on mobile */
+body.sidebar-open {
+  overflow: hidden;
+}
