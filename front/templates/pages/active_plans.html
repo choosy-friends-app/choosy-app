@@ -97,7 +97,9 @@
           {% for option in selected_proposal.options %}
           <div class="plans-progress-item">
             <div class="plans-progress-item__head">
-              <strong>{{ option.title }}</strong>
+              <a href="{% url 'plan_detail' option.id %}" style="text-decoration:none; color:inherit;">
+                <strong>{{ option.title }}</strong>
+              </a>
               <span>{{ option.upvote_count }} upvote{{ option.upvote_count|pluralize }}</span>
             </div>
             <div class="plans-progress-bar">
