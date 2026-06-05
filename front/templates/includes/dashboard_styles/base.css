@@ -3731,3 +3731,15 @@ body {
     display: none;
   }
 }
+
+/* responsive: fix squad-highlight at 900px */
+@media (max-width: 900px) {
+  .squad-highlight {
+    grid-template-columns: 1fr;
+    grid-column: span 1;
+    gap: 1.5rem;
+  }
+  .squad-highlight__stats {
+    gap: 2rem;
+  }
+}
