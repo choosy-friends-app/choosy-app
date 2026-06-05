@@ -4097,3 +4097,10 @@ body.sidebar-open {
     min-height: 7rem;
   }
 }
+
+/* responsive: fix member-card-grid on small screens */
+@media (max-width: 640px) {
+  .member-card-grid {
+    grid-template-columns: 1fr;
+  }
+}
