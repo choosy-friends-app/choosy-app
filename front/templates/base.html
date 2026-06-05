@@ -21,6 +21,7 @@
     </style>
   </head>
   <body>
+    <div class="sidebar-overlay" id="sidebar-overlay" hidden></div>
     <div class="app-shell">
       {% include "includes/layout/sidebar.html" %}
 
@@ -126,15 +127,28 @@
         var sidebar = document.getElementById("app-sidebar");
         var overlay = document.getElementById("sidebar-overlay");
         if (!btn || !sidebar) return;
+        function openSidebar() {
+          sidebar.classList.add("is-open");
+          document.body.classList.add("sidebar-open");
+          if (overlay) overlay.hidden = false;
+        }
         function closeSidebar() {
           sidebar.classList.remove("is-open");
-          document.body.style.overflow = "";
+          document.body.classList.remove("sidebar-open");
+          if (overlay) overlay.hidden = true;
         }
         btn.addEventListener("click", function () {
-          var isOpen = sidebar.classList.toggle("is-open");
-          document.body.style.overflow = isOpen ? "hidden" : "";
+          if (sidebar.classList.contains("is-open")) closeSidebar();
+          else openSidebar();
         });
         if (overlay) overlay.addEventListener("click", closeSidebar);
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape") closeSidebar();
+        });
+        // Avoid an orphaned drawer/overlay when resizing past the mobile breakpoint
+        window.addEventListener("resize", function () {
+          if (window.innerWidth > 768) closeSidebar();
+        });
       })();
     </script>
   </body>

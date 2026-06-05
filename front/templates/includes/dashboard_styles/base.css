@@ -3989,7 +3989,7 @@ body {
   z-index: 99;
 }
 
-.app-rail.is-open .sidebar-overlay {
+body.sidebar-open .sidebar-overlay {
   display: block;
 }
 
