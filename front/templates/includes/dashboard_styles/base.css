@@ -3876,3 +3876,15 @@ body {
     gap: 0.65rem;
   }
 }
+
+/* responsive: fix group-row__actions stacking on mobile */
+@media (max-width: 768px) {
+  .group-row__actions {
+    flex-direction: column;
+    justify-content: stretch;
+  }
+  .group-row__link {
+    justify-content: center;
+    width: 100%;
+  }
+}
