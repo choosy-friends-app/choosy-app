@@ -3593,3 +3593,11 @@ body.groups-modal-open {
     font-size: 2.7rem;
   }
 }
+
+/* responsive: prevent horizontal scroll globally */
+html {
+  overflow-x: hidden;
+}
+body {
+  overflow-x: hidden;
+}
