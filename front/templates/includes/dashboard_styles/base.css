@@ -4198,3 +4198,16 @@ html {
     justify-content: center;
   }
 }
+
+/* responsive: fix topbar bell badge on mobile */
+@media (max-width: 480px) {
+  .topbar-bell {
+    width: 2.3rem;
+    height: 2.3rem;
+  }
+  .topbar-bell__badge {
+    min-width: 1.1rem;
+    height: 1.1rem;
+    font-size: 0.6rem;
+  }
+}
