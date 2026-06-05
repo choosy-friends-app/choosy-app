@@ -4221,3 +4221,11 @@ img {
 .brand-logo {
   max-width: unset;
 }
+
+/* responsive: improve link transitions for better UX */
+.rail-link,
+.group-row__link,
+.plans-btn,
+.btn-god-mode {
+  transition: background 0.2s ease, color 0.2s ease, transform 0.18s ease, border-color 0.2s ease;
+}
