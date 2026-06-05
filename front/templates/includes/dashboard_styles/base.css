@@ -4140,3 +4140,13 @@ a:focus-visible {
 html {
   scroll-behavior: smooth;
 }
+
+/* responsive: fix archive-hero on mobile */
+@media (max-width: 640px) {
+  .archive-hero h1 {
+    font-size: clamp(2rem, 6vw, 3rem);
+  }
+  .archive-hero p:last-child {
+    font-size: 0.92rem;
+  }
+}
