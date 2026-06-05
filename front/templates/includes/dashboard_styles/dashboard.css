@@ -119,6 +119,7 @@
   border-radius: 50%;
   border: 2px solid #141416;
   margin-left: -0.8rem;
+  background: #2a2a2d;
 }
 
 .avav:first-child {
@@ -258,4 +259,31 @@
 .vote-item-godmode:hover .vi-jump {
   color: var(--primary);
   transform: scale(1.2);
+}
+
+/* Responsive: prevent the godmode group card header/content from
+   overflowing on small screens (the title is locked at 1.8rem). */
+@media (max-width: 600px) {
+  .group-card-godmode {
+    padding: 1.2rem;
+  }
+
+  .gc-header {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .gc-identity {
+    gap: 0.9rem;
+  }
+
+  .gc-title h3 {
+    font-size: 1.4rem !important;
+    word-break: break-word;
+  }
+
+  .gc-content {
+    flex-wrap: wrap;
+    gap: 0.85rem;
+  }
 }

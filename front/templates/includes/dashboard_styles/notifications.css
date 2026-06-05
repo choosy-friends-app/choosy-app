@@ -584,3 +584,32 @@
     opacity: 0;
   }
 }
+
+/* =========================================
+   RESPONSIVE
+   ========================================= */
+@media (max-width: 1024px) {
+  .notifications-layout {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .notifications-main {
+    padding: 0 1rem 1.5rem 1rem;
+  }
+
+  .notif-header {
+    flex-wrap: wrap;
+  }
+
+  /* Let the title and timestamp stack instead of colliding */
+  .notif-meta {
+    flex-wrap: wrap;
+  }
+
+  .notif-time {
+    margin-left: 0;
+  }
+}
