@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+
+{% block content %}
+<article class="plan-detail-page" vocab="https://schema.org/" typeof="Event">
+
+  <meta property="url" content="{{ request.build_absolute_uri }}">
+  <link property="eventStatus" href="https://schema.org/EventScheduled">
+  <link property="eventAttendanceMode" href="https://schema.org/OfflineEventAttendanceMode">
+
+  <!-- Hero image -->
+  {% if plan.image_url %}
+  <div class="pd-hero">
+    <img property="image" src="{{ plan.image_url }}" alt="{{ plan.title }}" class="pd-hero__img">
+    <div class="pd-hero__overlay"></div>
+  </div>
+  {% else %}
+  <div class="pd-hero pd-hero--placeholder">
+    <div class="pd-hero__overlay"></div>
+  </div>
+  {% endif %}
+
+  <div class="pd-body">
+
+    <!-- Header -->
+    <header class="pd-header">
+      {% if plan.tag %}
+      <span class="pd-tag" property="keywords">{{ plan.tag|upper }}</span>
+      {% endif %}
+      <h1 class="pd-title" property="name">{{ plan.title }}</h1>
+      {% if plan.description %}
+      <p class="pd-desc" property="description">{{ plan.description }}</p>
+      {% endif %}
+    </header>
+
+    <!-- Details grid -->
+    <div class="pd-grid">
+
+      <!-- Date & Time -->
+      {% if plan.scheduled_for %}
+      <div class="pd-item">
+        <span class="material-symbols-outlined pd-item__icon">calendar_today</span>
+        <div class="pd-item__text">
+          <strong>Date &amp; Time</strong>
+          <time property="startDate" datetime="{{ plan.scheduled_for|date:'c' }}">
+            {{ plan.scheduled_for|date:"l, d F Y" }} &ndash; {{ plan.scheduled_for|date:"H:i" }}
+          </time>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Duration -->
+      {% if plan.duration_minutes %}
+      <div class="pd-item">
+        <span class="material-symbols-outlined pd-item__icon">schedule</span>
+        <div class="pd-item__text">
+          <strong>Duration</strong>
+          <meta property="duration" content="{{ duration_iso }}">
+          <span>{{ plan.duration_minutes }} min</span>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Price / Offer -->
+      <div class="pd-item" property="offers" typeof="Offer">
+        <span class="material-symbols-outlined pd-item__icon">euro</span>
+        <div class="pd-item__text">
+          <strong>Price</strong>
+          <meta property="priceCurrency" content="EUR">
+          <link property="availability" href="https://schema.org/InStock">
+          <span property="price" content="{{ plan.price }}">
+            {% if plan.price == 0 %}Free{% else %}&euro;{{ plan.price }}{% endif %}
+          </span>
+        </div>
+      </div>
+
+      <!-- Location -->
+      {% if plan.place_name or plan.address %}
+      <div class="pd-item" property="location" typeof="Place">
+        <span class="material-symbols-outlined pd-item__icon">location_on</span>
+        <div class="pd-item__text">
+          <strong>Location</strong>
+          {% if plan.place_name %}
+          <span property="name">{{ plan.place_name }}</span>
+          {% endif %}
+          {% if plan.address %}
+          <span property="address" typeof="PostalAddress">
+            <span property="streetAddress">{{ plan.address }}</span>
+          </span>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Organizer (Group) -->
+      <div class="pd-item" property="organizer" typeof="Organization">
+        <span class="material-symbols-outlined pd-item__icon">groups</span>
+        <div class="pd-item__text">
+          <strong>Group</strong>
+          <span property="name">{{ plan.group.name }}</span>
+        </div>
+      </div>
+
+      <!-- Created by -->
+      {% if plan.created_by %}
+      <div class="pd-item">
+        <span class="material-symbols-outlined pd-item__icon">person</span>
+        <div class="pd-item__text">
+          <strong>Proposed by</strong>
+          <span>{{ plan.created_by.get_full_name|default:plan.created_by.username }}</span>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- Actions -->
+    <div class="pd-actions">
+      <a href="{% url 'vote' plan.group.id %}" class="plans-btn primary">
+        <span class="material-symbols-outlined">how_to_vote</span>
+        Vote Now
+      </a>
+      <a href="{% url 'active_plans' %}" class="plans-btn secondary">
+        <span class="material-symbols-outlined">arrow_back</span>
+        Back to Plans
+      </a>
+    </div>
+  </div>
+</article>
+
+<style>
+  .plan-detail-page {
+    max-width: 52rem;
+    margin: 0 auto;
+  }
+
+  .pd-hero {
+    position: relative;
+    height: 22rem;
+    border-radius: 1.25rem;
+    overflow: hidden;
+    margin-bottom: 2rem;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  }
+
+  .pd-hero__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .pd-hero--placeholder {
+    background: linear-gradient(135deg, rgba(138,43,226,0.3), rgba(105,218,255,0.2));
+  }
+
+  .pd-hero__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(0deg, rgba(5,5,8,0.6) 0%, transparent 60%);
+  }
+
+  .pd-body {
+    display: grid;
+    gap: 2rem;
+  }
+
+  .pd-header {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .pd-tag {
+    display: inline-block;
+    padding: 0.3rem 0.75rem;
+    background: rgba(105,218,255,0.12);
+    color: var(--tertiary, #69daff);
+    border: 1px solid rgba(105,218,255,0.2);
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    width: fit-content;
+  }
+
+  .pd-title {
+    font-family: "Manrope", sans-serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.03em;
+  }
+
+  .pd-desc {
+    color: rgba(255,255,255,0.65);
+    font-size: 1.05rem;
+    line-height: 1.7;
+    margin: 0;
+    max-width: 40rem;
+  }
+
+  .pd-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+    gap: 1rem;
+  }
+
+  .pd-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 1rem;
+  }
+
+  .pd-item__icon {
+    color: var(--primary, #a5a5ff);
+    font-size: 1.4rem;
+    margin-top: 0.1rem;
+    flex-shrink: 0;
+  }
+
+  .pd-item__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .pd-item__text strong {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+  }
+
+  .pd-item__text time,
+  .pd-item__text span {
+    font-size: 0.97rem;
+    color: rgba(255,255,255,0.9);
+  }
+
+  .pd-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .plans-btn {
+    min-height: 2.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.8rem 1.25rem;
+    border-radius: 0.85rem;
+    font-weight: 800;
+    text-decoration: none;
+    transition: transform 0.18s ease, background 0.18s ease;
+    border: 1px solid transparent;
+    font-size: 0.9rem;
+  }
+
+  .plans-btn.primary {
+    background: linear-gradient(135deg, var(--primary, #a5a5ff), var(--secondary, #69daff));
+    color: #120b2f;
+  }
+
+  .plans-btn.primary:hover { transform: translateY(-1px); }
+
+  .plans-btn.secondary {
+    background: rgba(255,255,255,0.055);
+    color: #fff;
+    border-color: rgba(255,255,255,0.08);
+  }
+
+  .plans-btn.secondary:hover { background: rgba(255,255,255,0.1); }
+</style>
+{% endblock %}

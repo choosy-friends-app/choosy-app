@@ -175,6 +175,37 @@ def vote(request, group_id):
     )
 
 
+@login_required
+def plan_detail(request, pk):
+    from django.core.exceptions import PermissionDenied
+    plan = get_object_or_404(Plan, pk=pk)
+    if not plan.group.members.filter(user=request.user, status="active").exists():
+        raise PermissionDenied
+
+    duration_iso = None
+    if plan.duration_minutes:
+        hours = plan.duration_minutes // 60
+        minutes = plan.duration_minutes % 60
+        if hours and minutes:
+            duration_iso = f"PT{hours}H{minutes}M"
+        elif hours:
+            duration_iso = f"PT{hours}H"
+        else:
+            duration_iso = f"PT{minutes}M"
+
+    return render(
+        request,
+        "pages/plan_detail.html",
+        {
+            "meta_title": plan.title,
+            "active_page": "active_plans",
+            "topbar_context": f"Plan · {plan.title}",
+            "plan": plan,
+            "duration_iso": duration_iso,
+        },
+    )
+
+
 def api_submit_vote(request, plan_id):
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)

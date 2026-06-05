@@ -21,6 +21,7 @@ urlpatterns = [
     path("editar-plan/<int:pk>/", views.PlanUpdateView.as_view(), name="editar_plan"),
     path("eliminar-plan/<int:pk>/", views.PlanDeleteView.as_view(), name="eliminar_plan"),
     path("vote/<int:group_id>/", views.vote, name="vote"),
+    path("plan/<int:pk>/", views.plan_detail, name="plan_detail"),
     path("api/groups/", views.api_create_group, name="api_create_group"),
     path("api/groups/<int:group_id>/members/", views.api_add_group_member, name="api_add_group_member"),
     path("api/vote/<int:plan_id>/", views.api_submit_vote, name="api_submit_vote"),
