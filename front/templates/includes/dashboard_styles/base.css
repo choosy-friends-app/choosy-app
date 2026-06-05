@@ -3845,3 +3845,13 @@ body {
     font-size: 1.5rem;
   }
 }
+
+/* responsive: fix groups-overview__stats to 2 cols at 768px */
+@media (max-width: 768px) {
+  .groups-stat strong {
+    font-size: 1.5rem;
+  }
+  .group-row__title h3 {
+    font-size: 1.3rem;
+  }
+}
