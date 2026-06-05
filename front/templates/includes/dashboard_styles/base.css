@@ -3645,3 +3645,13 @@ body {
     font-size: 1.5rem;
   }
 }
+
+/* responsive: fix section-header gap at intermediate widths */
+@media (max-width: 1200px) {
+  .section-header {
+    gap: 1rem;
+  }
+  .section-header h2 {
+    font-size: 1.2rem;
+  }
+}
