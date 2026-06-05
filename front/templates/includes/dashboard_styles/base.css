@@ -3601,3 +3601,9 @@ html {
 body {
   overflow-x: hidden;
 }
+
+/* responsive: ensure main-shell doesn't overflow its grid cell */
+.main-shell {
+  min-width: 0;
+  overflow-x: clip;
+}
