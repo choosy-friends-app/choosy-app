@@ -4135,3 +4135,8 @@ a:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+
+/* responsive: smooth scrolling for the whole page */
+html {
+  scroll-behavior: smooth;
+}
