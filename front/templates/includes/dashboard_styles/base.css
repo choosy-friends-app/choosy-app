@@ -3937,3 +3937,14 @@ body {
     padding: 0.85rem;
   }
 }
+
+/* responsive: fix vote-float-actions on very small screens */
+@media (max-width: 480px) {
+  .vote-float-actions {
+    gap: 0.75rem;
+  }
+  .fa-btn {
+    width: 3.2rem;
+    height: 3.2rem;
+  }
+}
