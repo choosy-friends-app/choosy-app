@@ -4077,3 +4077,13 @@ body.sidebar-open {
     grid-template-columns: 1fr;
   }
 }
+
+/* responsive: fix plan-layout responsive */
+@media (max-width: 900px) {
+  .plan-layout {
+    grid-template-columns: 1fr;
+  }
+  .plan-row {
+    grid-template-columns: 1fr;
+  }
+}
