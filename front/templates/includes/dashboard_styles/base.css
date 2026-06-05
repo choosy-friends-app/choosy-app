@@ -4087,3 +4087,13 @@ body.sidebar-open {
     grid-template-columns: 1fr;
   }
 }
+
+/* responsive: fix activity-option-grid at mobile */
+@media (max-width: 480px) {
+  .activity-option-grid {
+    grid-template-columns: 1fr;
+  }
+  .activity-option-card {
+    min-height: 7rem;
+  }
+}
