@@ -8,9 +8,10 @@
   }
 
   .plan-page {
-    max-width: 1200px;
+    max-width: 100%;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 0;
+    box-sizing: border-box;
   }
 
   .plan-hero {
@@ -46,8 +47,8 @@
 
   .plan-grid {
     display: grid;
-    grid-template-columns: 1fr 340px;
-    gap: 2.5rem;
+    grid-template-columns: 1fr minmax(0, 320px);
+    gap: 2rem;
     align-items: start;
   }
 
