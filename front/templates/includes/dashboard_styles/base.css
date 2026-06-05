@@ -3607,3 +3607,9 @@ body {
   min-width: 0;
   overflow-x: clip;
 }
+
+/* responsive: constrain page-shell so inner content doesn't force width */
+.page-shell {
+  box-sizing: border-box;
+  max-width: 100%;
+}
