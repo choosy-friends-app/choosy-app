@@ -4104,3 +4104,14 @@ body.sidebar-open {
     grid-template-columns: 1fr;
   }
 }
+
+/* responsive: fix groups-modal dialog padding on mobile */
+@media (max-width: 640px) {
+  .groups-modal__dialog {
+    padding: 1.5rem;
+    border-radius: 1.5rem;
+  }
+  .groups-modal__hero h2 {
+    font-size: 2rem;
+  }
+}
