@@ -3955,3 +3955,28 @@ body {
     padding-bottom: 5rem;
   }
 }
+
+/* responsive: hamburger button - hidden by default, shown on mobile */
+.topbar-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #fff;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.topbar-hamburger:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 1100px) {
+  .topbar-hamburger {
+    display: inline-flex;
+  }
+}
