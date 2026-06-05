@@ -3707,3 +3707,16 @@ body {
     font-size: 1.8rem;
   }
 }
+
+/* responsive: fix archive-stats at 900px */
+@media (max-width: 900px) {
+  .archive-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 1.25rem;
+  }
+  .archive-stats__button {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    text-align: center;
+  }
+}
