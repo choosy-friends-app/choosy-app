@@ -4184,3 +4184,17 @@ html {
     font-size: 1.1rem;
   }
 }
+
+/* responsive: fix plan-form-actions at mobile */
+@media (max-width: 640px) {
+  .plan-form-actions {
+    flex-direction: column-reverse;
+    gap: 0.65rem;
+  }
+  .plan-form-actions a,
+  .plan-form-actions button {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+}
