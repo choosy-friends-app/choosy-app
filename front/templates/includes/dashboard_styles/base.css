@@ -4163,3 +4163,14 @@ html {
     justify-content: center;
   }
 }
+
+/* responsive: fix brand title truncation on mobile */
+@media (max-width: 380px) {
+  .brand-title {
+    font-size: 1.3rem;
+  }
+  .rail-cta {
+    font-size: 0.9rem;
+    min-height: 3.2rem;
+  }
+}
