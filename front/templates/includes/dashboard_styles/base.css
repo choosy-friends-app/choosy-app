@@ -4150,3 +4150,16 @@ html {
     font-size: 0.92rem;
   }
 }
+
+/* responsive: fix modal actions on mobile */
+@media (max-width: 560px) {
+  .groups-modal__actions {
+    flex-direction: column-reverse;
+    gap: 0.65rem;
+  }
+  .groups-modal__actions button,
+  .groups-modal__actions a {
+    width: 100%;
+    justify-content: center;
+  }
+}
