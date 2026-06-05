@@ -3773,3 +3773,17 @@ body {
     justify-content: flex-start;
   }
 }
+
+/* responsive: fix plan-detail grid at 800px */
+@media (max-width: 800px) {
+  .pd-grid {
+    grid-template-columns: 1fr;
+  }
+  .pd-hero {
+    height: 16rem;
+    border-radius: 1rem;
+  }
+  .pd-title {
+    font-size: clamp(1.6rem, 5vw, 2.4rem);
+  }
+}
