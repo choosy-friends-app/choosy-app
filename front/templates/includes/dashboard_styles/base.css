@@ -3948,3 +3948,10 @@ body {
     height: 3.2rem;
   }
 }
+
+/* responsive: fix page-shell bottom padding on mobile */
+@media (max-width: 480px) {
+  .page-shell {
+    padding-bottom: 5rem;
+  }
+}
