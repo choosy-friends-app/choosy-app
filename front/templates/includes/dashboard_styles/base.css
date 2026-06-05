@@ -3810,3 +3810,15 @@ body {
     overflow-x: hidden;
   }
 }
+
+/* responsive: fix vote-meta-bar at 800px */
+@media (max-width: 800px) {
+  .vote-meta-bar {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+  }
+  .vmb-left strong {
+    font-size: 0.95rem;
+  }
+}
