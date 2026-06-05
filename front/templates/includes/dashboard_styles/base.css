@@ -3655,3 +3655,11 @@ body {
     font-size: 1.2rem;
   }
 }
+
+/* responsive: fix plans-layout at 1200px */
+@media (max-width: 1200px) {
+  .plans-layout {
+    grid-template-columns: minmax(0, 1.3fr) minmax(17rem, 0.7fr);
+    gap: 1.2rem;
+  }
+}
