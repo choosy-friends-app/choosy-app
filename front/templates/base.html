@@ -120,5 +120,22 @@
         }
       })();
     </script>
+    <script>
+      (function () {
+        var btn = document.getElementById("sidebar-toggle");
+        var sidebar = document.getElementById("app-sidebar");
+        var overlay = document.getElementById("sidebar-overlay");
+        if (!btn || !sidebar) return;
+        function closeSidebar() {
+          sidebar.classList.remove("is-open");
+          document.body.style.overflow = "";
+        }
+        btn.addEventListener("click", function () {
+          var isOpen = sidebar.classList.toggle("is-open");
+          document.body.style.overflow = isOpen ? "hidden" : "";
+        });
+        if (overlay) overlay.addEventListener("click", closeSidebar);
+      })();
+    </script>
   </body>
 </html>
