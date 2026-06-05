@@ -3888,3 +3888,17 @@ body {
     width: 100%;
   }
 }
+
+/* responsive: fix session-chip truncation on mobile */
+@media (max-width: 720px) {
+  .session-chip > div {
+    max-width: 8rem;
+    overflow: hidden;
+  }
+  .session-chip strong {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.85rem;
+  }
+}
