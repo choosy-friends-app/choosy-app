@@ -3925,3 +3925,15 @@ body {
     grid-column: 1;
   }
 }
+
+/* responsive: fix auth-highlights to single column on small phones */
+@media (max-width: 600px) {
+  .auth-highlights {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+  .auth-highlights div {
+    min-height: auto;
+    padding: 0.85rem;
+  }
+}
