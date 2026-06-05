@@ -18,9 +18,9 @@
         </div>
 
         <div class="notif-tabs">
-            <button class="notif-tab active">All</button>
-            <button class="notif-tab">Invitations</button>
-            <button class="notif-tab">Decisions</button>
+            <button class="notif-tab active" type="button" data-notif-filter="all">All</button>
+            <button class="notif-tab" type="button" data-notif-filter="invitation">Invitations</button>
+            <button class="notif-tab" type="button" data-notif-filter="decision">Decisions</button>
         </div>
 
         <div class="notif-list" data-notification-list>
@@ -265,6 +265,25 @@
     const clearFeedBtn = document.querySelector('.clear-feed-btn');
     if (clearFeedBtn) {
         clearFeedBtn.addEventListener('click', clearAllNotifications);
+    }
+
+    // Filter the feed by notification type when a tab is selected.
+    const notifTabs = Array.from(document.querySelectorAll('.notif-tab'));
+    if (notifTabs.length) {
+        const applyFilter = (filter) => {
+            document.querySelectorAll('.notif-card').forEach((card) => {
+                if (card.hasAttribute('data-empty-notifications')) return;
+                const matches = filter === 'all' || card.classList.contains('type-' + filter);
+                card.style.display = matches ? '' : 'none';
+            });
+        };
+        notifTabs.forEach((tab) => {
+            tab.addEventListener('click', () => {
+                notifTabs.forEach((t) => t.classList.remove('active'));
+                tab.classList.add('active');
+                applyFilter(tab.dataset.notifFilter || 'all');
+            });
+        });
     }
 </script>
 {% endblock %}

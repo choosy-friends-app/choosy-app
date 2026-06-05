@@ -38,16 +38,10 @@
             }
         });
 
-        const STORY_DURATION = 7000;
-        let storyTimer = null;
-        let storyStart = 0;
         let isDragging = false;
         let isVoted = false;
         let votingLocked = false;
         let dragStartX = 0, dragStartY = 0;
-        let currentMouseX = window.innerWidth / 2;
-        let currentMouseY = window.innerHeight / 2;
-        let mouseInEdge = false;
         const deadlineLabel = document.getElementById("vote-deadline-label");
         const deadlineValue = deadlineLabel ? deadlineLabel.dataset.deadline : "";
 
@@ -181,21 +175,6 @@
             });
             updateProgress();
             updateAmbient();
-            startStoryTimer();
-        };
-
-        const startStoryTimer = () => {
-            if (storyTimer) clearInterval(storyTimer);
-            storyStart = Date.now();
-            storyTimer = setInterval(() => {
-                const elapsed = Date.now() - storyStart;
-                const progress = (elapsed / STORY_DURATION) * 100;
-                masterProgress.style.width = `${progress}%`;
-                if (elapsed >= STORY_DURATION && !isDragging) {
-                    clearInterval(storyTimer);
-                    vote(-1);
-                }
-            }, 16);
         };
 
         function initPointer(el) {
@@ -244,13 +223,6 @@
             const fbLike = document.getElementById("fb-like");
             const fbNope = document.getElementById("fb-nope");
 
-            // Magnetic logic if NOT dragging
-            if (!isDragging) {
-                const xPct = currentMouseX / window.innerWidth;
-                targetX = (xPct - 0.5) * 300; // Even wider
-                targetRotate = (xPct - 0.5) * 30;
-            }
-
             // Lerp physics
             currentX += (targetX - currentX) * LERP_FACTOR;
             currentY += (targetY - currentY) * LERP_FACTOR;
@@ -288,30 +260,6 @@
             }
         };
 
-        window.onmousemove = (e) => {
-            currentMouseX = e.clientX;
-            currentMouseY = e.clientY;
-
-            // --- PASSIVE EDGE VOTING (With re-arm logic) ---
-            const edgeMargin = 40;
-            const isAtEdge = (e.clientX < edgeMargin || e.clientX > window.innerWidth - edgeMargin);
-
-            if (isAtEdge) {
-                if (!mouseInEdge && !isVoted && !isDragging && !votingLocked && plans.length > 0) {
-                    mouseInEdge = true; // Arm locked
-                    vote(e.clientX < edgeMargin ? -1 : 1);
-                }
-            } else {
-                mouseInEdge = false; // Re-arm when moving back to center
-            }
-        };
-
-        universe.onclick = (e) => {
-            if (Math.abs(targetX) > 5 || isDragging) return; // Prevent if was drag
-            const xPct = e.clientX / window.innerWidth;
-            vote(xPct > 0.5 ? 1 : -1);
-        };
-
         const submitVote = (planId, value) => {
             if (votingLocked) return;
             fetch(`/api/vote/${planId}/`, {
@@ -330,7 +278,6 @@
         const vote = (value) => {
             if (isVoted || votingLocked) return;
             isVoted = true;
-            if (storyTimer) clearInterval(storyTimer);
 
             const topCard = deck.querySelector(".card-container:first-child");
             topCard.style.transition = "transform 0.8s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.5s";
@@ -371,6 +318,9 @@
             const total = parseInt("{{ plan_total }}");
             const voted = total - plans.length;
             if (counter) counter.textContent = voted + 1;
+            if (masterProgress && total > 0) {
+                masterProgress.style.width = `${Math.min(100, (voted / total) * 100)}%`;
+            }
         };
 
         function showEmpty() {

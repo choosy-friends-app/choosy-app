@@ -8,23 +8,21 @@
       </div>
       <div class="gc-title">
         <h3>{{ group.name }}</h3>
-        <p>
-          {% if group.active_proposal %}
-          <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <span>{{ group.active_proposal.title }} · cierra {{ group.active_proposal.voting_ends_at|date:"d/m H:i" }}</span>
-            {% if request.user.is_authenticated and group.active_proposal.created_by_id == request.user.id %}
-            <a href="{% url 'editar_propuesta' group.active_proposal.id %}" title="Edit Proposal" style="color: var(--primary); text-decoration: none; display: flex; align-items: center;">
-              <span class="material-symbols-outlined" style="font-size: 1rem;">edit</span>
-            </a>
-            <a href="{% url 'eliminar_propuesta' group.active_proposal.id %}" title="Delete Proposal" style="color: #ff6b6b; text-decoration: none; display: flex; align-items: center;">
-              <span class="material-symbols-outlined" style="font-size: 1rem;">delete</span>
-            </a>
-            {% endif %}
-          </div>
-          {% else %}
-          {{ group.description|default:"Coordinating the next big group decision together." }}
+        {% if group.active_proposal %}
+        <div class="gc-sub">
+          <span>{{ group.active_proposal.title }} · cierra {{ group.active_proposal.voting_ends_at|date:"d/m H:i" }}</span>
+          {% if request.user.is_authenticated and group.active_proposal.created_by_id == request.user.id %}
+          <a href="{% url 'editar_propuesta' group.active_proposal.id %}" title="Edit Proposal" style="color: var(--primary); text-decoration: none; display: flex; align-items: center;">
+            <span class="material-symbols-outlined" style="font-size: 1rem;">edit</span>
+          </a>
+          <a href="{% url 'eliminar_propuesta' group.active_proposal.id %}" title="Delete Proposal" style="color: #ff6b6b; text-decoration: none; display: flex; align-items: center;">
+            <span class="material-symbols-outlined" style="font-size: 1rem;">delete</span>
+          </a>
           {% endif %}
-        </p>
+        </div>
+        {% else %}
+        <p>{{ group.description|default:"Coordinating the next big group decision together." }}</p>
+        {% endif %}
       </div>
     </div>
     <div class="gc-status">

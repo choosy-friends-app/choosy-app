@@ -367,6 +367,38 @@
   border-color: rgba(255, 255, 255, 0.2);
 }
 
+.btn-view-plan {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(165, 165, 255, 0.12);
+  border: 1px solid rgba(165, 165, 255, 0.35);
+  color: #cbb9ff;
+  padding: 0.55rem 1.3rem;
+  border-radius: 99px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: all 0.3s;
+}
+
+.btn-view-plan:hover {
+  background: rgba(165, 165, 255, 0.22);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.notif-group-context {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.4rem;
+  color: #8a8690;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
 /* RIGHT SIDEBAR */
 .notif-sidebar {
   display: flex;
@@ -582,5 +614,34 @@
   100% {
     transform: translateY(-20px);
     opacity: 0;
+  }
+}
+
+/* =========================================
+   RESPONSIVE
+   ========================================= */
+@media (max-width: 1024px) {
+  .notifications-layout {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .notifications-main {
+    padding: 0 1rem 1.5rem 1rem;
+  }
+
+  .notif-header {
+    flex-wrap: wrap;
+  }
+
+  /* Let the title and timestamp stack instead of colliding */
+  .notif-meta {
+    flex-wrap: wrap;
+  }
+
+  .notif-time {
+    margin-left: 0;
   }
 }
