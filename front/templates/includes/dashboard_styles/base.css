@@ -3720,3 +3720,14 @@ body {
     text-align: center;
   }
 }
+
+/* responsive: fix hero-grid on 900px screens */
+@media (max-width: 900px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  .plan-hero__badge {
+    display: none;
+  }
+}
