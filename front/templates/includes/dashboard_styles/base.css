@@ -3980,3 +3980,17 @@ body {
     display: inline-flex;
   }
 }
+
+/* responsive: mobile sidebar overlay backdrop */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 99;
+}
+
+.app-rail.is-open .sidebar-overlay {
+  display: block;
+}
