@@ -16,7 +16,7 @@ from core.web.notifications import (
     invitation_detail,
     notification_center,
 )
-from core.web.plans import api_submit_vote, start_new_plan, vote
+from core.web.plans import api_submit_vote, plan_detail, start_new_plan, vote
 
 __all__ = [
     "active_plans",
@@ -30,6 +30,7 @@ __all__ = [
     "api_respond_invitation",
     "api_submit_vote",
     "api_weather_forecast",
+    "plan_detail",
     "archive",
     "dashboard",
     "dashboard_css",
