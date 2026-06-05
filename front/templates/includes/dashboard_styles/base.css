@@ -3613,3 +3613,10 @@ body {
   box-sizing: border-box;
   max-width: 100%;
 }
+
+/* responsive: fix topbar overflow at intermediate widths */
+.topbar {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+}
