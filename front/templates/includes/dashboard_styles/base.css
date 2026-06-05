@@ -3689,3 +3689,11 @@ body {
     font-size: 1.5rem;
   }
 }
+
+/* responsive: fix groups-overview stats grid at 1100px */
+@media (max-width: 1100px) {
+  .groups-overview {
+    gap: 1.2rem;
+    padding: 1.5rem;
+  }
+}
