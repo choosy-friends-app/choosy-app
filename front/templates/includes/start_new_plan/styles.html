@@ -8,9 +8,7 @@
   }
 
   .plan-page {
-    max-width: 100%;
-    margin: 0 auto;
-    padding: 0;
+    width: 100%;
     box-sizing: border-box;
   }
 
@@ -47,7 +45,7 @@
 
   .plan-grid {
     display: grid;
-    grid-template-columns: 1fr minmax(0, 320px);
+    grid-template-columns: 1fr 300px;
     gap: 2rem;
     align-items: start;
   }
@@ -808,13 +806,49 @@
     }
   }
 
-  @media (max-width: 900px) {
+  /* Pantallas medianas: sidebar se vuelve fila horizontal encima */
+  @media (max-width: 1200px) {
     .plan-grid {
       grid-template-columns: 1fr;
     }
 
     .plan-sidebar {
       order: -1;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .plan-sidebar .glass-card {
+      margin-bottom: 0;
+    }
+
+    .submission-box {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      margin-top: 0;
+    }
+  }
+
+  /* Móvil: todo en columna */
+  @media (max-width: 640px) {
+    .plan-sidebar {
+      grid-template-columns: 1fr;
+    }
+
+    .submission-box {
+      grid-template-columns: 1fr;
+    }
+
+    .plan-hero h1 {
+      font-size: 2.4rem;
+    }
+
+    .section-divider {
+      flex-wrap: wrap;
+      gap: 0.75rem;
     }
   }
 </style>
