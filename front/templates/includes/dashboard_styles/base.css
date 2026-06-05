@@ -3663,3 +3663,14 @@ body {
     gap: 1.2rem;
   }
 }
+
+/* responsive: fix archive-grid at 1100px */
+@media (max-width: 1100px) {
+  .archive-grid {
+    grid-template-columns: 1fr;
+  }
+  .archive-memory--tall,
+  .archive-memory--wide {
+    min-height: 18rem;
+  }
+}
