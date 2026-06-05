@@ -4028,3 +4028,15 @@ body {
 body.sidebar-open {
   overflow: hidden;
 }
+
+/* responsive: fix topbar layout to accommodate hamburger button */
+@media (max-width: 1100px) {
+  .topbar {
+    justify-content: space-between;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+  .topbar-side {
+    margin-left: auto;
+  }
+}
