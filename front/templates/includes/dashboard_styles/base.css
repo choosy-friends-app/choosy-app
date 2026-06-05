@@ -3980,19 +3980,12 @@ body {
   background: rgba(255, 255, 255, 0.1);
 }
 
-@media (max-width: 1100px) {
-  .topbar-hamburger {
-    display: inline-flex;
-  }
-}
-
-/* responsive: mobile sidebar overlay backdrop */
+/* responsive: overlay backdrop — sólo visible en móvil cuando sidebar está abierto */
 .sidebar-overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.7);
   z-index: 99;
 }
 
@@ -4000,17 +3993,31 @@ body {
   display: block;
 }
 
-/* responsive: mobile sidebar slide-in styles */
-@media (max-width: 1100px) {
+/* responsive: móvil (<768px) — hamburger + sidebar overlay deslizante */
+@media (max-width: 768px) {
+  .topbar-hamburger {
+    display: inline-flex;
+  }
+
+  .topbar {
+    justify-content: space-between;
+  }
+
+  .topbar-side {
+    margin-left: auto;
+  }
+
+  /* Overrule el top-nav de 1100px: vuelve a ser overlay fijo */
   .app-rail {
-    position: fixed;
+    position: fixed !important;
     top: 0;
     left: 0;
-    height: 100vh;
+    height: 100vh !important;
     z-index: 100;
     transform: translateX(-100%);
     transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 0;
+    padding: 0 !important;
+    width: 16.5rem;
   }
 
   .app-rail.is-open {
@@ -4018,32 +4025,23 @@ body {
   }
 
   .rail-panel {
+    position: static !important;
+    min-height: 100vh !important;
     height: 100vh;
-    border-radius: 0;
-    border: none;
-    border-right: 1px solid var(--line-soft);
+    border-radius: 0 !important;
+    border: none !important;
+    border-right: 1px solid var(--line-soft) !important;
+    overflow-y: auto;
   }
 
-  .app-shell {
-    grid-template-columns: 1fr;
+  .rail-nav {
+    grid-template-columns: 1fr !important;
   }
 }
 
-/* responsive: prevent background scroll when sidebar is open on mobile */
+/* responsive: bloquear scroll de body cuando el sidebar está abierto en móvil */
 body.sidebar-open {
   overflow: hidden;
-}
-
-/* responsive: fix topbar layout to accommodate hamburger button */
-@media (max-width: 1100px) {
-  .topbar {
-    justify-content: space-between;
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
-  }
-  .topbar-side {
-    margin-left: auto;
-  }
 }
 
 /* responsive: fix group-card meta on small screens */
