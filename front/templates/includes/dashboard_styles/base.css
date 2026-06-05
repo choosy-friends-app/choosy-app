@@ -4051,3 +4051,17 @@ body.sidebar-open {
     justify-items: start;
   }
 }
+
+/* responsive: fix pulse-card on very narrow widths */
+@media (max-width: 480px) {
+  .pulse-card {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .pulse-card strong {
+    font-size: 0.82rem;
+  }
+  .pulse-card span {
+    font-size: 0.68rem;
+  }
+}
