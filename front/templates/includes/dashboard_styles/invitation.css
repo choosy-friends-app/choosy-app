@@ -405,3 +405,45 @@
     transform: rotate(360deg);
   }
 }
+
+/* =========================================
+   RESPONSIVE
+   ========================================= */
+@media (max-width: 1080px) {
+  .invitation-layout {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding: 2rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .inv-sub-cards {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .inv-hero-card {
+    height: auto;
+    min-height: 260px;
+    padding: 2rem;
+  }
+
+  .inv-title {
+    font-size: 2.6rem;
+  }
+
+  .inv-sub-card {
+    padding: 1.75rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .invitation-layout {
+    padding: 1.25rem;
+  }
+
+  .inv-title {
+    font-size: 2.1rem;
+  }
+}

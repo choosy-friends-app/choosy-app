@@ -27,6 +27,7 @@ def login_view(request):
             "active_page": "login",
             "topbar_context": "Login",
             "error_message": error_message,
+            "form_username": request.POST.get("username", ""),
         },
     )
 
@@ -68,6 +69,10 @@ def register_view(request):
             "active_page": "register",
             "topbar_context": "Register",
             "error_message": error_message,
+            "form_username": request.POST.get("username", ""),
+            "form_first_name": request.POST.get("first_name", ""),
+            "form_last_name": request.POST.get("last_name", ""),
+            "form_email": request.POST.get("email", ""),
         },
     )
 

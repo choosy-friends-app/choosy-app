@@ -52,7 +52,7 @@
           <span>Username</span>
           <div class="auth-input-shell">
             <span class="material-symbols-outlined" aria-hidden="true">person</span>
-            <input class="groups-input" type="text" name="username" autocomplete="username" required autofocus />
+            <input class="groups-input" type="text" name="username" autocomplete="username" required autofocus value="{{ form_username }}" />
           </div>
         </label>
 
@@ -60,7 +60,7 @@
           <span>First name</span>
           <div class="auth-input-shell">
             <span class="material-symbols-outlined" aria-hidden="true">badge</span>
-            <input class="groups-input" type="text" name="first_name" autocomplete="given-name" />
+            <input class="groups-input" type="text" name="first_name" autocomplete="given-name" value="{{ form_first_name }}" />
           </div>
         </label>
 
@@ -68,7 +68,7 @@
           <span>Last name</span>
           <div class="auth-input-shell">
             <span class="material-symbols-outlined" aria-hidden="true">badge</span>
-            <input class="groups-input" type="text" name="last_name" autocomplete="family-name" />
+            <input class="groups-input" type="text" name="last_name" autocomplete="family-name" value="{{ form_last_name }}" />
           </div>
         </label>
 
@@ -76,7 +76,7 @@
           <span>Email</span>
           <div class="auth-input-shell">
             <span class="material-symbols-outlined" aria-hidden="true">alternate_email</span>
-            <input class="groups-input" type="email" name="email" autocomplete="email" />
+            <input class="groups-input" type="email" name="email" autocomplete="email" value="{{ form_email }}" />
           </div>
         </label>
 

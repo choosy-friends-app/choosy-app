@@ -8,9 +8,8 @@
   }
 
   .plan-page {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .plan-hero {
@@ -46,8 +45,8 @@
 
   .plan-grid {
     display: grid;
-    grid-template-columns: 1fr 340px;
-    gap: 2.5rem;
+    grid-template-columns: 1fr 300px;
+    gap: 2rem;
     align-items: start;
   }
 
@@ -490,6 +489,34 @@
     box-shadow: 0 0 15px var(--accent-glow);
   }
 
+  /* Sidebar (deadline) time picker columns */
+  .tp-scrollable {
+    display: flex;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .tp-column {
+    flex: 1;
+    height: 160px;
+    overflow-y: auto;
+    scrollbar-width: none;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 10px;
+    padding: 0.4rem;
+  }
+
+  .tp-column::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tp-sep {
+    display: flex;
+    align-items: center;
+    font-weight: 900;
+    color: var(--muted);
+  }
+
   /* Calendar Picker Overlay */
   .calendar-overlay {
     position: absolute;
@@ -807,13 +834,72 @@
     }
   }
 
-  @media (max-width: 900px) {
+  /* Pantallas medianas: sidebar se vuelve fila horizontal encima */
+  @media (max-width: 1200px) {
     .plan-grid {
       grid-template-columns: 1fr;
     }
 
     .plan-sidebar {
       order: -1;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .plan-sidebar .glass-card {
+      margin-bottom: 0;
+    }
+
+    .submission-box {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      margin-top: 0;
+    }
+  }
+
+  /* Option cards: stack the fields grid + map on tablet/mobile */
+  @media (max-width: 768px) {
+    .opt-card {
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      padding: 1.25rem;
+    }
+
+    .opt-grid-inner {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .opt-map-container {
+      width: 100%;
+      margin-left: 0;
+    }
+  }
+
+  /* Móvil: todo en columna */
+  @media (max-width: 640px) {
+    .plan-sidebar {
+      grid-template-columns: 1fr;
+    }
+
+    .deadline-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .submission-box {
+      grid-template-columns: 1fr;
+    }
+
+    .plan-hero h1 {
+      font-size: 2.4rem;
+    }
+
+    .section-divider {
+      flex-wrap: wrap;
+      gap: 0.75rem;
     }
   }
 </style>
