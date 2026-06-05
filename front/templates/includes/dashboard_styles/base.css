@@ -4128,3 +4128,10 @@ a:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 3px;
 }
+
+/* responsive: fix groups-form-grid at mobile */
+@media (max-width: 560px) {
+  .groups-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
