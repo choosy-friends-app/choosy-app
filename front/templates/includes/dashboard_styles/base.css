@@ -2311,6 +2311,7 @@ body.groups-modal-open {
 
 .groups-input--compact {
   min-height: 2.8rem;
+  width: 100%;
 }
 
 .groups-input--modal,
@@ -3557,9 +3558,11 @@ body.groups-modal-open {
     padding-right: 1.25rem;
   }
 
+  /* Keep the topbar a single row in the mobile drawer range so the
+     hamburger doesn't detach onto its own stacked row (the drawer
+     breakpoint is 768px, wider than this 720px rule). */
   .topbar {
-    flex-direction: column;
-    align-items: stretch;
+    align-items: center;
   }
 
   .search-shell {
