@@ -3635,3 +3635,13 @@ body {
     font-size: clamp(2.4rem, 4vw, 3.6rem);
   }
 }
+
+/* responsive: fix group-card padding on medium screens */
+@media (max-width: 1200px) {
+  .group-card {
+    padding: 1.6rem;
+  }
+  .group-card__title h3 {
+    font-size: 1.5rem;
+  }
+}
