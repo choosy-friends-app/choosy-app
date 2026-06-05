@@ -3799,3 +3799,14 @@ body {
     font-size: clamp(2.4rem, 6vw, 3.5rem);
   }
 }
+
+/* responsive: fix vote-app overflow */
+@media (max-width: 800px) {
+  .vote-immersive-universe {
+    overflow: hidden;
+  }
+  .vote-app-adv {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+}
